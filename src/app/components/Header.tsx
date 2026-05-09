@@ -1,0 +1,43 @@
+import { Search, Bell, Menu, User } from 'lucide-react';
+
+export function Header() {
+  return (
+    <header className="sticky top-0 z-50 w-full bg-white border-b-2 border-[#CBD5E1] shadow-sm">
+      <div className="flex items-center justify-between px-6 py-3">
+        <div className="flex items-center gap-8">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#0F766E] to-[#0284C7] flex items-center justify-center shadow-md">
+              <span className="text-white font-bold text-base">AA</span>
+            </div>
+            <span className="font-bold text-[#1E293B] text-lg">Analytics Avenue</span>
+          </div>
+        </div>
+
+        <div className="flex-1 max-w-2xl mx-8">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#475569]" />
+            <input
+              type="text"
+              placeholder="Search solutions..."
+              className="w-full pl-11 pr-4 py-2.5 bg-white border-[1.5px] border-[#CBD5E1] rounded-lg text-[15px] font-medium text-[#1E293B] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/20 shadow-sm"
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button className="p-2.5 hover:bg-[#F1F5F9] rounded-lg transition-colors">
+            <Bell className="w-5 h-5 text-[#1E293B]" />
+          </button>
+          <button className="p-1.5 hover:bg-[#F1F5F9] rounded-lg transition-colors">
+            <div className="w-9 h-9 rounded-full bg-[#0F766E] flex items-center justify-center shadow-md">
+              <User className="w-5 h-5 text-white" />
+            </div>
+          </button>
+          <button className="p-2.5 hover:bg-[#F1F5F9] rounded-lg transition-colors">
+            <Menu className="w-5 h-5 text-[#1E293B]" />
+          </button>
+        </div>
+      </div>
+    </header>
+  );
+}
