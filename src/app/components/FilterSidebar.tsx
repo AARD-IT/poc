@@ -1,12 +1,12 @@
-import { ChevronDown, ChevronUp } from 'lucide-react';
-import { useState } from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react'
+import { useState } from 'react'
 
 interface FilterSection {
-  title: string;
-  items: { label: string; count: number }[];
+  title: string
+  items: { label: string; count: number }[]
 }
 
-const filterSections: FilterSection[] = [
+const defaultSections: FilterSection[] = [
   {
     title: 'Type',
     items: [
@@ -55,37 +55,48 @@ const filterSections: FilterSection[] = [
       { label: 'Automation', count: 12 },
     ],
   },
-];
+]
 
-export function FilterSidebar() {
+export interface FilterSidebarProps {
+  /** When provided, replaces static demo counts (e.g. derived from live POCs). */
+  sections?: FilterSection[]
+  /** Controlled selection; omit for uncontrolled internal state. */
+  selectedFilters?: Set<string>
+  onSelectedFiltersChange?: (next: Set<string>) => void
+}
+
+export function FilterSidebar({ sections, selectedFilters: controlled, onSelectedFiltersChange }: FilterSidebarProps) {
+  const filterSections = sections ?? defaultSections
+
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(['Type', 'Industry', 'Tech'])
-  );
-  const [selectedFilters, setSelectedFilters] = useState<Set<string>>(new Set());
+  )
+  const [internalSelected, setInternalSelected] = useState<Set<string>>(new Set())
+  const selectedFilters = controlled ?? internalSelected
+
+  const setSelectedFilters = (updater: (prev: Set<string>) => Set<string>) => {
+    const next = updater(selectedFilters)
+    if (onSelectedFiltersChange) onSelectedFiltersChange(next)
+    else setInternalSelected(next)
+  }
 
   const toggleSection = (title: string) => {
     setExpandedSections((prev) => {
-      const next = new Set(prev);
-      if (next.has(title)) {
-        next.delete(title);
-      } else {
-        next.add(title);
-      }
-      return next;
-    });
-  };
+      const next = new Set(prev)
+      if (next.has(title)) next.delete(title)
+      else next.add(title)
+      return next
+    })
+  }
 
   const toggleFilter = (filter: string) => {
     setSelectedFilters((prev) => {
-      const next = new Set(prev);
-      if (next.has(filter)) {
-        next.delete(filter);
-      } else {
-        next.add(filter);
-      }
-      return next;
-    });
-  };
+      const next = new Set(prev)
+      if (next.has(filter)) next.delete(filter)
+      else next.add(filter)
+      return next
+    })
+  }
 
   return (
     <aside className="w-64 bg-white border-r-2 border-[#CBD5E1] overflow-y-auto">
@@ -94,11 +105,12 @@ export function FilterSidebar() {
 
         <div className="space-y-1">
           {filterSections.map((section) => {
-            const isExpanded = expandedSections.has(section.title);
+            const isExpanded = expandedSections.has(section.title)
 
             return (
               <div key={section.title} className="border-b border-[#CBD5E1] pb-2">
                 <button
+                  type="button"
                   onClick={() => toggleSection(section.title)}
                   className="w-full flex items-center justify-between py-2 hover:bg-[#F1F5F9] px-2 rounded-lg transition-colors"
                 >
@@ -113,11 +125,12 @@ export function FilterSidebar() {
                 {isExpanded && (
                   <div className="mt-1 space-y-0.5">
                     {section.items.map((item) => {
-                      const filterId = `${section.title}-${item.label}`;
-                      const isSelected = selectedFilters.has(filterId);
+                      const filterId = `${section.title}-${item.label}`
+                      const isSelected = selectedFilters.has(filterId)
 
                       return (
                         <button
+                          type="button"
                           key={item.label}
                           onClick={() => toggleFilter(filterId)}
                           className={`w-full flex items-center justify-between py-2 px-3 rounded-lg text-[15px] font-medium transition-all ${
@@ -127,23 +140,23 @@ export function FilterSidebar() {
                           }`}
                         >
                           <span>{item.label}</span>
-                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                            isSelected
-                              ? 'bg-[#0F766E] text-white'
-                              : 'bg-[#CBD5E1] text-[#475569]'
-                          }`}>
+                          <span
+                            className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                              isSelected ? 'bg-[#0F766E] text-white' : 'bg-[#CBD5E1] text-[#475569]'
+                            }`}
+                          >
                             {item.count}
                           </span>
                         </button>
-                      );
+                      )
                     })}
                   </div>
                 )}
               </div>
-            );
+            )
           })}
         </div>
       </div>
     </aside>
-  );
+  )
 }

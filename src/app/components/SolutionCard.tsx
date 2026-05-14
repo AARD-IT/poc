@@ -1,29 +1,15 @@
-import { Star } from 'lucide-react';
+import { Star } from 'lucide-react'
+import { tagColors } from '@/utils/tagColors'
 
 interface SolutionCardProps {
-  rank: number;
-  title: string;
-  description: string;
-  tags: string[];
-  date: string;
-  featured?: boolean;
-  onClick: () => void;
+  rank: number
+  title: string
+  description: string
+  tags: string[]
+  date: string
+  featured?: boolean
+  onClick: () => void
 }
-
-const tagColors: Record<string, string> = {
-  AI: 'bg-[#DBEAFE] text-[#1D4ED8] border-[#93C5FD]',
-  'Gen AI': 'bg-[#EDE9FE] text-[#6D28D9] border-[#C4B5FD]',
-  Analytics: 'bg-[#E0E7FF] text-[#4338CA] border-[#A5B4FC]',
-  Finance: 'bg-[#DCFCE7] text-[#15803D] border-[#86EFAC]',
-  Healthcare: 'bg-[#FEE2E2] text-[#B91C1C] border-[#FCA5A5]',
-  Retail: 'bg-[#FFEDD5] text-[#C2410C] border-[#FED7AA]',
-  Dashboard: 'bg-[#E0E7FF] text-[#4F46E5] border-[#A5B4FC]',
-  Automation: 'bg-[#FCE7F3] text-[#BE185D] border-[#F9A8D4]',
-  'Power BI': 'bg-[#FEF3C7] text-[#A16207] border-[#FDE68A]',
-  Python: 'bg-[#CCFBF1] text-[#0F766E] border-[#5EEAD4]',
-  Demo: 'bg-[#E5E7EB] text-[#374151] border-[#D1D5DB]',
-  Legal: 'bg-[#F3E8FF] text-[#7C3AED] border-[#DDD6FE]',
-};
 
 export function SolutionCard({
   rank,
@@ -34,12 +20,20 @@ export function SolutionCard({
   featured,
   onClick,
 }: SolutionCardProps) {
-  const visibleTags = tags.slice(0, 4);
-  const remainingCount = tags.length - visibleTags.length;
+  const visibleTags = tags.slice(0, 4)
+  const remainingCount = tags.length - visibleTags.length
 
   return (
     <div
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onClick()
+        }
+      }}
+      role="button"
+      tabIndex={0}
       className="bg-white border-[1.5px] border-[#CBD5E1] rounded-xl p-5 hover:shadow-[0_4px_16px_rgba(15,23,42,0.12)] hover:border-[#94A3B8] transition-all cursor-pointer"
       style={{ boxShadow: '0 4px 12px rgba(15,23,42,0.08)' }}
     >
@@ -86,5 +80,5 @@ export function SolutionCard({
         <span className="text-xs font-semibold text-[#475569]">{date}</span>
       </div>
     </div>
-  );
+  )
 }

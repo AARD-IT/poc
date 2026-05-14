@@ -1,7 +1,12 @@
+import { createRoot } from 'react-dom/client'
+import { RouterProvider } from 'react-router'
+import { router } from './router.tsx'
+import { useAuthStore } from './stores/authStore.ts'
+import './styles/index.css'
 
-  import { createRoot } from "react-dom/client";
-  import App from "./app/App.tsx";
-  import "./styles/index.css";
+async function bootstrap() {
+  await useAuthStore.getState().init()
+  createRoot(document.getElementById('root')!).render(<RouterProvider router={router} />)
+}
 
-  createRoot(document.getElementById("root")!).render(<App />);
-  
+void bootstrap()
