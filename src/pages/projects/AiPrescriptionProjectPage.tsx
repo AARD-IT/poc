@@ -104,9 +104,26 @@ function ApplicationTab() {
   const [status, setStatus] = useState('Working Professional')
   const [selectedDomains, setSelectedDomains] = useState<string[]>([])
   const [domainOpen, setDomainOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
+  const [jobId, setJobId] = useState<string | null>(null)
+  const [aiContent, setAiContent] = useState<Record<string, any> | null>(null)
+  const [tableRows, setTableRows] = useState<any[]>([])
+  const [domainMap, setDomainMap] = useState<Record<string, number>>({})
+  const [emailTo, setEmailTo] = useState('')
+  const [emailCc, setEmailCc] = useState('')
+  const [emailSubject, setEmailSubject] = useState(
+    'Your Career Prescription – Analytics Avenue & Advanced Analytics',
+  )
+  const [emailBody, setEmailBody] = useState(getDefaultEmailBody('', []))
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  // Close dropdown on outside click
+  function getDefaultEmailBody(recipientName: string, domains: string[]) {
+    const domainText = domains.length > 0 ? domains.join(', ') : 'E-Commerce'
+    return `Dear ${recipientName || 'Candidate'},\n\nThank you for your recent consultation with Analytics Avenue & Advanced Analytics.\n\nAs discussed, please find attached your personalised Career Prescription prepared by our Senior Data Scientist Mr. Subramani. This document outlines your tailored roadmap, key outcomes, and domain-specific career opportunities in ${domainText}.\n\nYour prescription covers:\n  • Customised career roadmap across E-Commerce\n  • Key technical skills: SQL, Python, Statistics, Power BI, Machine Learning, Gen AI\n  • Industry-relevant projects and placement support\n\nTo take the next step, please register and pay the initial ₹5,000 to block your seat:\nPayment Link: https://pages.razorpay.com/OpenAnalyticsAvenue\nUPI: aard@uco\n\nFeel free to reach out for any queries.\n\nWarm regards,\nData Consultant\nAnalytics Avenue & Advanced Analytics\nPh / WhatsApp: 9677298268\nEmail: supportteam@analyticsavenue.in`
+  }
+
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -116,6 +133,10 @@ function ApplicationTab() {
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
+
+  useEffect(() => {
+    setEmailBody(getDefaultEmailBody(name, selectedDomains))
+  }, [name, selectedDomains])
 
   function toggleDomain(domain: string) {
     setSelectedDomains((prev) =>
@@ -135,6 +156,113 @@ function ApplicationTab() {
     setSelectedDomains([])
   }
 
+  async function handleGeneratePrescription() {
+    setError(null)
+    setSuccess(false)
+
+    if (!name.trim()) {
+      setError('Please enter the candidate name.')
+      return
+    }
+
+    if (selectedDomains.length === 0) {
+      setError('Please select at least one domain.')
+      return
+    }
+
+    let apiBase = import.meta.env.VITE_API_BASE_URL
+    if (!apiBase) {
+      console.warn('VITE_API_BASE_URL is not set — falling back to http://localhost:8000')
+      apiBase = 'http://localhost:8000'
+    }
+
+    setLoading(true)
+
+    try {
+      const response = await fetch(`${apiBase}/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          status,
+          domains: selectedDomains,
+        }),
+      })
+
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data?.detail || data?.message || 'Failed to generate prescription.')
+      }
+
+      setJobId(data.job_id)
+      setAiContent(data.ai_content)
+      setTableRows(data.table_rows)
+      setDomainMap(data.domain_map)
+      setSuccess(true)
+      setError(null)
+    } catch (err: any) {
+      setError(err?.message || 'Unable to generate prescription.')
+      setSuccess(false)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  function handleDownloadPdf() {
+    if (!jobId) return
+    const apiBasePdf = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+    window.open(`${apiBasePdf}/download/pdf/${jobId}`, '_blank')
+  }
+
+  function handleDownloadDocx() {
+    if (!jobId) return
+    const apiBaseDocx = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+    window.open(`${apiBaseDocx}/download/docx/${jobId}`, '_blank')
+  }
+
+  async function handleSendEmail() {
+    setError(null)
+    if (!jobId) {
+      setError('Please generate the prescription before sending email.')
+      return
+    }
+
+    if (!emailTo.trim() || !emailTo.includes('@')) {
+      setError('Enter a valid recipient email address.')
+      return
+    }
+
+    const apiBaseEmail = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+
+    setLoading(true)
+
+    try {
+      const response = await fetch(`${apiBaseEmail}/send-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          job_id: jobId,
+          to_email: emailTo,
+          cc_emails: emailCc.split(',').map((item) => item.trim()).filter(Boolean),
+          subject: emailSubject,
+          body: emailBody,
+        }),
+      })
+
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data?.detail || data?.message || 'Failed to send email.')
+      }
+
+      setSuccess(true)
+      setError(null)
+    } catch (err: any) {
+      setError(err?.message || 'Unable to send email.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div>
       <h2 className="text-xl font-bold text-[#0F172A] mb-5">Your Details</h2>
@@ -142,7 +270,6 @@ function ApplicationTab() {
       <div className="border border-[#E2E8F0] rounded-xl p-6 bg-white shadow-sm">
         {/* Row 1: Name + Status */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
-          {/* Name */}
           <div>
             <label className="block text-[13px] font-semibold text-[#334155] mb-1.5">
               Name <span className="text-red-500">*</span>
@@ -156,7 +283,6 @@ function ApplicationTab() {
             />
           </div>
 
-          {/* Status */}
           <div>
             <label className="block text-[13px] font-semibold text-[#334155] mb-1.5">
               Status <span className="text-red-500">*</span>
@@ -178,7 +304,6 @@ function ApplicationTab() {
           </div>
         </div>
 
-        {/* Row 2: Target Domains */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-1.5">
             <label className="text-[13px] font-semibold text-[#334155]">
@@ -187,7 +312,6 @@ function ApplicationTab() {
             <CircleHelp className="w-4 h-4 text-[#94A3B8]" title="Select one or more domains" />
           </div>
 
-          {/* Custom multi-select */}
           <div className="relative" ref={dropdownRef}>
             <div
               role="button"
@@ -241,10 +365,8 @@ function ApplicationTab() {
               </div>
             </div>
 
-            {/* Dropdown panel */}
             {domainOpen && (
               <div className="absolute z-20 left-0 right-0 mt-1 bg-white border border-[#E2E8F0] rounded-xl shadow-lg overflow-hidden">
-                {/* Select all */}
                 <button
                   type="button"
                   onClick={selectAll}
@@ -264,7 +386,6 @@ function ApplicationTab() {
                   Select all
                 </button>
 
-                {/* Domain options */}
                 <div className="max-h-56 overflow-y-auto">
                   {DOMAINS.map((d) => {
                     const checked = selectedDomains.includes(d)
@@ -292,15 +413,119 @@ function ApplicationTab() {
           </div>
         </div>
 
-        {/* Generate Prescription button */}
         <button
           type="button"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-[#1a3c6e] hover:bg-[#152e55] text-white font-bold text-[15px] rounded-lg transition-all shadow-md hover:shadow-lg"
+          onClick={handleGeneratePrescription}
+          disabled={loading}
+          className="inline-flex items-center gap-2 px-6 py-3 bg-[#1a3c6e] hover:bg-[#152e55] disabled:opacity-70 disabled:cursor-not-allowed text-white font-bold text-[15px] rounded-lg transition-all shadow-md hover:shadow-lg"
         >
           <Rocket className="w-4 h-4" />
-          Generate Prescription
+          {loading ? 'Generating...' : 'Generate Prescription'}
         </button>
+
+        {error && (
+          <div className="mt-5 rounded-xl border border-[#F8D7DA] bg-[#FCE8EA] px-4 py-3 text-sm text-[#842029]">
+            {error}
+          </div>
+        )}
+
+        {success && jobId && (
+          <div className="mt-5 rounded-xl border border-[#D1E7DD] bg-[#E6F4EA] px-4 py-3 text-sm text-[#0F5132]">
+            Prescription generated successfully! You can download the file or send it by email.
+          </div>
+        )}
+
+        {jobId && (
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={handleDownloadPdf}
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#15803D] hover:bg-[#13673D] text-white font-semibold rounded-lg transition shadow-sm"
+            >
+              📄 Download PDF
+            </button>
+            <button
+              type="button"
+              onClick={handleDownloadDocx}
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#166534] hover:bg-[#14532d] text-white font-semibold rounded-lg transition shadow-sm"
+            >
+              📄 Download Word (.docx)
+            </button>
+          </div>
+        )}
       </div>
+
+      {jobId && (
+        <div className="mt-8 border border-[#E2E8F0] rounded-xl p-6 bg-white shadow-sm">
+          <h3 className="text-lg font-bold text-[#0F172A] mb-4">Send Prescription by Email</h3>
+
+          <div className="grid grid-cols-1 gap-5">
+            <div>
+              <label className="block text-[13px] font-semibold text-[#334155] mb-1.5">To *</label>
+              <input
+                type="email"
+                value={emailTo}
+                onChange={(e) => setEmailTo(e.target.value)}
+                placeholder="candidate@email.com"
+                className="w-full px-3 py-2.5 border border-[#CBD5E1] rounded-lg text-[14px] text-[#1E293B] bg-white focus:outline-none focus:border-[#1a3c6e] focus:ring-2 focus:ring-[#1a3c6e]/10 transition"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#334155] mb-1.5">CC (comma-separated)</label>
+              <input
+                type="text"
+                value={emailCc}
+                onChange={(e) => setEmailCc(e.target.value)}
+                placeholder="cc1@email.com, cc2@email.com"
+                className="w-full px-3 py-2.5 border border-[#CBD5E1] rounded-lg text-[14px] text-[#1E293B] bg-white focus:outline-none focus:border-[#1a3c6e] focus:ring-2 focus:ring-[#1a3c6e]/10 transition"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#334155] mb-1.5">Subject</label>
+              <input
+                type="text"
+                value={emailSubject}
+                onChange={(e) => setEmailSubject(e.target.value)}
+                className="w-full px-3 py-2.5 border border-[#CBD5E1] rounded-lg text-[14px] text-[#1E293B] bg-white focus:outline-none focus:border-[#1a3c6e] focus:ring-2 focus:ring-[#1a3c6e]/10 transition"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-semibold text-[#334155] mb-1.5">Email Body</label>
+              <textarea
+                value={emailBody}
+                onChange={(e) => setEmailBody(e.target.value)}
+                rows={10}
+                className="w-full px-3 py-2.5 border border-[#CBD5E1] rounded-lg text-[14px] text-[#1E293B] bg-white focus:outline-none focus:border-[#1a3c6e] focus:ring-2 focus:ring-[#1a3c6e]/10 transition resize-none"
+              />
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={handleSendEmail}
+                disabled={loading}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-[#DC2626] hover:bg-[#B91C1C] disabled:opacity-70 disabled:cursor-not-allowed text-white font-bold rounded-lg transition shadow-sm"
+              >
+                {loading ? 'Sending...' : 'Send Mail'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {aiContent && (
+        <div className="mt-8 border border-[#E2E8F0] rounded-xl p-6 bg-white shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-[#0F172A]">AI Content</h3>
+          </div>
+          <pre className="whitespace-pre-wrap text-[13px] leading-relaxed text-[#334155] bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-4 overflow-x-auto">
+            {JSON.stringify(aiContent, null, 2)}
+          </pre>
+        </div>
+      )}
     </div>
   )
 }
