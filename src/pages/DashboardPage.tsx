@@ -83,6 +83,39 @@ export function DashboardPage() {
 
   const visible = filterPocs(pocs, { headerQuery, resultsQuery, selectedFilters })
 
+  const aiPrescriptionCard = (
+    <SolutionCard
+      key="ai-prescription-generator"
+      rank={1}
+      title="AI Prescription Generator"
+      description="Clinical-style prescription drafting assistant powered by generative AI. Opens the live Streamlit demo in your workspace."
+      tags={['Gen AI', 'Healthcare', 'Streamlit', 'Demo']}
+      date="Updated May 14, 2026"
+      featured
+      onClick={() => navigate('/projects/ai-prescription-detail')}
+    />
+  )
+
+  const assignedCards = visible.map((poc, index) => (
+    <SolutionCard
+      key={poc.id}
+      rank={poc.sort_rank || index + 1}
+      title={poc.title}
+      description={poc.description}
+      tags={poc.tags}
+      date={poc.date_label ?? '—'}
+      featured={poc.featured}
+      onClick={() => navigate(`/poc/${poc.slug}`, { state: { poc } })}
+    />
+  ))
+
+  const solutionGrid = (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      {aiPrescriptionCard}
+      {assignedCards}
+    </div>
+  )
+
   return (
     <div className="p-6">
       <ControlBar />
@@ -90,30 +123,17 @@ export function DashboardPage() {
       {loading ? (
         <div className="text-[15px] font-medium text-[#475569] py-12 text-center">Loading solutions…</div>
       ) : pocs.length === 0 ? (
-        <EnterpriseEmpty
-          title="No POCs assigned yet"
-          description="You do not have any proof-of-concepts assigned. Once an administrator assigns access, your solutions will appear here."
-        />
+        solutionGrid
       ) : visible.length === 0 ? (
-        <EnterpriseEmpty
-          title="No matching results"
-          description="Try adjusting your search or filters to find relevant solutions."
-        />
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          {visible.map((poc, index) => (
-            <SolutionCard
-              key={poc.id}
-              rank={poc.sort_rank || index + 1}
-              title={poc.title}
-              description={poc.description}
-              tags={poc.tags}
-              date={poc.date_label ?? '—'}
-              featured={poc.featured}
-              onClick={() => navigate(`/poc/${poc.slug}`, { state: { poc } })}
-            />
-          ))}
+        <div className="space-y-5">
+          {solutionGrid}
+          <EnterpriseEmpty
+            title="No matching assigned solutions"
+            description="Try adjusting your search or filters. The featured demo above is always available."
+          />
         </div>
+      ) : (
+        solutionGrid
       )}
     </div>
   )

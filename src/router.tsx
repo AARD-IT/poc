@@ -9,6 +9,9 @@ import { ForgotPasswordPage } from '@/pages/ForgotPasswordPage'
 import { LoginPage } from '@/pages/LoginPage'
 import { PendingApprovalPage } from '@/pages/PendingApprovalPage'
 import { PocDetailPage } from '@/pages/PocDetailPage'
+import { AiPrescriptionProjectPage } from '@/pages/projects/AiPrescriptionProjectPage'
+import { AiPrescriptionDetailPage } from '@/pages/projects/AiPrescriptionDetailPage'
+
 import { ProfilePage } from '@/pages/ProfilePage'
 import { SettingsPage } from '@/pages/SettingsPage'
 import { SignupPage } from '@/pages/SignupPage'
@@ -38,6 +41,17 @@ export const router = createBrowserRouter([
         element: <MainShellWithSidebar />,
         children: [{ index: true, element: <PocDetailPage /> }],
       },
+      {
+        path: 'projects/ai-prescription',
+        element: <MainShellPlain />,
+        children: [{ index: true, element: <AiPrescriptionProjectPage /> }],
+      },
+      {
+        path: 'projects/ai-prescription-detail',
+        element: <MainShellWithSidebar />,
+        children: [{ index: true, element: <AiPrescriptionDetailPage /> }],
+      },
+
       {
         path: 'profile',
         element: <MainShellPlain />,

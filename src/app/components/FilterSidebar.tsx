@@ -133,17 +133,15 @@ export function FilterSidebar({ sections, selectedFilters: controlled, onSelecte
                           type="button"
                           key={item.label}
                           onClick={() => toggleFilter(filterId)}
-                          className={`w-full flex items-center justify-between py-2 px-3 rounded-lg text-[15px] font-medium transition-all ${
-                            isSelected
+                          className={`w-full flex items-center justify-between py-2 px-3 rounded-lg text-[15px] font-medium transition-all ${isSelected
                               ? 'bg-[#0F766E]/15 text-[#0F766E] border border-[#0F766E]/30'
                               : 'hover:bg-[#F1F5F9] text-[#1E293B] border border-transparent'
-                          }`}
+                            }`}
                         >
                           <span>{item.label}</span>
                           <span
-                            className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                              isSelected ? 'bg-[#0F766E] text-white' : 'bg-[#CBD5E1] text-[#475569]'
-                            }`}
+                            className={`text-xs font-bold px-2 py-0.5 rounded-full ${isSelected ? 'bg-[#0F766E] text-white' : 'bg-[#CBD5E1] text-[#475569]'
+                              }`}
                           >
                             {item.count}
                           </span>

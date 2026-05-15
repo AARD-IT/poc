@@ -18,12 +18,28 @@ interface Solution {
   function: string;
   tech: string;
   contact: string;
+  projectRoute?: string;
 }
 
 const solutions: Solution[] = [
   {
-    id: 1,
+    id: 0,
     rank: 1,
+    title: 'AI Prescription Generator',
+    description: 'Intelligent prescription generation platform powered by generative AI that assists clinicians in producing accurate, personalised medication recommendations with real-time drug-interaction checks.',
+    tags: ['Gen AI', 'Healthcare', 'AI', 'Automation'],
+    date: 'Updated May 15, 2026',
+    featured: true,
+    client: 'MedTech Innovations',
+    industry: 'Healthcare',
+    function: 'AI & Automation',
+    tech: 'Gen AI, Python, LLM',
+    contact: 'health-ai@example.com',
+    projectRoute: '/projects/ai-prescription',
+  },
+  {
+    id: 1,
+    rank: 2,
     title: 'AI Financial Intelligence Dashboard',
     description: 'Advanced analytics platform leveraging machine learning to provide real-time insights into financial performance, risk assessment, and predictive modeling for enterprise finance teams.',
     tags: ['AI', 'Finance', 'Analytics', 'Dashboard', 'Power BI'],
