@@ -5,7 +5,7 @@ import { useAuthStore } from '@/stores/authStore'
 import type { AppUser, UserRole, UserStatus } from '@/types/domain'
 import { canAssignSuperAdmin } from '@/types/domain'
 
-const roles: UserRole[] = ['client', 'viewer', 'admin', 'super_admin']
+const roles: UserRole[] = ['client', 'admin', 'super_admin']
 
 export function AdminUsersPage() {
   const actor = useAuthStore((s) => s.profile)
@@ -30,7 +30,7 @@ export function AdminUsersPage() {
 
   useEffect(() => {
     void load(true)
-  }, [load])
+  }, [load, actor?.id])
 
   const filtered = useMemo(() => {
     const n = q.trim().toLowerCase()

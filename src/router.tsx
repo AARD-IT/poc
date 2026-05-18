@@ -11,6 +11,8 @@ import { PendingApprovalPage } from '@/pages/PendingApprovalPage'
 import { PocDetailPage } from '@/pages/PocDetailPage'
 import { AiPrescriptionProjectPage } from '@/pages/projects/AiPrescriptionProjectPage'
 import { AiPrescriptionDetailPage } from '@/pages/projects/AiPrescriptionDetailPage'
+import { OfferLetterProjectPage } from '@/pages/projects/OfferLetterProjectPage'
+import { OfferLetterDetailPage } from '@/pages/projects/OfferLetterDetailPage'
 
 import { ProfilePage } from '@/pages/ProfilePage'
 import { SettingsPage } from '@/pages/SettingsPage'
@@ -18,7 +20,6 @@ import { SignupPage } from '@/pages/SignupPage'
 import { UnauthorizedPage } from '@/pages/UnauthorizedPage'
 import { AdminAccessManagementPage } from '@/pages/admin/AdminAccessManagementPage'
 import { AdminOverviewPage } from '@/pages/admin/AdminOverviewPage'
-import { AdminPocsPage } from '@/pages/admin/AdminPocsPage'
 import { AdminUsersPage } from '@/pages/admin/AdminUsersPage'
 
 export const router = createBrowserRouter([
@@ -51,6 +52,16 @@ export const router = createBrowserRouter([
         element: <MainShellWithSidebar />,
         children: [{ index: true, element: <AiPrescriptionDetailPage /> }],
       },
+      {
+        path: 'projects/offerletter-generator',
+        element: <MainShellWithSidebar />,
+        children: [{ index: true, element: <OfferLetterDetailPage /> }],
+      },
+      {
+        path: 'projects/offerletter-generator/full',
+        element: <MainShellPlain />,
+        children: [{ index: true, element: <OfferLetterProjectPage /> }],
+      },
 
       {
         path: 'profile',
@@ -76,7 +87,6 @@ export const router = createBrowserRouter([
             children: [
               { index: true, element: <AdminOverviewPage /> },
               { path: 'users', element: <AdminUsersPage /> },
-              { path: 'pocs', element: <AdminPocsPage /> },
               { path: 'access-management', element: <AdminAccessManagementPage /> },
             ],
           },

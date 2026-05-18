@@ -20,8 +20,8 @@ export function AdminAccessManagementPage() {
     setErr(null)
     try {
       const [uRows, pRows] = await Promise.all([fetchAllUsers(), fetchAllPocsAdmin()])
-      setUsers(uRows.filter((u) => u.status === 'approved' && (u.role === 'client' || u.role === 'viewer')))
-      setPocs(pRows)
+      setUsers(uRows.filter((u) => u.status === 'approved' && u.role === 'client'))
+      setPocs(pRows.filter((p) => p.visibility === 'visible'))
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : 'Failed to load')
     } finally {

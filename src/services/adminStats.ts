@@ -17,7 +17,7 @@ export async function fetchAdminStats(): Promise<AdminStats> {
       supabase.from('users').select('id', { count: 'exact', head: true }),
       supabase.from('users').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
       supabase.from('users').select('id', { count: 'exact', head: true }).eq('status', 'approved'),
-      supabase.from('pocs').select('id', { count: 'exact', head: true }),
+      supabase.from('pocs').select('id', { count: 'exact', head: true }).eq('visibility', 'visible'),
       supabase.from('users').select('*').order('created_at', { ascending: false }).limit(6),
     ])
 

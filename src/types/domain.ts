@@ -1,4 +1,4 @@
-export type UserRole = 'super_admin' | 'admin' | 'client' | 'viewer'
+export type UserRole = 'super_admin' | 'admin' | 'client'
 
 export type UserStatus = 'pending' | 'approved' | 'rejected'
 

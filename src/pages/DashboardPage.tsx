@@ -1,41 +1,14 @@
-import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { ControlBar } from '@/app/components/ControlBar'
 import { SolutionCard } from '@/app/components/SolutionCard'
 import { EnterpriseEmpty } from '@/components/empty-states/EnterpriseEmpty'
-import { useSearchFilters } from '@/contexts/SearchFiltersContext'
-import { fetchMyPocs, getCachedMyPocs } from '@/services/pocs'
 import { useAuthStore } from '@/stores/authStore'
-import { filterPocs } from '@/utils/filterPocs'
-import type { Poc } from '@/types/domain'
 
 export function DashboardPage() {
   const navigate = useNavigate()
   const profile = useAuthStore((s) => s.profile)
   const profileLoading = useAuthStore((s) => s.profileLoading)
   const profileError = useAuthStore((s) => s.profileError)
-  const { headerQuery, resultsQuery, selectedFilters } = useSearchFilters()
-  const cachedPocs = getCachedMyPocs()
-  const hasInitialCachedPocs = cachedPocs.length > 0
-
-  const [pocs, setPocs] = useState<Poc[]>(cachedPocs)
-  const [loading, setLoading] = useState(!hasInitialCachedPocs)
-
-  const load = useCallback(async (showLoading = false) => {
-    if (showLoading) setLoading(true)
-    try {
-      const rows = await fetchMyPocs()
-      setPocs(rows)
-    } catch {
-      setPocs([])
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    void load(!hasInitialCachedPocs)
-  }, [hasInitialCachedPocs, load])
 
   if (profileLoading && !profile) {
     return (
@@ -81,8 +54,6 @@ export function DashboardPage() {
     )
   }
 
-  const visible = filterPocs(pocs, { headerQuery, resultsQuery, selectedFilters })
-
   const aiPrescriptionCard = (
     <SolutionCard
       key="ai-prescription-generator"
@@ -96,45 +67,30 @@ export function DashboardPage() {
     />
   )
 
-  const assignedCards = visible.map((poc, index) => (
+  const offerLetterCard = (
     <SolutionCard
-      key={poc.id}
-      rank={poc.sort_rank || index + 1}
-      title={poc.title}
-      description={poc.description}
-      tags={poc.tags}
-      date={poc.date_label ?? '—'}
-      featured={poc.featured}
-      onClick={() => navigate(`/poc/${poc.slug}`, { state: { poc } })}
+      key="offer-letter-generator"
+      rank={2}
+      title="Offer Letter Generator"
+      description="AI-powered HR automation tool for generating pre-offer letters, offer letters, internship certificates, and downloadable HR documents instantly."
+      tags={['HR Automation', 'Gen AI', 'Streamlit', 'Documents']}
+      date="Updated May 2026"
+      featured
+      onClick={() => navigate('/projects/offerletter-generator')}
     />
-  ))
+  )
 
   const solutionGrid = (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
       {aiPrescriptionCard}
-      {assignedCards}
+      {offerLetterCard}
     </div>
   )
 
   return (
     <div className="p-6">
       <ControlBar />
-
-      {loading ? (
-        <div className="text-[15px] font-medium text-[#475569] py-12 text-center">Loading solutions…</div>
-      ) : pocs.length === 0 ? (
-        solutionGrid
-      ) : visible.length === 0 ? (
-        <div className="space-y-5">
-          {solutionGrid}
-          <EnterpriseEmpty
-            title="No matching assigned solutions"
-            description="Try adjusting your search or filters. The featured demo above is always available."
-          />
-        </div>
-      ) : (
-        solutionGrid
-      )}
+      {solutionGrid}
     </div>
   )
 }

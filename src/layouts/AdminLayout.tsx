@@ -1,14 +1,15 @@
-import { Link, NavLink, Outlet } from 'react-router'
+import { Link, NavLink, Outlet, useLocation } from 'react-router'
 import { Header } from '@/app/components/Header'
 
 const nav = [
   { to: '/admin', label: 'Overview', end: true },
   { to: '/admin/users', label: 'Users' },
-  { to: '/admin/pocs', label: 'POCs' },
   { to: '/admin/access-management', label: 'Access' },
 ]
 
 export function AdminLayout() {
+  const location = useLocation()
+
   return (
     <div className="min-h-screen bg-[#F1F5F9]">
       <Header />
@@ -48,7 +49,7 @@ export function AdminLayout() {
         </aside>
 
         <main className="flex-1 overflow-y-auto p-6">
-          <Outlet />
+          <Outlet key={location.pathname} />
         </main>
       </div>
     </div>

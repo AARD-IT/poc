@@ -4,6 +4,7 @@ import { PocDetailBody } from '@/app/components/PocDetailBody'
 import { EnterpriseEmpty } from '@/components/empty-states/EnterpriseEmpty'
 import { fetchPocBySlug, getCachedPocBySlug } from '@/services/pocs'
 import { useAuthStore } from '@/stores/authStore'
+import { isStaffRole } from '@/types/domain'
 import type { Poc } from '@/types/domain'
 
 export function PocDetailPage() {
@@ -32,7 +33,7 @@ export function PocDetailPage() {
     }
   }, [slug])
 
-  const readOnly = profile?.role === 'viewer'
+  const readOnly = !profile || !isStaffRole(profile.role)
 
   if (poc === undefined) {
     return <div className="p-6 text-[15px] font-medium text-[#475569]">Loading…</div>

@@ -15,16 +15,25 @@ function StatCard({ label, value }: { label: string; value: number | string }) {
 
 export function AdminOverviewPage() {
   const [stats, setStats] = useState<AdminStats | null>(null)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
+    setLoading(true)
+    setError(null)
     fetchAdminStats()
       .then((s) => {
-        if (!cancelled) setStats(s)
+        if (!cancelled) {
+          setStats(s)
+          setLoading(false)
+        }
       })
       .catch((e: unknown) => {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load')
+        if (!cancelled) {
+          setError(e instanceof Error ? e.message : 'Failed to load')
+          setLoading(false)
+        }
       })
     return () => {
       cancelled = true
