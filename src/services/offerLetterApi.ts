@@ -39,6 +39,8 @@ export interface SalaryParseResponse {
   gross_monthly: number
   hra_percent_of_basic: number
   basic_percent: number
+  hra_percent: number
+  pf_percent: number
   variable_percent: number
   pf_description: string
   ctcAnnual: number
@@ -50,6 +52,8 @@ export interface SalaryParseResponse {
   grossMonthly: number
   hraPercentOfBasic: number
   basicPercent: number
+  hraPercent: number
+  pfPercent: number
   variablePercent: number
   ctcAnnualStr?: string
   basicMonthlyStr?: string
@@ -74,8 +78,13 @@ function normalizeSalaryParseResponse(response: any): SalaryParseResponse {
     specialAllowanceAnnual: response.special_allowance_annual ?? response.specialAllowanceAnnual ?? 0,
     grossMonthly: response.gross_monthly ?? response.grossMonthly ?? 0,
     basicPercent: response.base_percent ?? response.basic_percent ?? response.basicPercent ?? 0,
-    hraPercentOfBasic: response.hra_percent_of_basic ?? response.hraPercentOfBasic ?? 0,
+    hraPercent: response.hra_percent ?? response.hraPercent ?? response.hraPercentOfBasic ?? 0,
+    pfPercent: response.pf_percent ?? response.pfPercent ?? 0,
     variablePercent: response.variable_percent ?? response.variablePercent ?? 0,
+    base_percent: response.base_percent ?? response.basic_percent ?? response.basicPercent ?? 0,
+    hra_percent: response.hra_percent ?? response.hraPercent ?? response.hraPercentOfBasic ?? 0,
+    pf_percent: response.pf_percent ?? response.pfPercent ?? 0,
+    variable_percent: response.variable_percent ?? response.variablePercent ?? 0,
     pfDescription: response.pf_description ?? response.pfDescription ?? 'Not applicable',
     ctcAnnualStr: response.ctc_annual_str ?? response.ctcAnnualStr ?? '',
     basicMonthlyStr: response.basic_monthly_str ?? response.basicMonthlyStr ?? '',

@@ -26,7 +26,6 @@ import {
   clearHistory as clearHistoryApi,
   downloadPdf,
   downloadDocx,
-  getRoleResponsibilities,
   type SalaryParseResponse,
   type DocumentResponse,
   type HistoryResponse,
@@ -38,14 +37,21 @@ type PreOfferForm = {
   candidateName: string
   salutation: string
   role: string
+  otherRoleName?: string
+  otherResponsibilitiesKeywords?: string
+  otherResponsibilitiesPreview?: string
   letterDate: string
   joiningDate: string
   includeTraining: boolean
   trainingMode: 'preset' | 'manual'
   trainingDuration: string
+  trainingStartDate?: string
+  trainingEndDate?: string
   includeProbation: boolean
   probationMode: 'preset' | 'manual'
   probationDuration: string
+  probationStartDate?: string
+  probationEndDate?: string
   ctcRangeOption: string
   ctcRangeCustom: string
   fixedStipendOption: string
@@ -58,6 +64,9 @@ type OfferLetterForm = {
   candidateName: string
   salutation: string
   role: string
+  otherRoleName?: string
+  otherResponsibilitiesKeywords?: string
+  otherResponsibilitiesPreview?: string
   department: string
   salaryPrompt: string
   letterDate: string
@@ -72,6 +81,7 @@ type InternshipForm = {
   department: string
   role: string
   datesMode: 'auto' | 'manual'
+  durationOption: string
   startDate: string
   endDate: string
   letterDate: string
@@ -90,6 +100,7 @@ type HistoryItem = {
 
 const SALUTATIONS = ['Ms.', 'Mr.']
 const PRE_OFFER_ROLES = [
+  'Data Analyst Trainee',
   'Data Analyst',
   'Business Analyst',
   'Software Developer',
@@ -165,6 +176,12 @@ const RESPONSIBILITY_SUGGESTIONS = [
   'Completion of mandatory technical and professional training programs',
 ]
 
+const DEFAULT_OTHER_ROLE_PREVIEW = `Actively participate in assigned projects and deliver quality outcomes.
+Collaborate with team members and contribute to organizational goals.
+Prepare regular progress reports and update stakeholders.
+Adhere to company policies, timelines, and professional standards.
+Continuously upskill through training programs and self-learning.`
+
 const initialPreOffer: PreOfferForm = {
   candidateName: '',
   salutation: 'Ms.',
@@ -173,22 +190,32 @@ const initialPreOffer: PreOfferForm = {
   joiningDate: new Date().toISOString().slice(0, 10),
   includeTraining: true,
   trainingMode: 'preset',
-  trainingDuration: '15 days',
+  trainingDuration: '15',
+  trainingStartDate: '',
+  trainingEndDate: '',
   includeProbation: true,
   probationMode: 'preset',
   probationDuration: '2-4 months',
+  probationStartDate: '',
+  probationEndDate: '',
   ctcRangeOption: '₹2 LPA – ₹3 LPA',
   ctcRangeCustom: '',
   fixedStipendOption: '₹10,000',
   fixedStipendCustom: '',
   incentiveOption: '₹15,000',
   incentiveCustom: '',
+  otherRoleName: '',
+  otherResponsibilitiesKeywords: '',
+  otherResponsibilitiesPreview: DEFAULT_OTHER_ROLE_PREVIEW,
 }
 
 const initialOfferLetter: OfferLetterForm = {
   candidateName: '',
   salutation: 'Ms.',
   role: 'Data Analyst Trainee',
+  otherRoleName: '',
+  otherResponsibilitiesKeywords: '',
+  otherResponsibilitiesPreview: DEFAULT_OTHER_ROLE_PREVIEW,
   department: 'Analytics',
   salaryPrompt: 'e.g. "6 LPA, 40% basic, no PF, 10% variable"',
   letterDate: new Date().toISOString().slice(0, 10),
@@ -203,6 +230,7 @@ const initialInternship: InternshipForm = {
   department: 'Computer Science and Engineering',
   role: 'Data Analytics Trainee',
   datesMode: 'manual',
+  durationOption: '3',
   startDate: new Date().toISOString().slice(0, 10),
   endDate: new Date(new Date().setMonth(new Date().getMonth() + 3)).toISOString().slice(0, 10),
   letterDate: new Date().toISOString().slice(0, 10),
@@ -222,6 +250,31 @@ function formatDuration(start: string, end: string) {
   const days = Math.ceil(diff / (1000 * 60 * 60 * 24))
   const months = Math.floor(days / 30)
   return months > 0 ? `${months} month${months > 1 ? 's' : ''}` : `${days} day${days > 1 ? 's' : ''}`
+}
+
+function formatDateForApi(date: string) {
+  const [year, month, day] = date.split('-')
+  return `${day}-${month}-${year}`
+}
+
+function addDaysToDate(date: string, days: number) {
+  const [year, month, day] = date.split('-').map(Number)
+  const result = new Date(year, month - 1, day)
+  result.setDate(result.getDate() + days)
+  const dd = String(result.getDate()).padStart(2, '0')
+  const mm = String(result.getMonth() + 1).padStart(2, '0')
+  const yyyy = result.getFullYear()
+  return `${yyyy}-${mm}-${dd}`
+}
+
+function addMonthsToDate(date: string, months: number) {
+  const [year, month, day] = date.split('-').map(Number)
+  const result = new Date(year, month - 1, day)
+  result.setMonth(result.getMonth() + months)
+  const dd = String(result.getDate()).padStart(2, '0')
+  const mm = String(result.getMonth() + 1).padStart(2, '0')
+  const yyyy = result.getFullYear()
+  return `${yyyy}-${mm}-${dd}`
 }
 
 function formatRupees(value: number) {
@@ -368,19 +421,58 @@ export function OfferLetterProjectPage() {
   const preOfferIncentiveLabel = preOfferIncentive === 'None' ? 'Not applicable' : `Up to ${preOfferIncentive} / month`
 
   const preOfferTrainingPeriod = useMemo(() => {
-    if (!preOfferForm.includeTraining || !preOfferForm.joiningDate) return null
-    const days = parseInt(preOfferForm.trainingDuration, 10)
-    const startDate = new Date(preOfferForm.joiningDate)
-    if (Number.isNaN(days) || days <= 0) return null
-    const endDate = new Date(startDate)
-    endDate.setDate(startDate.getDate() + days)
-    return `${startDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} → ${endDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} (${days} day${days === 1 ? '' : 's'})`
-  }, [preOfferForm.includeTraining, preOfferForm.joiningDate, preOfferForm.trainingDuration])
+    if (!preOfferForm.includeTraining) return null
+    // preset mode: trainingDuration is in days (string)
+    if (preOfferForm.trainingMode === 'preset') {
+      if (!preOfferForm.joiningDate) return null
+      const days = parseInt(preOfferForm.trainingDuration, 10)
+      const startDate = new Date(preOfferForm.joiningDate)
+      if (Number.isNaN(days) || days <= 0) return null
+      const endDate = new Date(startDate)
+      endDate.setDate(startDate.getDate() + days)
+      return `${startDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} → ${endDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} (${days} day${days === 1 ? '' : 's'})`
+    }
+    // manual mode: use explicitly entered dates
+    if (preOfferForm.trainingMode === 'manual' && preOfferForm.trainingStartDate && preOfferForm.trainingEndDate) {
+      const start = new Date(preOfferForm.trainingStartDate)
+      const end = new Date(preOfferForm.trainingEndDate)
+      const diff = Math.max(0, end.getTime() - start.getTime())
+      const days = Math.ceil(diff / (1000 * 60 * 60 * 24))
+      return `${start.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} → ${end.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} (${days} day${days === 1 ? '' : 's'})`
+    }
+    return null
+  }, [preOfferForm.includeTraining, preOfferForm.joiningDate, preOfferForm.trainingDuration, preOfferForm.trainingMode, preOfferForm.trainingStartDate, preOfferForm.trainingEndDate])
 
   const internshipDuration = useMemo(
     () => formatDuration(internshipForm.startDate, internshipForm.endDate),
     [internshipForm.startDate, internshipForm.endDate],
   )
+
+  const preOfferProbationPeriod = useMemo(() => {
+    if (!preOfferForm.includeProbation) return null
+    // manual mode
+    if (preOfferForm.probationMode === 'manual' && preOfferForm.probationStartDate && preOfferForm.probationEndDate) {
+      const start = new Date(preOfferForm.probationStartDate)
+      const end = new Date(preOfferForm.probationEndDate)
+      const diff = Math.max(0, end.getTime() - start.getTime())
+      const months = Math.floor(Math.ceil(diff / (1000 * 60 * 60 * 24)) / 30)
+      const monthsLabel = months > 0 ? `${months} month${months > 1 ? 's' : ''}` : `${Math.ceil(diff / (1000 * 60 * 60 * 24))} day(s)`
+      return `${start.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} → ${end.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} • ${monthsLabel}`
+    }
+    // preset mode: derive start from training/joining
+    let startStr = preOfferForm.joiningDate
+    if (preOfferForm.includeTraining) {
+      if (preOfferForm.trainingMode === 'manual' && preOfferForm.trainingEndDate) startStr = preOfferForm.trainingEndDate
+      else startStr = addDaysToDate(preOfferForm.joiningDate, parseInt(preOfferForm.trainingDuration, 10) || 0)
+    }
+    const start = new Date(startStr)
+    // pick lower bound months from range like '2-4 months'
+    const m = parseInt((preOfferForm.probationDuration || '').split('-')[0], 10) || 2
+    const end = new Date(start)
+    end.setMonth(end.getMonth() + m)
+    const monthsLabel = `${m} month${m > 1 ? 's' : ''}`
+    return `${start.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} → ${end.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} • ${monthsLabel}`
+  }, [preOfferForm.includeProbation, preOfferForm.probationMode, preOfferForm.probationStartDate, preOfferForm.probationEndDate, preOfferForm.probationDuration, preOfferForm.includeTraining, preOfferForm.trainingMode, preOfferForm.trainingEndDate, preOfferForm.joiningDate, preOfferForm.trainingDuration])
 
   async function handleCalculateSalaryBreakup() {
     setSalaryLoading(true)
@@ -413,19 +505,40 @@ export function OfferLetterProjectPage() {
     setPreOfferLoading(true)
     setPreOfferError(null)
     try {
+      let probationStartDate: string | undefined = undefined
+      if (preOfferForm.includeProbation) {
+        if (preOfferForm.probationMode === 'manual' && preOfferForm.probationStartDate) {
+          probationStartDate = formatDateForApi(preOfferForm.probationStartDate)
+        } else {
+          // compute based on training end or joining date
+          if (preOfferForm.includeTraining) {
+            if (preOfferForm.trainingMode === 'manual' && preOfferForm.trainingEndDate) {
+              probationStartDate = formatDateForApi(preOfferForm.trainingEndDate)
+            } else {
+              probationStartDate = formatDateForApi(addDaysToDate(preOfferForm.joiningDate, parseInt(preOfferForm.trainingDuration, 10) || 0))
+            }
+          } else {
+            probationStartDate = formatDateForApi(preOfferForm.joiningDate)
+          }
+        }
+      }
+
+      const roleNameToSend = preOfferForm.role === 'Other' ? (preOfferForm.otherRoleName?.trim() || 'Other') : preOfferForm.role.trim()
+
       const result = await generatePreOffer({
         candidate_name: preOfferForm.candidateName.trim(),
         salutation: preOfferForm.salutation,
-        role: preOfferForm.role.trim(),
-        joining_date: preOfferForm.joiningDate,
-        letter_date: preOfferForm.letterDate,
+        role: roleNameToSend,
+        joining_date: formatDateForApi(preOfferForm.joiningDate),
+        letter_date: preOfferForm.letterDate ? formatDateForApi(preOfferForm.letterDate) : undefined,
         stipend: preOfferStipend,
         incentive: preOfferIncentive === 'None' ? '' : preOfferIncentive,
         ctc_range: preOfferCtcRange,
-        training_period: preOfferForm.includeTraining ? preOfferForm.trainingDuration : undefined,
-        probation_start: preOfferForm.includeProbation ? preOfferForm.joiningDate : undefined,
+        training_period: preOfferForm.includeTraining ? preOfferTrainingPeriod : undefined,
+        probation_start: probationStartDate,
         probation_dur: preOfferForm.probationDuration,
         has_probation: preOfferForm.includeProbation,
+        custom_rr: preOfferForm.role === 'Other' ? (preOfferForm.otherResponsibilitiesPreview || '').split(/\n+/).map((r) => r.trim()).filter(Boolean) : undefined,
       })
       setPreOfferResult(result)
       await loadHistory()
@@ -457,14 +570,16 @@ export function OfferLetterProjectPage() {
     setOfferLetterLoading(true)
     setOfferLetterError(null)
     try {
+      const roleNameToSend = offerLetterForm.role === 'Other' ? (offerLetterForm.otherRoleName?.trim() || offerLetterForm.role.trim()) : offerLetterForm.role.trim()
       const result = await generateOfferLetter({
         candidate_name: offerLetterForm.candidateName.trim(),
         salutation: offerLetterForm.salutation,
-        role: offerLetterForm.role.trim(),
+        role: roleNameToSend,
         department: offerLetterForm.department,
-        joining_date: offerLetterForm.joiningDate,
-        letter_date: offerLetterForm.letterDate,
+        joining_date: formatDateForApi(offerLetterForm.joiningDate),
+        letter_date: offerLetterForm.letterDate ? formatDateForApi(offerLetterForm.letterDate) : undefined,
         salary_data: salaryBreakup,
+        custom_rr: offerLetterForm.role === 'Other' ? (offerLetterForm.otherResponsibilitiesPreview || '').split(/\n+/).map((r) => r.trim()).filter(Boolean) : undefined,
       })
       setOfferLetterResult(result)
       await loadHistory()
@@ -504,11 +619,11 @@ export function OfferLetterProjectPage() {
         college: internshipForm.institution,
         department: internshipForm.department,
         role: internshipForm.role.trim(),
-        start_date: internshipForm.startDate,
-        end_date: internshipForm.endDate,
+        start_date: formatDateForApi(internshipForm.startDate),
+        end_date: formatDateForApi(internshipForm.endDate),
         duration: internshipDuration,
         responsibilities: responsibilities,
-        letter_date: internshipForm.letterDate,
+        letter_date: internshipForm.letterDate ? formatDateForApi(internshipForm.letterDate) : undefined,
       })
       setInternshipResult(result)
       await loadHistory()
@@ -658,6 +773,51 @@ export function OfferLetterProjectPage() {
                         </option>
                       ))}
                     </select>
+                    {preOfferForm.role === 'Other' && (
+                      <div className="mt-3 space-y-4 rounded-3xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
+                        <div className="space-y-2">
+                          <p className="text-[13px] font-semibold text-[#334155]">Designation</p>
+                          <div className="rounded-2xl border border-[#CBD5E1] bg-white px-4 py-3 text-[14px] text-[#0F172A]">Other</div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="block text-[13px] font-semibold text-[#334155]">Type role name</label>
+                          <input
+                            type="text"
+                            value={preOfferForm.otherRoleName || ''}
+                            onChange={(e) => setPreOfferForm((s) => ({ ...s, otherRoleName: e.target.value }))}
+                            placeholder="e.g. Cloud Solutions Engineer"
+                            className="w-full rounded-xl border border-[#CBD5E1] bg-white px-4 py-3 text-[14px] focus:outline-none"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-[13px] font-semibold text-[#334155]">Roles & Responsibilities</p>
+                          </div>
+                          <p className="text-[12px] text-[#64748B]">Enter each point on a new line — spelling & grammar auto-fixed, minimum 5 points auto-added.</p>
+                          <textarea
+                            value={preOfferForm.otherResponsibilitiesKeywords || ''}
+                            onChange={(e) => setPreOfferForm((s) => ({ ...s, otherResponsibilitiesKeywords: e.target.value }))}
+                            placeholder="Type keywords or points (e.g. llm rag, docker, client meeting)"
+                            rows={3}
+                            className="w-full rounded-xl border border-[#CBD5E1] bg-white px-4 py-3 text-[14px] focus:outline-none"
+                          />
+                        </div>
+
+                        <div className="rounded-2xl border border-[#CBD5E1] bg-white p-4">
+                          <div className="mb-2 flex items-center gap-2 text-[13px] font-semibold text-[#334155]">
+                            <span>✏️ Edit points below — add more lines, change wording, delete unwanted points</span>
+                          </div>
+                          <textarea
+                            value={preOfferForm.otherResponsibilitiesPreview ?? DEFAULT_OTHER_ROLE_PREVIEW}
+                            onChange={(e) => setPreOfferForm((s) => ({ ...s, otherResponsibilitiesPreview: e.target.value }))}
+                            rows={6}
+                            className="w-full rounded-2xl border border-[#CBD5E1] bg-[#F8FAFC] px-4 py-3 text-[14px] focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div>
@@ -718,17 +878,34 @@ export function OfferLetterProjectPage() {
                       </label>
                     </div>
                     <label className="block text-[13px] font-semibold text-[#334155] mb-2">Training duration</label>
-                    <select
-                      value={preOfferForm.trainingDuration}
-                      disabled={!preOfferForm.includeTraining}
-                      onChange={(e) => setPreOfferForm((s) => ({ ...s, trainingDuration: e.target.value }))}
-                      className="w-full rounded-xl border border-[#CBD5E1] bg-white px-4 py-3 text-[14px] text-[#1E293B] focus:outline-none focus:ring-2 focus:ring-[#0F766E]/15 transition disabled:bg-[#F8FAFC]"
-                    >
-                      <option>15 days</option>
-                      <option>1 month</option>
-                      <option>2 months</option>
-                      <option>3 months</option>
-                    </select>
+                    {preOfferForm.trainingMode === 'preset' ? (
+                      <select
+                        value={preOfferForm.trainingDuration}
+                        disabled={!preOfferForm.includeTraining}
+                        onChange={(e) => setPreOfferForm((s) => ({ ...s, trainingDuration: e.target.value }))}
+                        className="w-full rounded-xl border border-[#CBD5E1] bg-white px-4 py-3 text-[14px] text-[#1E293B] focus:outline-none focus:ring-2 focus:ring-[#0F766E]/15 transition disabled:bg-[#F8FAFC]"
+                      >
+                        <option value="15">15 days</option>
+                        <option value="30">1 month</option>
+                        <option value="60">2 months</option>
+                        <option value="90">3 months</option>
+                      </select>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="date"
+                          value={preOfferForm.trainingStartDate}
+                          onChange={(e) => setPreOfferForm((s) => ({ ...s, trainingStartDate: e.target.value }))}
+                          className="w-full rounded-xl border border-[#CBD5E1] bg-white px-4 py-3 text-[14px] text-[#1E293B]"
+                        />
+                        <input
+                          type="date"
+                          value={preOfferForm.trainingEndDate}
+                          onChange={(e) => setPreOfferForm((s) => ({ ...s, trainingEndDate: e.target.value }))}
+                          className="w-full rounded-xl border border-[#CBD5E1] bg-white px-4 py-3 text-[14px] text-[#1E293B]"
+                        />
+                      </div>
+                    )}
                   </div>
 
                   <div className="rounded-2xl border border-[#E2E8F0] p-5 bg-[#F8FAFC]">
@@ -767,16 +944,35 @@ export function OfferLetterProjectPage() {
                       </label>
                     </div>
                     <label className="block text-[13px] font-semibold text-[#334155] mb-2">Probation duration</label>
-                    <select
-                      value={preOfferForm.probationDuration}
-                      disabled={!preOfferForm.includeProbation}
-                      onChange={(e) => setPreOfferForm((s) => ({ ...s, probationDuration: e.target.value }))}
-                      className="w-full rounded-xl border border-[#CBD5E1] bg-white px-4 py-3 text-[14px] text-[#1E293B] focus:outline-none focus:ring-2 focus:ring-[#0F766E]/15 transition disabled:bg-[#F8FAFC]"
-                    >
-                      <option>2-4 months</option>
-                      <option>3-6 months</option>
-                      <option>4-6 months</option>
-                    </select>
+                                    {preOfferForm.probationMode === 'preset' ? (
+                                      <select
+                                        value={preOfferForm.probationDuration}
+                                        disabled={!preOfferForm.includeProbation}
+                                        onChange={(e) => setPreOfferForm((s) => ({ ...s, probationDuration: e.target.value }))}
+                                        className="w-full rounded-xl border border-[#CBD5E1] bg-white px-4 py-3 text-[14px] text-[#1E293B] focus:outline-none focus:ring-2 focus:ring-[#0F766E]/15 transition disabled:bg-[#F8FAFC]"
+                                      >
+                                        <option>1-2 months</option>
+                                        <option>2-3 months</option>
+                                        <option>2-4 months</option>
+                                        <option>3-4 months</option>
+                                        <option>3-6 months</option>
+                                      </select>
+                                    ) : (
+                                      <div className="grid grid-cols-2 gap-2">
+                                        <input
+                                          type="date"
+                                          value={preOfferForm.probationStartDate}
+                                          onChange={(e) => setPreOfferForm((s) => ({ ...s, probationStartDate: e.target.value }))}
+                                          className="w-full rounded-xl border border-[#CBD5E1] bg-white px-4 py-3 text-[14px] text-[#1E293B]"
+                                        />
+                                        <input
+                                          type="date"
+                                          value={preOfferForm.probationEndDate}
+                                          onChange={(e) => setPreOfferForm((s) => ({ ...s, probationEndDate: e.target.value }))}
+                                          className="w-full rounded-xl border border-[#CBD5E1] bg-white px-4 py-3 text-[14px] text-[#1E293B]"
+                                        />
+                                      </div>
+                                    )}
                   </div>
                 </div>
 
@@ -874,7 +1070,7 @@ export function OfferLetterProjectPage() {
                     </div>
                     <div className="flex justify-between border-b border-[#E2E8F0] pb-3">
                       <span className="text-[#64748B]">Role</span>
-                      <span className="font-semibold text-[#1E293B]">{preOfferForm.role}</span>
+                      <span className="font-semibold text-[#1E293B]">{preOfferForm.role === 'Other' ? (preOfferForm.otherRoleName || 'Other') : preOfferForm.role}</span>
                     </div>
                     <div className="flex justify-between border-b border-[#E2E8F0] pb-3">
                       <span className="text-[#64748B]">Joining</span>
@@ -886,10 +1082,10 @@ export function OfferLetterProjectPage() {
                         <span className="font-semibold text-[#1E293B]">{preOfferTrainingPeriod}</span>
                       </div>
                     )}
-                    {preOfferForm.includeProbation && (
+                    {preOfferForm.includeProbation && preOfferProbationPeriod && (
                       <div className="flex justify-between border-b border-[#E2E8F0] pb-3">
-                        <span className="text-[#64748B]">Probation Starts</span>
-                        <span className="font-semibold text-[#1E293B]">{preOfferForm.joiningDate ? new Date(preOfferForm.joiningDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}</span>
+                        <span className="text-[#64748B]">Probation</span>
+                        <span className="font-semibold text-[#1E293B]">{preOfferProbationPeriod}</span>
                       </div>
                     )}
                     <div className="flex justify-between border-b border-[#E2E8F0] pb-3">
@@ -1028,6 +1224,51 @@ export function OfferLetterProjectPage() {
                         </option>
                       ))}
                     </select>
+                    {offerLetterForm.role === 'Other' && (
+                      <div className="mt-3 space-y-4 rounded-3xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
+                        <div className="space-y-2">
+                          <p className="text-[13px] font-semibold text-[#334155]">Designation</p>
+                          <div className="rounded-2xl border border-[#CBD5E1] bg-white px-4 py-3 text-[14px] text-[#0F172A]">Other</div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="block text-[13px] font-semibold text-[#334155]">Type role name</label>
+                          <input
+                            type="text"
+                            value={offerLetterForm.otherRoleName || ''}
+                            onChange={(e) => setOfferLetterForm((s) => ({ ...s, otherRoleName: e.target.value }))}
+                            placeholder="e.g. Cloud Solutions Engineer"
+                            className="w-full rounded-xl border border-[#CBD5E1] bg-white px-4 py-3 text-[14px] focus:outline-none"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-[13px] font-semibold text-[#334155]">Roles & Responsibilities</p>
+                          </div>
+                          <p className="text-[12px] text-[#64748B]">Enter each point on a new line — spelling & grammar auto-fixed, minimum 5 points auto-added.</p>
+                          <textarea
+                            value={offerLetterForm.otherResponsibilitiesKeywords || ''}
+                            onChange={(e) => setOfferLetterForm((s) => ({ ...s, otherResponsibilitiesKeywords: e.target.value }))}
+                            placeholder="Type keywords or points (e.g. llm rag, docker, client meeting)"
+                            rows={3}
+                            className="w-full rounded-xl border border-[#CBD5E1] bg-white px-4 py-3 text-[14px] focus:outline-none"
+                          />
+                        </div>
+
+                        <div className="rounded-2xl border border-[#CBD5E1] bg-white p-4">
+                          <div className="mb-2 flex items-center gap-2 text-[13px] font-semibold text-[#334155]">
+                            <span>✏️ Edit points below — add more lines, change wording, delete unwanted points</span>
+                          </div>
+                          <textarea
+                            value={offerLetterForm.otherResponsibilitiesPreview ?? DEFAULT_OTHER_ROLE_PREVIEW}
+                            onChange={(e) => setOfferLetterForm((s) => ({ ...s, otherResponsibilitiesPreview: e.target.value }))}
+                            rows={6}
+                            className="w-full rounded-2xl border border-[#CBD5E1] bg-[#F8FAFC] px-4 py-3 text-[14px] focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div>
                     <label className="block text-[13px] font-semibold text-[#334155] mb-2">Department</label>
@@ -1323,18 +1564,25 @@ export function OfferLetterProjectPage() {
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
-                      onClick={() => setInternshipForm((s) => ({ ...s, datesMode: 'manual' }))}
+                      onClick={() => setInternshipForm((s) => ({
+                        ...s,
+                        datesMode: 'manual',
+                      }))}
                       className={`rounded-xl border px-4 py-3 text-[14px] font-semibold transition ${
                         internshipForm.datesMode === 'manual'
-                          ? 'border-[#0F766E] bg-[#ECFDF5] text-[#0F766E]'
+                          ? 'border-[#DC2626] bg-[#FEE2E2] text-[#B91C1C]'
                           : 'border-[#CBD5E1] bg-white text-[#475569]'
                       }`}
                     >
-                      Manual
+                      Manual (pick start & end)
                     </button>
                     <button
                       type="button"
-                      onClick={() => setInternshipForm((s) => ({ ...s, datesMode: 'auto' }))}
+                      onClick={() => setInternshipForm((s) => ({
+                        ...s,
+                        datesMode: 'auto',
+                        endDate: addMonthsToDate(s.startDate, parseInt(s.durationOption, 10) || 3),
+                      }))}
                       className={`rounded-xl border px-4 py-3 text-[14px] font-semibold transition ${
                         internshipForm.datesMode === 'auto'
                           ? 'border-[#0F766E] bg-[#ECFDF5] text-[#0F766E]'
@@ -1352,19 +1600,44 @@ export function OfferLetterProjectPage() {
                     <input
                       type="date"
                       value={internshipForm.startDate}
-                      onChange={(e) => setInternshipForm((s) => ({ ...s, startDate: e.target.value }))}
+                      onChange={(e) => setInternshipForm((s) => ({
+                        ...s,
+                        startDate: e.target.value,
+                        endDate: s.datesMode === 'auto' ? addMonthsToDate(e.target.value, parseInt(s.durationOption, 10) || 3) : s.endDate,
+                      }))}
                       className="w-full rounded-xl border border-[#CBD5E1] bg-white px-4 py-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#0F766E]/15 transition"
                     />
                   </div>
-                  <div>
-                    <label className="block text-[13px] font-semibold text-[#334155] mb-2">End date</label>
-                    <input
-                      type="date"
-                      value={internshipForm.endDate}
-                      onChange={(e) => setInternshipForm((s) => ({ ...s, endDate: e.target.value }))}
-                      className="w-full rounded-xl border border-[#CBD5E1] bg-white px-4 py-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#0F766E]/15 transition"
-                    />
-                  </div>
+                  {internshipForm.datesMode === 'manual' ? (
+                    <div>
+                      <label className="block text-[13px] font-semibold text-[#334155] mb-2">End date</label>
+                      <input
+                        type="date"
+                        value={internshipForm.endDate}
+                        onChange={(e) => setInternshipForm((s) => ({ ...s, endDate: e.target.value }))}
+                        className="w-full rounded-xl border border-[#CBD5E1] bg-white px-4 py-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#0F766E]/15 transition"
+                      />
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="block text-[13px] font-semibold text-[#334155] mb-2">Duration</label>
+                      <select
+                        value={internshipForm.durationOption}
+                        onChange={(e) => setInternshipForm((s) => ({
+                          ...s,
+                          durationOption: e.target.value,
+                          endDate: addMonthsToDate(s.startDate, parseInt(e.target.value, 10) || 3),
+                        }))}
+                        className="w-full rounded-xl border border-[#CBD5E1] bg-white px-4 py-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#0F766E]/15 transition"
+                      >
+                        <option value="1">1 month</option>
+                        <option value="2">2 months</option>
+                        <option value="3">3 months</option>
+                        <option value="4">4 months</option>
+                        <option value="6">6 months</option>
+                      </select>
+                    </div>
+                  )}
                 </div>
 
                 <div className="mb-5">
