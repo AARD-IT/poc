@@ -1356,13 +1356,13 @@ export function OfferLetterProjectPage() {
                       <p className="text-[13px] leading-relaxed text-[#0F172A]">
                         <span className="font-semibold">CTC:</span> {formatRupees(parsedOfferSalary.ctcAnnual)}
                         <span className="mx-2 text-[#64748B]">|</span>
-                        <span className="font-semibold">Basic:</span> {parsedOfferSalary.basicPercent.toFixed(1)}% of CTC
+                        <span className="font-semibold">Basic:</span> {(parsedOfferSalary.basicPercent ?? 0).toFixed(1)}% of CTC
                         <span className="mx-2 text-[#64748B]">|</span>
-                        <span className="font-semibold">HRA:</span> {parsedOfferSalary.hraPercentOfBasic.toFixed(1)}% of Basic
+                        <span className="font-semibold">HRA:</span> {(parsedOfferSalary.hraPercentOfBasic ?? 0).toFixed(1)}% of Basic
                         <span className="mx-2 text-[#64748B]">|</span>
                         <span className="font-semibold">PF:</span> {parsedOfferSalary.pfDescription}
                         <span className="mx-2 text-[#64748B]">|</span>
-                        <span className="font-semibold">Variable:</span> {parsedOfferSalary.variablePercent.toFixed(1)}% of CTC
+                        <span className="font-semibold">Variable:</span> {(parsedOfferSalary.variablePercent ?? 0).toFixed(1)}% of CTC
                       </p>
                     </div>
                     <div className="border border-[#E2E8F0] rounded-2xl p-6 bg-white shadow-sm mt-6">
