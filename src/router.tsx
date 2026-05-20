@@ -13,6 +13,8 @@ import { AiPrescriptionProjectPage } from '@/pages/projects/AiPrescriptionProjec
 import { AiPrescriptionDetailPage } from '@/pages/projects/AiPrescriptionDetailPage'
 import { OfferLetterProjectPage } from '@/pages/projects/OfferLetterProjectPage'
 import { OfferLetterDetailPage } from '@/pages/projects/OfferLetterDetailPage'
+import { PiiRedactionProjectPage } from '@/pages/projects/PiiRedactionProjectPage'
+import { PiiRedactionDetailPage } from '@/pages/projects/PiiRedactionDetailPage'
 
 import { ProfilePage } from '@/pages/ProfilePage'
 import { SettingsPage } from '@/pages/SettingsPage'
@@ -61,6 +63,16 @@ export const router = createBrowserRouter([
         path: 'projects/offerletter-generator/full',
         element: <MainShellPlain />,
         children: [{ index: true, element: <OfferLetterProjectPage /> }],
+      },
+      {
+        path: 'projects/pii-redaction',
+        element: <MainShellWithSidebar />,
+        children: [{ index: true, element: <PiiRedactionDetailPage /> }],
+      },
+      {
+        path: 'projects/pii-redaction/full',
+        element: <MainShellPlain />,
+        children: [{ index: true, element: <PiiRedactionProjectPage /> }],
       },
 
       {
