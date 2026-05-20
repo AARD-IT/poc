@@ -54,6 +54,8 @@ type PreOfferForm = {
   probationEndDate?: string
   ctcRangeOption: string
   ctcRangeCustom: string
+  ctcRangeMin: string
+  ctcRangeMax: string
   fixedStipendOption: string
   fixedStipendCustom: string
   incentiveOption: string
@@ -68,6 +70,12 @@ type OfferLetterForm = {
   otherResponsibilitiesKeywords?: string
   otherResponsibilitiesPreview?: string
   department: string
+  ctcRangeOption: string
+  ctcRangeCustom: string
+  fixedStipendOption: string
+  fixedStipendCustom: string
+  incentiveOption: string
+  incentiveCustom: string
   salaryPrompt: string
   letterDate: string
   joiningDate: string
@@ -200,6 +208,8 @@ const initialPreOffer: PreOfferForm = {
   probationEndDate: '',
   ctcRangeOption: '₹2 LPA – ₹3 LPA',
   ctcRangeCustom: '',
+  ctcRangeMin: '',
+  ctcRangeMax: '',
   fixedStipendOption: '₹10,000',
   fixedStipendCustom: '',
   incentiveOption: '₹15,000',
@@ -217,6 +227,12 @@ const initialOfferLetter: OfferLetterForm = {
   otherResponsibilitiesKeywords: '',
   otherResponsibilitiesPreview: DEFAULT_OTHER_ROLE_PREVIEW,
   department: 'Analytics',
+  ctcRangeOption: '₹2 LPA – ₹3 LPA',
+  ctcRangeCustom: '',
+  fixedStipendOption: '₹10,000',
+  fixedStipendCustom: '',
+  incentiveOption: '₹15,000',
+  incentiveCustom: '',
   salaryPrompt: 'e.g. "6 LPA, 40% basic, no PF, 10% variable"',
   letterDate: new Date().toISOString().slice(0, 10),
   joiningDate: new Date().toISOString().slice(0, 10),
@@ -413,7 +429,15 @@ export function OfferLetterProjectPage() {
   )
 
   const preOfferCtcRange =
-    preOfferForm.ctcRangeOption === 'Other' ? preOfferForm.ctcRangeCustom || 'Other' : preOfferForm.ctcRangeOption
+    preOfferForm.ctcRangeOption === 'Other'
+      ? preOfferForm.ctcRangeMin && preOfferForm.ctcRangeMax
+        ? `${preOfferForm.ctcRangeMin} LPA - ${preOfferForm.ctcRangeMax} LPA`
+        : preOfferForm.ctcRangeMin
+          ? `${preOfferForm.ctcRangeMin} LPA`
+          : preOfferForm.ctcRangeMax
+            ? `${preOfferForm.ctcRangeMax} LPA`
+            : preOfferForm.ctcRangeCustom || 'Other'
+      : preOfferForm.ctcRangeOption
   const preOfferStipend =
     preOfferForm.fixedStipendOption === 'Other' ? preOfferForm.fixedStipendCustom || 'Other' : preOfferForm.fixedStipendOption
   const preOfferIncentive =
@@ -991,13 +1015,32 @@ export function OfferLetterProjectPage() {
                       ))}
                     </select>
                     {preOfferForm.ctcRangeOption === 'Other' && (
-                      <input
-                        type="text"
-                        value={preOfferForm.ctcRangeCustom}
-                        onChange={(e) => setPreOfferForm((s) => ({ ...s, ctcRangeCustom: e.target.value }))}
-                        placeholder="Enter custom range"
-                        className="mt-3 w-full rounded-xl border border-[#CBD5E1] bg-white px-4 py-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#0F766E]/15 transition"
-                      />
+                      <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[11px] font-semibold uppercase text-[#64748B] mb-2">MIN CTC (LPA)</label>
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.1"
+                            value={preOfferForm.ctcRangeMin}
+                            onChange={(e) => setPreOfferForm((s) => ({ ...s, ctcRangeMin: e.target.value }))}
+                            placeholder="e.g. 3"
+                            className="w-full rounded-xl border border-[#CBD5E1] bg-white px-4 py-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#0F766E]/15 transition"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-semibold uppercase text-[#64748B] mb-2">MAX CTC (LPA)</label>
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.1"
+                            value={preOfferForm.ctcRangeMax}
+                            onChange={(e) => setPreOfferForm((s) => ({ ...s, ctcRangeMax: e.target.value }))}
+                            placeholder="e.g. 6"
+                            className="w-full rounded-xl border border-[#CBD5E1] bg-white px-4 py-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#0F766E]/15 transition"
+                          />
+                        </div>
+                      </div>
                     )}
                   </div>
                   <div>
@@ -1014,13 +1057,16 @@ export function OfferLetterProjectPage() {
                       ))}
                     </select>
                     {preOfferForm.fixedStipendOption === 'Other' && (
-                      <input
-                        type="text"
-                        value={preOfferForm.fixedStipendCustom}
-                        onChange={(e) => setPreOfferForm((s) => ({ ...s, fixedStipendCustom: e.target.value }))}
-                        placeholder="Enter amount"
-                        className="mt-3 w-full rounded-xl border border-[#CBD5E1] bg-white px-4 py-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#0F766E]/15 transition"
-                      />
+                      <div className="mt-3">
+                        <label className="block text-[11px] font-semibold uppercase text-[#64748B] mb-2">ENTER STIPEND AMOUNT</label>
+                        <input
+                          type="text"
+                          value={preOfferForm.fixedStipendCustom}
+                          onChange={(e) => setPreOfferForm((s) => ({ ...s, fixedStipendCustom: e.target.value }))}
+                          placeholder="e.g. 13000"
+                          className="w-full rounded-xl border border-[#CBD5E1] bg-white px-4 py-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#0F766E]/15 transition"
+                        />
+                      </div>
                     )}
                   </div>
                   <div>
@@ -1037,13 +1083,16 @@ export function OfferLetterProjectPage() {
                       ))}
                     </select>
                     {preOfferForm.incentiveOption === 'Other' && (
-                      <input
-                        type="text"
-                        value={preOfferForm.incentiveCustom}
-                        onChange={(e) => setPreOfferForm((s) => ({ ...s, incentiveCustom: e.target.value }))}
-                        placeholder="Enter amount"
-                        className="mt-3 w-full rounded-xl border border-[#CBD5E1] bg-white px-4 py-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#0F766E]/15 transition"
-                      />
+                      <div className="mt-3">
+                        <label className="block text-[11px] font-semibold uppercase text-[#64748B] mb-2">ENTER INCENTIVE AMOUNT</label>
+                        <input
+                          type="text"
+                          value={preOfferForm.incentiveCustom}
+                          onChange={(e) => setPreOfferForm((s) => ({ ...s, incentiveCustom: e.target.value }))}
+                          placeholder="e.g. 22000"
+                          className="w-full rounded-xl border border-[#CBD5E1] bg-white px-4 py-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#0F766E]/15 transition"
+                        />
+                      </div>
                     )}
                   </div>
                 </div>
@@ -1304,6 +1353,78 @@ export function OfferLetterProjectPage() {
                       onChange={(e) => setOfferLetterForm((s) => ({ ...s, letterDate: e.target.value }))}
                       className="w-full rounded-xl border border-[#CBD5E1] bg-white px-4 py-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#0F766E]/15 transition"
                     />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-5">
+                  <div>
+                    <label className="block text-[13px] font-semibold text-[#334155] mb-2">CTC range (post confirmation)</label>
+                    <select
+                      value={offerLetterForm.ctcRangeOption}
+                      onChange={(e) => setOfferLetterForm((s) => ({ ...s, ctcRangeOption: e.target.value }))}
+                      className="w-full rounded-xl border border-[#CBD5E1] bg-[#F8FAFC] px-4 py-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#0F766E]/15 transition"
+                    >
+                      {CTC_RANGE_OPTIONS.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                    {offerLetterForm.ctcRangeOption === 'Other' && (
+                      <input
+                        type="text"
+                        value={offerLetterForm.ctcRangeCustom}
+                        onChange={(e) => setOfferLetterForm((s) => ({ ...s, ctcRangeCustom: e.target.value }))}
+                        placeholder="Enter custom range"
+                        className="mt-3 w-full rounded-xl border border-[#CBD5E1] bg-white px-4 py-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#0F766E]/15 transition"
+                      />
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-[13px] font-semibold text-[#334155] mb-2">Fixed stipend / base pay</label>
+                    <select
+                      value={offerLetterForm.fixedStipendOption}
+                      onChange={(e) => setOfferLetterForm((s) => ({ ...s, fixedStipendOption: e.target.value }))}
+                      className="w-full rounded-xl border border-[#CBD5E1] bg-[#F8FAFC] px-4 py-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#0F766E]/15 transition"
+                    >
+                      {STIPEND_OPTIONS.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                    {offerLetterForm.fixedStipendOption === 'Other' && (
+                      <input
+                        type="text"
+                        value={offerLetterForm.fixedStipendCustom}
+                        onChange={(e) => setOfferLetterForm((s) => ({ ...s, fixedStipendCustom: e.target.value }))}
+                        placeholder="Enter amount"
+                        className="mt-3 w-full rounded-xl border border-[#CBD5E1] bg-white px-4 py-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#0F766E]/15 transition"
+                      />
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-[13px] font-semibold text-[#334155] mb-2">Performance incentive</label>
+                    <select
+                      value={offerLetterForm.incentiveOption}
+                      onChange={(e) => setOfferLetterForm((s) => ({ ...s, incentiveOption: e.target.value }))}
+                      className="w-full rounded-xl border border-[#CBD5E1] bg-[#F8FAFC] px-4 py-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#0F766E]/15 transition"
+                    >
+                      {INCENTIVE_OPTIONS.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                    {offerLetterForm.incentiveOption === 'Other' && (
+                      <input
+                        type="text"
+                        value={offerLetterForm.incentiveCustom}
+                        onChange={(e) => setOfferLetterForm((s) => ({ ...s, incentiveCustom: e.target.value }))}
+                        placeholder="Enter amount"
+                        className="mt-3 w-full rounded-xl border border-[#CBD5E1] bg-white px-4 py-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#0F766E]/15 transition"
+                      />
+                    )}
                   </div>
                 </div>
 

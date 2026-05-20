@@ -15,6 +15,8 @@ import { OfferLetterProjectPage } from '@/pages/projects/OfferLetterProjectPage'
 import { OfferLetterDetailPage } from '@/pages/projects/OfferLetterDetailPage'
 import { PiiRedactionProjectPage } from '@/pages/projects/PiiRedactionProjectPage'
 import { PiiRedactionDetailPage } from '@/pages/projects/PiiRedactionDetailPage'
+import { MultimodalRAGProjectPage } from '@/pages/projects/MultimodalRAGProjectPage'
+import { MultimodalRAGDetailPage } from '@/pages/projects/MultimodalRAGDetailPage'
 
 import { ProfilePage } from '@/pages/ProfilePage'
 import { SettingsPage } from '@/pages/SettingsPage'
@@ -73,6 +75,16 @@ export const router = createBrowserRouter([
         path: 'projects/pii-redaction/full',
         element: <MainShellPlain />,
         children: [{ index: true, element: <PiiRedactionProjectPage /> }],
+      },
+      {
+        path: 'projects/multimodal-rag',
+        element: <MainShellWithSidebar />,
+        children: [{ index: true, element: <MultimodalRAGDetailPage /> }],
+      },
+      {
+        path: 'projects/multimodal-rag/full',
+        element: <MainShellPlain />,
+        children: [{ index: true, element: <MultimodalRAGProjectPage /> }],
       },
 
       {

@@ -92,11 +92,24 @@ export function DashboardPage() {
     />
   )
 
+  const multimodalRAGCard = (
+    <SolutionCard
+      key="multimodal-rag"
+      rank={4}
+      title="Multimodal RAG System"
+      description="Advanced Retrieval-Augmented Generation system that processes both text and images for intelligent document understanding and knowledge management."
+      tags={['Gen AI', 'RAG', 'Multimodal', 'Streamlit']}
+      date="Updated May 2026"
+      onClick={() => navigate('/projects/multimodal-rag')}
+    />
+  )
+
   const solutionGrid = (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
       {aiPrescriptionCard}
       {offerLetterCard}
       {piiRedactionCard}
+      {multimodalRAGCard}
     </div>
   )
 
