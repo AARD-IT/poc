@@ -1,9 +1,12 @@
 /**
  * Offer Letter Generator API Service
- * Handles all API calls to the backend at http://localhost:8000
+ * Uses VITE_OFFERLETTER_API_URL for deployed backend routing.
  */
 
-const API_BASE_URL = 'http://localhost:8000'
+const API_BASE_URL =
+  import.meta.env.VITE_OFFERLETTER_API_URL ||
+  import.meta.env.VITE_API_BASE_URL ||
+  'http://localhost:8000'
 
 // ==========================================
 // TYPE DEFINITIONS
