@@ -17,6 +17,10 @@ import { PiiRedactionProjectPage } from '@/pages/projects/PiiRedactionProjectPag
 import { PiiRedactionDetailPage } from '@/pages/projects/PiiRedactionDetailPage'
 import { MultimodalRAGProjectPage } from '@/pages/projects/MultimodalRAGProjectPage'
 import { MultimodalRAGDetailPage } from '@/pages/projects/MultimodalRAGDetailPage'
+import { SentimentAnalyzerProjectPage } from '@/pages/projects/SentimentAnalyzerProjectPage'
+import { SentimentAnalyzerDetailPage } from '@/pages/projects/SentimentAnalyzerDetailPage'
+import { AiGoldNegotiationProjectPage } from '@/pages/projects/AiGoldNegotiationProjectPage'
+import { AiGoldNegotiationDetailPage } from '@/pages/projects/AiGoldNegotiationDetailPage'
 
 import { ProfilePage } from '@/pages/ProfilePage'
 import { SettingsPage } from '@/pages/SettingsPage'
@@ -65,6 +69,26 @@ export const router = createBrowserRouter([
         path: 'projects/offerletter-generator/full',
         element: <MainShellPlain />,
         children: [{ index: true, element: <OfferLetterProjectPage /> }],
+      },
+      {
+        path: 'projects/sentiment-analyzer',
+        element: <MainShellWithSidebar />,
+        children: [{ index: true, element: <SentimentAnalyzerDetailPage /> }],
+      },
+      {
+        path: 'projects/sentiment-analyzer/full',
+        element: <MainShellPlain />,
+        children: [{ index: true, element: <SentimentAnalyzerProjectPage /> }],
+      },
+      {
+        path: 'projects/ai-gold-negotiation',
+        element: <MainShellWithSidebar />,
+        children: [{ index: true, element: <AiGoldNegotiationDetailPage /> }],
+      },
+      {
+        path: 'projects/ai-gold-negotiation/full',
+        element: <MainShellPlain />,
+        children: [{ index: true, element: <AiGoldNegotiationProjectPage /> }],
       },
       {
         path: 'projects/pii-redaction',

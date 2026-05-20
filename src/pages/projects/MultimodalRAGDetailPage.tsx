@@ -36,13 +36,23 @@ export function MultimodalRAGDetailPage() {
               <p className="text-[16px] font-medium text-[#475569] mb-8 leading-relaxed">
                 {poc.description}
               </p>
-              <button
-                type="button"
-                onClick={() => navigate('/projects/multimodal-rag/full')}
-                className="px-8 py-3.5 bg-[#0F766E] text-white rounded-lg hover:bg-[#0D5F58] transition-all font-bold text-[15px] shadow-md hover:shadow-lg"
-              >
-                View Full Details
-              </button>
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => navigate('/projects/multimodal-rag/full')}
+                  className="px-8 py-3.5 bg-[#0F766E] text-white rounded-lg hover:bg-[#0D5F58] transition-all font-bold text-[15px] shadow-md hover:shadow-lg"
+                >
+                  View Full Details
+                </button>
+                <a
+                  href="https://multimodalrag-master-qlv3gx8ntcfradnltky7qj.streamlit.app/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-8 py-3.5 border border-[#0F766E] text-[#0F766E] rounded-lg hover:bg-[#ECFDF5] transition-all font-bold text-[15px] shadow-sm hover:shadow-md"
+                >
+                  Streamlit
+                </a>
+              </div>
             </div>
 
             <div>

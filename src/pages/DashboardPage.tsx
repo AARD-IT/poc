@@ -80,15 +80,39 @@ export function DashboardPage() {
     />
   )
 
+  const sentimentAnalyzerCard = (
+    <SolutionCard
+      key="sentiment-analyzer"
+      rank={3}
+      title="AI Customer Feedback Analyzer"
+      description="Sentiment and tone categorization platform for large-scale customer feedback analysis with Excel upload, batch processing, and CSV export."
+      tags={['Gen AI', 'Customer Feedback', 'Sentiment', 'Tone Analysis']}
+      date="Updated May 2026"
+      onClick={() => navigate('/projects/sentiment-analyzer')}
+    />
+  )
+
   const piiRedactionCard = (
     <SolutionCard
       key="pii-redaction"
-      rank={3}
+      rank={4}
       title="Automated PII Redaction Solution (Gen AI)"
       description="Redact Personal Identifiable Information from documents using GPT-4o vision and structured compliance workflows."
       tags={['Gen AI', 'Data Privacy', 'Compliance', 'Documents']}
       date="Updated May 2026"
       onClick={() => navigate('/projects/pii-redaction')}
+    />
+  )
+
+  const goldNegotiationCard = (
+    <SolutionCard
+      key="ai-gold-negotiation"
+      rank={5}
+      title="AI Gold Negotiation Orchestrator"
+      description="Gold RFQ to quote automation with live MCX pricing, transparent 30% pre-GST margin calculation, branded PDF output, and auto-negotiation workflows."
+      tags={['Gen AI', 'Commodities', 'Pricing', 'PDF']}
+      date="Updated May 2026"
+      onClick={() => navigate('/projects/ai-gold-negotiation')}
     />
   )
 
@@ -108,6 +132,8 @@ export function DashboardPage() {
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
       {aiPrescriptionCard}
       {offerLetterCard}
+      {sentimentAnalyzerCard}
+      {goldNegotiationCard}
       {piiRedactionCard}
       {multimodalRAGCard}
     </div>
