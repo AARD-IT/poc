@@ -19,6 +19,8 @@ import { MultimodalRAGProjectPage } from '@/pages/projects/MultimodalRAGProjectP
 import { MultimodalRAGDetailPage } from '@/pages/projects/MultimodalRAGDetailPage'
 import { SentimentAnalyzerProjectPage } from '@/pages/projects/SentimentAnalyzerProjectPage'
 import { SentimentAnalyzerDetailPage } from '@/pages/projects/SentimentAnalyzerDetailPage'
+import { IntelligentDocumentProcessorProjectPage } from '@/pages/projects/IntelligentDocumentProcessorProjectPage'
+import { IntelligentDocumentProcessorDetailPage } from '@/pages/projects/IntelligentDocumentProcessorDetailPage'
 import { AiGoldNegotiationProjectPage } from '@/pages/projects/AiGoldNegotiationProjectPage'
 import { AiGoldNegotiationDetailPage } from '@/pages/projects/AiGoldNegotiationDetailPage'
 
@@ -79,6 +81,16 @@ export const router = createBrowserRouter([
         path: 'projects/sentiment-analyzer/full',
         element: <MainShellPlain />,
         children: [{ index: true, element: <SentimentAnalyzerProjectPage /> }],
+      },
+      {
+        path: 'projects/intelligent-document-processor',
+        element: <MainShellWithSidebar />,
+        children: [{ index: true, element: <IntelligentDocumentProcessorDetailPage /> }],
+      },
+      {
+        path: 'projects/intelligent-document-processor/full',
+        element: <MainShellPlain />,
+        children: [{ index: true, element: <IntelligentDocumentProcessorProjectPage /> }],
       },
       {
         path: 'projects/ai-gold-negotiation',

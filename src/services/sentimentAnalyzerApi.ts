@@ -66,8 +66,14 @@ export async function downloadCsv(results: AnalysisResult[]): Promise<void> {
   })
 
   if (!response.ok) {
-    const error = await response.json().catch(() => null)
-    throw new Error(error?.detail || error?.message || 'Failed to download CSV')
+    let errorMessage = 'Failed to download CSV'
+    try {
+      const error = await response.json()
+      errorMessage = error?.detail || error?.message || `Server error: ${response.status}`
+    } catch {
+      errorMessage = `Server error: ${response.status} ${response.statusText}`
+    }
+    throw new Error(errorMessage)
   }
 
   const blob = await response.blob()

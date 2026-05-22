@@ -164,7 +164,12 @@ function ApplicationTab() {
     try {
       await downloadCsv(results)
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Download failed'
+      let errorMsg = 'Failed to download CSV report'
+      if (err instanceof Error) {
+        errorMsg = err.message
+      } else if (err && typeof err === 'object') {
+        errorMsg = String(err)
+      }
       setError(errorMsg)
     }
   }

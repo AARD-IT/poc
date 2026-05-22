@@ -92,10 +92,22 @@ export function DashboardPage() {
     />
   )
 
+  const idpCard = (
+    <SolutionCard
+      key="intelligent-document-processor"
+      rank={4}
+      title="Intelligent Document Processor (IDP)"
+      description="AI document triage and OCR workflow for invoices, contracts, signatures, and identity documents with structured extraction."
+      tags={['Document AI', 'OCR', 'Signature', 'Automation', 'Gen AI']}
+      date="Updated May 2026"
+      onClick={() => navigate('/projects/intelligent-document-processor')}
+    />
+  )
+
   const piiRedactionCard = (
     <SolutionCard
       key="pii-redaction"
-      rank={4}
+      rank={5}
       title="Automated PII Redaction Solution (Gen AI)"
       description="Redact Personal Identifiable Information from documents using GPT-4o vision and structured compliance workflows."
       tags={['Gen AI', 'Data Privacy', 'Compliance', 'Documents']}
@@ -133,6 +145,7 @@ export function DashboardPage() {
       {aiPrescriptionCard}
       {offerLetterCard}
       {sentimentAnalyzerCard}
+      {idpCard}
       {goldNegotiationCard}
       {piiRedactionCard}
       {multimodalRAGCard}
