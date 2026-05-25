@@ -25,6 +25,8 @@ import { AiGoldNegotiationProjectPage } from '@/pages/projects/AiGoldNegotiation
 import { AiGoldNegotiationDetailPage } from '@/pages/projects/AiGoldNegotiationDetailPage'
 import { RealEstateIntelligenceSuiteDetailPage } from '@/pages/projects/RealEstateIntelligenceSuiteDetailPage'
 import { RealEstateIntelligenceSuiteSectionPage } from '@/pages/projects/RealEstateIntelligenceSuiteSectionPage'
+import { RealEstateDemandForecastingDetailPage } from '@/pages/projects/RealEstateDemandForecastingDetailPage'
+import { RealEstateDemandForecastingSectionPage } from '@/pages/projects/RealEstateDemandForecastingSectionPage'
 
 import { ProfilePage } from '@/pages/ProfilePage'
 import { SettingsPage } from '@/pages/SettingsPage'
@@ -113,6 +115,16 @@ export const router = createBrowserRouter([
         path: 'projects/real-estate-intelligence-suite/section',
         element: <MainShellPlain />,
         children: [{ index: true, element: <RealEstateIntelligenceSuiteSectionPage /> }],
+      },
+      {
+        path: 'projects/real-estate-demand-forecasting-lab',
+        element: <MainShellWithSidebar />,
+        children: [{ index: true, element: <RealEstateDemandForecastingDetailPage /> }],
+      },
+      {
+        path: 'projects/real-estate-demand-forecasting-lab/section',
+        element: <MainShellPlain />,
+        children: [{ index: true, element: <RealEstateDemandForecastingSectionPage /> }],
       },
       {
         path: 'projects/pii-redaction',

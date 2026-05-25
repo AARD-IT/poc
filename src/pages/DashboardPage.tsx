@@ -141,6 +141,17 @@ export function DashboardPage() {
     />
   )
 
+  const realEstateDemandForecastingCard = (
+    <SolutionCard
+      key="real-estate-demand-forecasting-lab"
+      rank={6}
+      title="Real Estate Demand Forecasting Lab"
+      description="Demand forecasting and market insight dashboard for real estate listings, price trends, and AI-driven monthly demand prediction."
+      tags={['Forecasting', 'Real Estate', 'Analytics', 'AI']}
+      date="Updated May 2026"
+      onClick={() => navigate('/projects/real-estate-demand-forecasting-lab')}
+    />
+  )
 
   const realEstateIntelligenceSuiteCard = <RealEstateIntelligenceSuiteCard />
 
@@ -153,6 +164,7 @@ export function DashboardPage() {
       {goldNegotiationCard}
       {piiRedactionCard}
       {multimodalRAGCard}
+      {realEstateDemandForecastingCard}
       {realEstateIntelligenceSuiteCard}
     </div>
   )
