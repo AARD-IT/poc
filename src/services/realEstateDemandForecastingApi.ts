@@ -108,3 +108,47 @@ export async function getInsights(data: Record<string, any>[]): Promise<Insights
   })
   return handleResponse(response)
 }
+
+export async function getCsvColumns(file: File): Promise<{ columns: string[] }> {
+  const formData = new FormData()
+  formData.append('file', file)
+
+  const response = await fetch(`${API_BASE_URL}/get-columns`, {
+    method: 'POST',
+    body: formData,
+  })
+
+  return handleResponse(response)
+}
+
+export async function applyColumnMapping(file: File, mapping: { city: string; listing_date: string; property_type: string; price: string }) {
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('city', mapping.city)
+  formData.append('listing_date', mapping.listing_date)
+  formData.append('property_type', mapping.property_type)
+  formData.append('price', mapping.price)
+
+  const response = await fetch(`${API_BASE_URL}/apply-mapping`, {
+    method: 'POST',
+    body: formData,
+  })
+
+  return handleResponse(response)
+}
+
+export async function downloadCsvFile(payload: { data: Record<string, any>[] }): Promise<Blob> {
+  const response = await fetch(`${API_BASE_URL}/download-csv`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => null)
+    const message = errorData?.detail || errorData?.message || response.statusText || 'Request failed'
+    throw new Error(message)
+  }
+
+  return response.blob()
+}
