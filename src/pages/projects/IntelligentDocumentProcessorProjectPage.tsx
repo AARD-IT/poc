@@ -1,4 +1,5 @@
 import { type ChangeEvent, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router'
 import {
   ArrowRight,
   CloudUpload,
@@ -38,6 +39,7 @@ const overviewImpact = [
 type Tab = 'overview' | 'application'
 
 export function IntelligentDocumentProcessorProjectPage() {
+  const navigate = useNavigate()
   const [tab, setTab] = useState<Tab>('overview')
   const [mode, setMode] = useState<'upload' | 'demo'>('upload')
   const [files, setFiles] = useState<File[]>([])
@@ -87,6 +89,15 @@ export function IntelligentDocumentProcessorProjectPage() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
+      <div className="mb-2">
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center gap-2 text-sm font-semibold text-[#475569] hover:text-[#0F172A]"
+        >
+          ← Back
+        </button>
+      </div>
       <div className="rounded-2xl border border-[#E2E8F0] bg-white p-8 shadow-sm">
         <h1 className="text-3xl font-bold text-[#0F172A] mb-4">Intelligent Document Processor (IDP)</h1>
         <p className="text-[16px] text-[#475569] leading-relaxed max-w-3xl">

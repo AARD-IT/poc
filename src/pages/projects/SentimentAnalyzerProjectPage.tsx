@@ -1,4 +1,5 @@
 import { useMemo, useState, type ChangeEvent } from 'react'
+import { useNavigate } from 'react-router'
 import { ArrowRight, CloudUpload, FileText, Download, ListChecks, Sparkles, ShieldCheck } from 'lucide-react'
 import { analyzeFile, runDemo, downloadCsv, type AnalysisResult, type SentimentAnalyzerResponse } from '../../services/sentimentAnalyzerApi'
 
@@ -352,10 +353,20 @@ function ApplicationTab() {
 }
 
 export function SentimentAnalyzerProjectPage() {
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<'overview' | 'application'>('overview')
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
+      <div className="mb-6">
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center gap-2 text-sm font-semibold text-[#475569] hover:text-[#0F172A]"
+        >
+          ← Back
+        </button>
+      </div>
       <div className="mb-8 rounded-3xl border border-[#E2E8F0] bg-white p-8 shadow-sm">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl">

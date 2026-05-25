@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router'
 import { ControlBar } from '@/app/components/ControlBar'
 import { SolutionCard } from '@/app/components/SolutionCard'
 import { EnterpriseEmpty } from '@/components/empty-states/EnterpriseEmpty'
+import { RealEstateIntelligenceSuiteCard } from '@/components/RealEstateIntelligenceSuiteCard'
 import { useAuthStore } from '@/stores/authStore'
 
 export function DashboardPage() {
@@ -140,6 +141,9 @@ export function DashboardPage() {
     />
   )
 
+
+  const realEstateIntelligenceSuiteCard = <RealEstateIntelligenceSuiteCard />
+
   const solutionGrid = (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
       {aiPrescriptionCard}
@@ -149,6 +153,7 @@ export function DashboardPage() {
       {goldNegotiationCard}
       {piiRedactionCard}
       {multimodalRAGCard}
+      {realEstateIntelligenceSuiteCard}
     </div>
   )
 

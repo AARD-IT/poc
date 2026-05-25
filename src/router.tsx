@@ -23,6 +23,8 @@ import { IntelligentDocumentProcessorProjectPage } from '@/pages/projects/Intell
 import { IntelligentDocumentProcessorDetailPage } from '@/pages/projects/IntelligentDocumentProcessorDetailPage'
 import { AiGoldNegotiationProjectPage } from '@/pages/projects/AiGoldNegotiationProjectPage'
 import { AiGoldNegotiationDetailPage } from '@/pages/projects/AiGoldNegotiationDetailPage'
+import { RealEstateIntelligenceSuiteDetailPage } from '@/pages/projects/RealEstateIntelligenceSuiteDetailPage'
+import { RealEstateIntelligenceSuiteSectionPage } from '@/pages/projects/RealEstateIntelligenceSuiteSectionPage'
 
 import { ProfilePage } from '@/pages/ProfilePage'
 import { SettingsPage } from '@/pages/SettingsPage'
@@ -101,6 +103,16 @@ export const router = createBrowserRouter([
         path: 'projects/ai-gold-negotiation/full',
         element: <MainShellPlain />,
         children: [{ index: true, element: <AiGoldNegotiationProjectPage /> }],
+      },
+      {
+        path: 'projects/real-estate-intelligence-suite',
+        element: <MainShellWithSidebar />,
+        children: [{ index: true, element: <RealEstateIntelligenceSuiteDetailPage /> }],
+      },
+      {
+        path: 'projects/real-estate-intelligence-suite/section',
+        element: <MainShellPlain />,
+        children: [{ index: true, element: <RealEstateIntelligenceSuiteSectionPage /> }],
       },
       {
         path: 'projects/pii-redaction',
