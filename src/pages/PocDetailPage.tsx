@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router'
 import { PocDetailBody } from '@/app/components/PocDetailBody'
 import { EnterpriseEmpty } from '@/components/empty-states/EnterpriseEmpty'
 import { fetchPocBySlug, getCachedPocBySlug } from '@/services/pocs'
+import { fetchAccessForUser } from '@/services/pocAccess'
 import { useAuthStore } from '@/stores/authStore'
 import { isStaffRole } from '@/types/domain'
 import type { Poc } from '@/types/domain'
@@ -21,17 +22,36 @@ export function PocDetailPage() {
   useEffect(() => {
     if (!slug) return
     let cancelled = false
-    fetchPocBySlug(slug)
-      .then((row) => {
+
+    async function loadPoc() {
+      try {
+        if (!profile) {
+          if (!cancelled) setPoc(null)
+          return
+        }
+
+        if (!isStaffRole(profile.role)) {
+          const rows = await fetchAccessForUser(profile.id)
+          const allowedSlugs = new Set(rows.map((row) => row.project_slug))
+          if (!allowedSlugs.has(slug)) {
+            if (!cancelled) setPoc(null)
+            return
+          }
+        }
+
+        const row = await fetchPocBySlug(slug)
         if (!cancelled) setPoc(row)
-      })
-      .catch(() => {
+      } catch {
         if (!cancelled) setPoc(null)
-      })
+      }
+    }
+
+    void loadPoc()
+
     return () => {
       cancelled = true
     }
-  }, [slug])
+  }, [profile, slug])
 
   const readOnly = !profile || !isStaffRole(profile.role)
 

@@ -1,4 +1,5 @@
 import { getSupabase } from '@/lib/supabase/client'
+import { getVisibleProjects } from '@/config/projects'
 import type { AppUser } from '@/types/domain'
 
 export interface AdminStats {
@@ -12,12 +13,11 @@ export interface AdminStats {
 export async function fetchAdminStats(): Promise<AdminStats> {
   const supabase = getSupabase()
 
-  const [{ count: totalUsers }, { count: pendingUsers }, { count: approvedUsers }, { count: totalPocs }, recent] =
+  const [{ count: totalUsers }, { count: pendingUsers }, { count: approvedUsers }, recent] =
     await Promise.all([
       supabase.from('users').select('id', { count: 'exact', head: true }),
       supabase.from('users').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
       supabase.from('users').select('id', { count: 'exact', head: true }).eq('status', 'approved'),
-      supabase.from('pocs').select('id', { count: 'exact', head: true }).eq('visibility', 'visible'),
       supabase.from('users').select('*').order('created_at', { ascending: false }).limit(6),
     ])
 
@@ -39,7 +39,7 @@ export async function fetchAdminStats(): Promise<AdminStats> {
     totalUsers: totalUsers ?? 0,
     pendingUsers: pendingUsers ?? 0,
     approvedUsers: approvedUsers ?? 0,
-    totalPocs: totalPocs ?? 0,
+    totalPocs: getVisibleProjects().length,
     recentUsers,
   }
 }

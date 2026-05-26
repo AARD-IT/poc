@@ -46,14 +46,14 @@ create index if not exists pocs_visibility_idx on public.pocs (visibility);
 create table if not exists public.poc_access (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.users (id) on delete cascade,
-  poc_id uuid not null references public.pocs (id) on delete cascade,
+  project_slug text not null,
   granted_by uuid references public.users (id) on delete set null,
   created_at timestamptz not null default now(),
-  unique (user_id, poc_id)
+  unique (user_id, project_slug)
 );
 
 create index if not exists poc_access_user_idx on public.poc_access (user_id);
-create index if not exists poc_access_poc_idx on public.poc_access (poc_id);
+create index if not exists poc_access_project_slug_idx on public.poc_access (project_slug);
 
 create table if not exists public.notifications (
   id uuid primary key default gen_random_uuid(),
@@ -179,7 +179,7 @@ for select using (
     select 1
     from public.poc_access a
     join public.users u on u.id = a.user_id
-    where a.poc_id = pocs.id
+    where a.project_slug = pocs.slug
       and a.user_id = auth.uid()
       and u.status = 'approved'
   )
@@ -211,16 +211,3 @@ drop policy if exists notifications_insert_staff on public.notifications;
 create policy notifications_insert_staff on public.notifications
 for insert with check (public.is_staff(auth.uid()));
 
-insert into public.pocs (title, description, industry, slug, thumbnail, visibility, tags, client, solution_function, tech, contact, featured, sort_rank, date_label)
-values
-('AI Financial Intelligence Dashboard', 'Advanced analytics platform leveraging machine learning to provide real-time insights into financial performance, risk assessment, and predictive modeling for enterprise finance teams.', 'Finance', 'ai-financial-intelligence-dashboard', null, 'visible', array['AI','Finance','Analytics','Dashboard','Power BI']::text[], 'Global Bank Corp', 'Data Analytics', 'AI, Power BI, Python', 'analytics@example.com', true, 1, 'Updated May 5, 2026'),
-('Predictive Analytics Hub', 'Comprehensive forecasting solution that combines historical data analysis with AI-driven predictions to help businesses make informed strategic decisions.', 'Retail', 'predictive-analytics-hub', null, 'visible', array['AI','Analytics','Python','Dashboard']::text[], 'TechVenture Inc', 'Forecasting', 'Python, Tableau', 'support@example.com', false, 2, 'Updated May 3, 2026'),
-('Healthcare Claims Automation', 'Intelligent automation system that streamlines healthcare claims processing using AI and machine learning, reducing processing time by 80% while improving accuracy.', 'Healthcare', 'healthcare-claims-automation', null, 'visible', array['Gen AI','Healthcare','Automation','AI']::text[], 'MediCare Solutions', 'Automation', 'Gen AI, Python, Automation', 'healthcare@example.com', false, 3, 'Updated May 1, 2026'),
-('Retail Demand Forecasting Engine', 'AI-powered demand forecasting tool that analyzes market trends, seasonal patterns, and consumer behavior to optimize inventory management and reduce stockouts.', 'Retail', 'retail-demand-forecasting-engine', null, 'visible', array['AI','Retail','Analytics','Python']::text[], 'RetailMax Group', 'Forecasting', 'AI, Python', 'retail@example.com', true, 4, 'Updated Apr 28, 2026'),
-('Executive KPI Dashboard', 'Real-time executive dashboard providing comprehensive visibility into key performance indicators across all business units with customizable metrics and drill-down capabilities.', 'Finance', 'executive-kpi-dashboard', null, 'visible', array['Dashboard','Analytics','Power BI','Demo']::text[], 'Enterprise Corp', 'Reporting', 'Power BI, Tableau', 'exec@example.com', false, 5, 'Updated Apr 25, 2026'),
-('Gen AI Knowledge Assistant', 'Intelligent knowledge management system powered by generative AI that helps employees quickly find information, generate reports, and automate documentation tasks.', 'Education', 'gen-ai-knowledge-assistant', null, 'visible', array['Gen AI','AI','Automation','Demo']::text[], 'Innovation Labs', 'Automation', 'Gen AI', 'ai@example.com', false, 6, 'Updated Apr 22, 2026'),
-('Customer Churn Prediction Model', 'Advanced machine learning model that identifies at-risk customers before they churn, enabling proactive retention strategies and improving customer lifetime value.', 'Finance', 'customer-churn-prediction-model', null, 'visible', array['AI','Analytics','Python','Finance']::text[], 'TelecomGlobal', 'Data Analytics', 'AI, Python', 'ml@example.com', false, 7, 'Updated Apr 20, 2026'),
-('Invoice OCR Automation System', 'Optical character recognition solution that automatically extracts data from invoices, purchase orders, and receipts, eliminating manual data entry and reducing errors.', 'Finance', 'invoice-ocr-automation-system', null, 'visible', array['Automation','AI','Finance','Legal']::text[], 'AccountingPro', 'Automation', 'AI, Automation', 'ocr@example.com', false, 8, 'Updated Apr 18, 2026'),
-('ESG Analytics Tracker', 'Environmental, Social, and Governance analytics platform that tracks sustainability metrics, generates compliance reports, and provides benchmarking against industry standards.', 'Manufacturing', 'esg-analytics-tracker', null, 'visible', array['Analytics','Dashboard','Finance','Power BI']::text[], 'GreenFuture Inc', 'Reporting', 'Power BI, Python', 'esg@example.com', true, 9, 'Updated Apr 15, 2026'),
-('Supply Chain Optimizer', 'AI-driven supply chain optimization platform that reduces costs, improves delivery times, and enhances visibility across the entire logistics network using predictive analytics.', 'Manufacturing', 'supply-chain-optimizer', null, 'visible', array['AI','Analytics','Automation','Retail']::text[], 'LogisticsXpert', 'Data Analytics', 'AI, Python, Automation', 'supply@example.com', false, 10, 'Updated Apr 12, 2026')
-on conflict (slug) do nothing;

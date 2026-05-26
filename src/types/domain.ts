@@ -35,6 +35,26 @@ export interface Poc {
   date_label: string | null
 }
 
+export interface ProjectRegistryItem {
+  id: string
+  title: string
+  slug: string
+  route: string
+  category: string
+  description: string
+  visible: boolean
+  icon?: string
+  featured?: boolean
+}
+
+export interface ProjectAccess {
+  id: string
+  user_id: string
+  project_slug: string
+  granted_by: string | null
+  created_at: string
+}
+
 export interface NotificationRow {
   id: string
   title: string

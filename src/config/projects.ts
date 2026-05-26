@@ -1,0 +1,127 @@
+import type { ProjectRegistryItem } from '@/types/domain'
+
+export const projectRegistry: ProjectRegistryItem[] = [
+  {
+    id: 'ai-gold-negotiation',
+    title: 'AI Gold Negotiation Orchestrator',
+    slug: 'ai-gold-negotiation',
+    route: '/projects/ai-gold-negotiation',
+    category: 'Commodities',
+    description:
+      'Gold RFQ-to-quote automation with live MCX pricing, margin calculations, branded PDF output, and guided negotiation workflows.',
+    visible: true,
+    featured: true,
+  },
+  {
+    id: 'ai-prescription',
+    title: 'AI Prescription Generator',
+    slug: 'ai-prescription',
+    route: '/projects/ai-prescription-detail',
+    category: 'Healthcare',
+    description:
+      'Clinical-style prescription drafting assistant powered by generative AI for fast, compliant medication orders and care plans.',
+    visible: true,
+    featured: true,
+  },
+  {
+    id: 'healthscope-insights',
+    title: 'Healthscope Insights',
+    slug: 'healthscope-insights',
+    route: '/projects/healthscope-insights-detail',
+    category: 'Healthcare',
+    description:
+      'Healthcare analytics and insights platform for hospital performance, patient trends, revenue, and operational intelligence.',
+    visible: true,
+    featured: true,
+  },
+  {
+    id: 'intelligent-document-processor',
+    title: 'Intelligent Document Processor',
+    slug: 'intelligent-document-processor',
+    route: '/projects/intelligent-document-processor',
+    category: 'Document AI',
+    description:
+      'Document triage and OCR workflow for invoices, contracts, signatures, and identity documents with structured extraction.',
+    visible: true,
+  },
+  {
+    id: 'multimodal-rag',
+    title: 'Multimodal RAG System',
+    slug: 'multimodal-rag',
+    route: '/projects/multimodal-rag',
+    category: 'AI',
+    description:
+      'Retrieval-augmented generation system that processes text and images for intelligent document understanding and knowledge insights.',
+    visible: true,
+  },
+  {
+    id: 'offer-letter-generator',
+    title: 'Offer Letter Generator',
+    slug: 'offer-letter-generator',
+    route: '/projects/offerletter-generator',
+    category: 'HR Automation',
+    description:
+      'AI-powered HR automation tool for generating offer letters, internship certificates, and downloadable employment documents instantly.',
+    visible: true,
+  },
+  {
+    id: 'pii-redaction',
+    title: 'PII Redaction Engine',
+    slug: 'pii-redaction',
+    route: '/projects/pii-redaction',
+    category: 'Compliance',
+    description:
+      'Automated redaction pipeline for identifying and masking personally identifiable information from documents at scale.',
+    visible: true,
+  },
+  {
+    id: 'real-estate-demand-forecasting-lab',
+    title: 'Real Estate Demand Forecasting Lab',
+    slug: 'real-estate-demand-forecasting-lab',
+    route: '/projects/real-estate-demand-forecasting-lab',
+    category: 'Real Estate',
+    description:
+      'Demand forecasting platform for real estate markets with price trends, monthly projections, and property analytics.',
+    visible: true,
+  },
+  {
+    id: 'real-estate-intelligence-suite',
+    title: 'Real Estate Intelligence Suite',
+    slug: 'real-estate-intelligence-suite',
+    route: '/projects/real-estate-intelligence-suite',
+    category: 'Real Estate',
+    description:
+      'Integrated real estate analytics suite for listings, market intelligence, and property performance dashboards.',
+    visible: true,
+  },
+  {
+    id: 'sentiment-analyzer',
+    title: 'AI Customer Feedback Analyzer',
+    slug: 'sentiment-analyzer',
+    route: '/projects/sentiment-analyzer',
+    category: 'Customer Experience',
+    description:
+      'Feedback analysis platform for sentiment, tone classification, and batch processing of customer responses.',
+    visible: true,
+  },
+]
+
+export function getProjectBySlug(slug: string): ProjectRegistryItem | null {
+  return projectRegistry.find((project) => project.slug === slug) ?? null
+}
+
+export function getAllProjects(): ProjectRegistryItem[] {
+  return [...projectRegistry]
+}
+
+export function getVisibleProjects(): ProjectRegistryItem[] {
+  return projectRegistry.filter((project) => project.visible)
+}
+
+export function getProjectByRoute(route: string): ProjectRegistryItem | null {
+  return projectRegistry.find((project) => project.route === route) ?? null
+}
+
+export function getProjectSlugs(): string[] {
+  return projectRegistry.map((project) => project.slug)
+}
