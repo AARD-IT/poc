@@ -11,6 +11,8 @@ import { PendingApprovalPage } from '@/pages/PendingApprovalPage'
 import { PocDetailPage } from '@/pages/PocDetailPage'
 import { AiPrescriptionProjectPage } from '@/pages/projects/AiPrescriptionProjectPage'
 import { AiPrescriptionDetailPage } from '@/pages/projects/AiPrescriptionDetailPage'
+import { HealthscopeInsightsProjectPage } from '@/pages/projects/HealthscopeInsightsProjectPage'
+import { HealthscopeInsightsDetailPage } from '@/pages/projects/HealthscopeInsightsDetailPage'
 import { OfferLetterProjectPage } from '@/pages/projects/OfferLetterProjectPage'
 import { OfferLetterDetailPage } from '@/pages/projects/OfferLetterDetailPage'
 import { PiiRedactionProjectPage } from '@/pages/projects/PiiRedactionProjectPage'
@@ -65,6 +67,16 @@ export const router = createBrowserRouter([
         path: 'projects/ai-prescription-detail',
         element: <MainShellWithSidebar />,
         children: [{ index: true, element: <AiPrescriptionDetailPage /> }],
+      },
+      {
+        path: 'projects/healthscope-insights',
+        element: <MainShellPlain />,
+        children: [{ index: true, element: <HealthscopeInsightsProjectPage /> }],
+      },
+      {
+        path: 'projects/healthscope-insights-detail',
+        element: <MainShellWithSidebar />,
+        children: [{ index: true, element: <HealthscopeInsightsDetailPage /> }],
       },
       {
         path: 'projects/offerletter-generator',

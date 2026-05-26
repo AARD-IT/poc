@@ -68,6 +68,19 @@ export function DashboardPage() {
     />
   )
 
+  const healthscopeInsightsCard = (
+    <SolutionCard
+      key="healthscope-insights"
+      rank={2}
+      title="Healthscope Insights"
+      description="Healthcare analytics dashboard for hospital performance, patient trends, revenue, and ML-driven operational insights."
+      tags={['Healthcare', 'Analytics', 'ML', 'Hospital Operations']}
+      date="Updated May 2026"
+      featured
+      onClick={() => navigate('/projects/healthscope-insights-detail')}
+    />
+  )
+
   const offerLetterCard = (
     <SolutionCard
       key="offer-letter-generator"
@@ -158,6 +171,7 @@ export function DashboardPage() {
   const solutionGrid = (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
       {aiPrescriptionCard}
+      {healthscopeInsightsCard}
       {offerLetterCard}
       {sentimentAnalyzerCard}
       {idpCard}
