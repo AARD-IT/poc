@@ -8,6 +8,7 @@ import {
 import { getVisibleProjects } from '@/config/projects'
 import { notifyUser } from '@/services/notifications'
 import { fetchAllUsers } from '@/services/users'
+import { sendAccess, sendFullAccess } from '@/services/email'
 import { useAuthStore } from '@/stores/authStore'
 import type { AppUser, ProjectRegistryItem } from '@/types/domain'
 
@@ -91,16 +92,31 @@ export function AdminAccessManagementPage() {
       await Promise.all(removeSlugs.map((slug) => revokeProjectAccess(userId, slug)))
       await Promise.all(addSlugs.map((slug) => grantProjectAccess(userId, slug, actor.id)))
 
-      if (addSlugs.length === 0 && removeSlugs.length === 0) {
-        setSuccess('No changes detected; access is already up to date.')
-      } else {
-        setSuccess('Access saved successfully.')
-      }
+      let emailIssue: string | null = null
 
       try {
         await notifyUser(userId, 'Access updated', 'Your assigned projects have been updated by an administrator.')
       } catch (notificationError: unknown) {
         console.warn('Notification failed after access update', notificationError)
+      }
+
+      if (addSlugs.length > 0 && selectedUser) {
+        try {
+          const assignedPocs = addSlugs.map((slug) => projects.find((project) => project.slug === slug)?.title ?? slug)
+          await sendAccess(selectedUser.email, selectedUser.name, assignedPocs)
+        } catch (emailError: unknown) {
+          console.error('Access email failed', emailError)
+          emailIssue = emailError instanceof Error ? emailError.message : String(emailError)
+        }
+      }
+
+      if (addSlugs.length === 0 && removeSlugs.length === 0) {
+        setSuccess('No changes detected; access is already up to date.')
+      } else if (emailIssue) {
+        setSuccess('Access saved successfully, but email notification failed.')
+        setErr(`Email send error: ${emailIssue}`)
+      } else {
+        setSuccess('Access saved successfully.')
       }
 
       await loadAccess(userId)
@@ -139,9 +155,24 @@ export function AdminAccessManagementPage() {
       } catch (notificationError: unknown) {
         console.warn('Notification failed after grant full access', notificationError)
       }
+      let emailIssue: string | null = null
+      if (selectedUser) {
+        try {
+          const areas = visible.map((project) => project.title)
+          await sendFullAccess(selectedUser.email, selectedUser.name, areas)
+        } catch (emailError: unknown) {
+          console.error('Full access email failed', emailError)
+          emailIssue = emailError instanceof Error ? emailError.message : String(emailError)
+        }
+      }
       await loadAccess(userId)
       setSelectedAccess(new Set(visible.map((project) => project.slug)))
-      setSuccess('Full visible access granted successfully.')
+      if (emailIssue) {
+        setSuccess('Full visible access granted successfully, but notification email failed.')
+        setErr(`Email send error: ${emailIssue}`)
+      } else {
+        setSuccess('Full visible access granted successfully.')
+      }
     } catch (e: unknown) {
       if (e instanceof Error) {
         setErr(e.message)

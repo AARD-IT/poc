@@ -5,10 +5,11 @@
 -- `public.users.role` is the app's source of truth:
 --   super_admin | admin | client | viewer
 -- Admin access also requires `status = 'approved'`.
+-- Permissions are stored in public.users.permissions as text[] and default to [] on signup.
 --
 -- Examples:
--- update public.users set role = 'admin', status = 'approved' where email = 'user@example.com';
--- update public.users set role = 'viewer', status = 'approved' where email = 'user@example.com';
+-- update public.users set role = 'admin', status = 'approved', permissions = '{}' where email = 'user@example.com';
+-- update public.users set role = 'viewer', status = 'approved', permissions = '{view_dashboard}' where email = 'user@example.com';
 
 update public.users
 set role = 'super_admin', status = 'approved'

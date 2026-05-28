@@ -75,3 +75,15 @@ export function canWritePoc(role: UserRole): boolean {
 export function canAssignSuperAdmin(actor: UserRole): boolean {
   return actor === 'super_admin'
 }
+
+export function isApproved(user: AppUser | null): boolean {
+  return user?.status === 'approved'
+}
+
+export function isPending(user: AppUser | null): boolean {
+  return user?.status === 'pending'
+}
+
+export function isRejected(user: AppUser | null): boolean {
+  return user?.status === 'rejected'
+}

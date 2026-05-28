@@ -27,7 +27,8 @@ begin
     industry,
     use_case,
     role,
-    status
+    status,
+    permissions
   )
   values (
     NEW.id,
@@ -39,7 +40,8 @@ begin
     nullif(trim(meta->>'industry'), ''),
     nullif(trim(meta->>'use_case'), ''),
     'client',
-    'pending'
+    'pending',
+    '{}'::text[]
   )
   on conflict (id) do nothing;
 

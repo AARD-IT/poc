@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link, Navigate, useLocation, useNavigate } from 'react-router'
+import { useEffect, useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router'
 import { signInWithPassword } from '@/services/auth'
 import { tryGetSupabase } from '@/lib/supabase/client'
 import { AuthLayout } from '@/layouts/AuthLayout'
@@ -25,8 +25,26 @@ export function LoginPage() {
 
   const configured = Boolean(tryGetSupabase())
 
-  if (initialized && session && !profileLoading) {
-    return <Navigate to={from} replace />
+  useEffect(() => {
+    if (!initialized || profileLoading || !session) return
+
+    if (profile?.status === 'pending') {
+      navigate('/pending-approval', { replace: true })
+      return
+    }
+
+    if (profile?.status === 'rejected') {
+      navigate('/rejected-access', { replace: true })
+      return
+    }
+
+    if (profile) {
+      navigate(from, { replace: true })
+    }
+  }, [initialized, profileLoading, session, profile, from, navigate])
+
+  if (initialized && session && !profileLoading && profile) {
+    return null
   }
 
   async function onSubmit(e: React.FormEvent) {

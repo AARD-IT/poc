@@ -25,7 +25,7 @@ export function PocDetailPage() {
 
     async function loadPoc() {
       try {
-        if (!profile) {
+        if (!profile || profile.status !== 'approved') {
           if (!cancelled) setPoc(null)
           return
         }

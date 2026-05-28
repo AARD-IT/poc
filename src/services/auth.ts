@@ -1,4 +1,5 @@
 import { getSupabase, tryGetSupabase } from '@/lib/supabase/client'
+import type { Session, User } from '@supabase/supabase-js'
 
 export interface SignUpPayload {
   email: string
@@ -11,12 +12,17 @@ export interface SignUpPayload {
   useCase: string
 }
 
-export async function signUpWithProfile(payload: SignUpPayload): Promise<{ needsEmailConfirmation: boolean }> {
+export interface SignUpResult {
+  session: Session | null
+  user: User | null
+}
+
+export async function signUpWithProfile(payload: SignUpPayload): Promise<SignUpResult> {
   const supabase = tryGetSupabase()
   if (!supabase) throw new Error('Supabase is not configured')
 
   const { data, error } = await supabase.auth.signUp({
-    email: payload.email,
+    email: payload.email.trim().toLowerCase(),
     password: payload.password,
     options: {
       data: {
@@ -31,10 +37,26 @@ export async function signUpWithProfile(payload: SignUpPayload): Promise<{ needs
   })
   if (error) throw error
 
-  // public.users row is created by DB trigger `on_auth_user_created` (see supabase/migrations).
-  // That avoids RLS failures when "Confirm email" is on and there is no session/JWT yet.
+  if (!data.session) {
+    const signInResult = await supabase.auth.signInWithPassword({
+      email: payload.email.trim().toLowerCase(),
+      password: payload.password,
+    })
+    if (signInResult.error) throw signInResult.error
 
-  return { needsEmailConfirmation: !data.session }
+    const sessionResponse = await supabase.auth.getSession()
+    if (sessionResponse.error) throw sessionResponse.error
+
+    return {
+      session: sessionResponse.data.session,
+      user: sessionResponse.data.session?.user ?? null,
+    }
+  }
+
+  return {
+    session: data.session,
+    user: data.user,
+  }
 }
 
 export async function signInWithPassword(email: string, password: string): Promise<void> {

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { notifyUser } from '@/services/notifications'
 import { deleteUserRow, fetchAllUsers, updateUserRole, updateUserStatus } from '@/services/users'
+import { sendApproval, sendRejection } from '@/services/email'
 import { useAuthStore } from '@/stores/authStore'
 import type { AppUser, UserRole, UserStatus } from '@/types/domain'
 import { canAssignSuperAdmin } from '@/types/domain'
@@ -49,8 +50,18 @@ export function AdminUsersPage() {
       await updateUserStatus(u.id, status)
       if (status === 'approved') {
         await notifyUser(u.id, 'Access approved', 'Your Analytics Avenue account has been approved. Assigned POCs will appear on your dashboard.')
+        try {
+          await sendApproval(u.email, u.name, actor?.name || actor?.email || 'Admin')
+        } catch (emailError: unknown) {
+          console.warn('Approval email failed', emailError)
+        }
       } else if (status === 'rejected') {
         await notifyUser(u.id, 'Access update', 'Your access request was not approved for this workspace.')
+        try {
+          await sendRejection(u.email, u.name, 'Your account request was not approved at this time.')
+        } catch (emailError: unknown) {
+          console.warn('Rejection email failed', emailError)
+        }
       }
       await load(false)
       if (u.id === actor?.id) await refreshProfile()

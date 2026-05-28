@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router'
 import { AuthLayout } from '@/layouts/AuthLayout'
 import { signUpWithProfile } from '@/services/auth'
+import { sendWelcome, sendAdminAlert } from '@/services/email'
 import { tryGetSupabase } from '@/lib/supabase/client'
 import { useAuthStore } from '@/stores/authStore'
 
@@ -39,7 +40,7 @@ export function SignupPage() {
     }
     setLoading(true)
     try {
-      const { needsEmailConfirmation } = await signUpWithProfile({
+      const { session } = await signUpWithProfile({
         email,
         password,
         name: fullName,
@@ -49,14 +50,24 @@ export function SignupPage() {
         industry,
         useCase,
       })
-      if (needsEmailConfirmation) {
-        navigate('/login', {
-          replace: true,
-          state: { message: 'Check your email to confirm your account, then sign in.' },
-        })
-      } else {
-        navigate('/dashboard', { replace: true })
+
+      if (!session) {
+        throw new Error('Unable to initialize your session after signup. Please try signing in.')
       }
+      
+      // Trigger transactional emails (best-effort, do not block signup flow)
+      try {
+        // welcome email to user
+        void sendWelcome(email, fullName)
+        // admin alert
+        const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || ''
+        if (adminEmail) void sendAdminAlert(adminEmail, email, fullName, { company, designation })
+      } catch (e) {
+        // swallow errors to avoid breaking UX
+        console.error('Email service error', e)
+      }
+
+      navigate('/dashboard', { replace: true })
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Sign up failed')
     } finally {

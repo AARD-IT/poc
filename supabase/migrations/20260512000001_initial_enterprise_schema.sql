@@ -14,12 +14,14 @@ create table if not exists public.users (
   use_case text,
   role text not null default 'client' check (role in ('super_admin', 'admin', 'client', 'viewer')),
   status text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
+  permissions text[] not null default '{}',
   created_at timestamptz not null default now()
 );
 
 create index if not exists users_status_idx on public.users (status);
 create index if not exists users_role_idx on public.users (role);
 create index if not exists users_email_idx on public.users (email);
+create index if not exists users_permissions_idx on public.users using gin (permissions);
 
 create table if not exists public.pocs (
   id uuid primary key default gen_random_uuid(),
@@ -107,7 +109,7 @@ set search_path = public
 as $$
 begin
   if tg_op = 'UPDATE' and new.id = auth.uid() and not public.is_staff(auth.uid()) then
-    if new.role is distinct from old.role or new.status is distinct from old.status or new.email is distinct from old.email then
+    if new.role is distinct from old.role or new.status is distinct from old.status or new.email is distinct from old.email or new.permissions is distinct from old.permissions then
       raise exception 'Forbidden' using errcode = '42501';
     end if;
   end if;

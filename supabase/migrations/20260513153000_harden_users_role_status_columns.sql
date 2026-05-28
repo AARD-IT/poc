@@ -15,6 +15,9 @@ update public.users
 set status = 'pending'
 where status is null or btrim(status) = '';
 
+alter table if exists public.users
+add column if not exists permissions text[] not null default '{}';
+
 alter table public.users
 alter column role set default 'client';
 
@@ -43,3 +46,4 @@ check (status in ('pending', 'approved', 'rejected'));
 
 create index if not exists users_role_idx on public.users (role);
 create index if not exists users_status_idx on public.users (status);
+create index if not exists users_permissions_idx on public.users using gin (permissions);
