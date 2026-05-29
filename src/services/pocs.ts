@@ -11,7 +11,7 @@ function mapRegistryProjectToPoc(project: ProjectRegistryItem): Poc {
     id: project.id,
     title: project.title,
     description: project.description,
-    industry: null,
+    industry: project.category,
     slug: project.slug,
     thumbnail: null,
     visibility: project.visible ? 'visible' : 'hidden',

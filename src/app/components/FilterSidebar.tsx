@@ -8,51 +8,18 @@ interface FilterSection {
 
 const defaultSections: FilterSection[] = [
   {
-    title: 'Type',
-    items: [
-      { label: 'Dashboard', count: 32 },
-      { label: 'AI Tool', count: 12 },
-      { label: 'Analytics', count: 18 },
-      { label: 'Automation', count: 9 },
-    ],
-  },
-  {
     title: 'Industry',
     items: [
-      { label: 'Finance', count: 24 },
-      { label: 'Healthcare', count: 18 },
-      { label: 'Retail', count: 15 },
-      { label: 'Manufacturing', count: 11 },
-      { label: 'Education', count: 8 },
-    ],
-  },
-  {
-    title: 'Function',
-    items: [
-      { label: 'Data Analytics', count: 28 },
-      { label: 'Reporting', count: 22 },
-      { label: 'Forecasting', count: 16 },
-      { label: 'Automation', count: 14 },
-    ],
-  },
-  {
-    title: 'Solution',
-    items: [
-      { label: 'AI-Powered', count: 35 },
-      { label: 'Real-time', count: 21 },
-      { label: 'Predictive', count: 19 },
-      { label: 'Custom', count: 12 },
-    ],
-  },
-  {
-    title: 'Tech',
-    items: [
-      { label: 'AI', count: 28 },
-      { label: 'Gen AI', count: 15 },
-      { label: 'Power BI', count: 18 },
-      { label: 'Tableau', count: 14 },
-      { label: 'Python', count: 22 },
-      { label: 'Automation', count: 12 },
+      { label: 'Gen AI', count: 12 },
+      { label: 'HR', count: 4 },
+      { label: 'Real Estate', count: 4 },
+      { label: 'Supply Chain', count: 2 },
+      { label: 'Solar Power', count: 1 },
+      { label: 'Healthcare', count: 3 },
+      { label: 'Manufacturing', count: 2 },
+      { label: 'Ev', count: 1 },
+      { label: 'Marketing', count: 2 },
+      { label: 'Automobile', count: 1 },
     ],
   },
 ]
@@ -68,9 +35,7 @@ export interface FilterSidebarProps {
 export function FilterSidebar({ sections, selectedFilters: controlled, onSelectedFiltersChange }: FilterSidebarProps) {
   const filterSections = sections ?? defaultSections
 
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(['Type', 'Industry', 'Tech'])
-  )
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['Industry']))
   const [internalSelected, setInternalSelected] = useState<Set<string>>(new Set())
   const selectedFilters = controlled ?? internalSelected
 

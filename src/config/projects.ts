@@ -6,7 +6,7 @@ export const projectRegistry: ProjectRegistryItem[] = [
     title: 'AI Gold Negotiation Orchestrator',
     slug: 'ai-gold-negotiation',
     route: '/projects/ai-gold-negotiation',
-    category: 'Commodities',
+    category: 'Gen AI',
     description:
       'Gold RFQ-to-quote automation with live MCX pricing, margin calculations, branded PDF output, and guided negotiation workflows.',
     visible: true,
@@ -17,7 +17,7 @@ export const projectRegistry: ProjectRegistryItem[] = [
     title: 'AI Prescription Generator',
     slug: 'ai-prescription',
     route: '/projects/ai-prescription-detail',
-    category: 'Healthcare',
+    category: 'Gen AI',
     description:
       'Clinical-style prescription drafting assistant powered by generative AI for fast, compliant medication orders and care plans.',
     visible: true,
@@ -39,7 +39,7 @@ export const projectRegistry: ProjectRegistryItem[] = [
     title: 'Intelligent Document Processor',
     slug: 'intelligent-document-processor',
     route: '/projects/intelligent-document-processor',
-    category: 'Document AI',
+    category: 'Gen AI',
     description:
       'Document triage and OCR workflow for invoices, contracts, signatures, and identity documents with structured extraction.',
     visible: true,
@@ -49,7 +49,7 @@ export const projectRegistry: ProjectRegistryItem[] = [
     title: 'Multimodal RAG System',
     slug: 'multimodal-rag',
     route: '/projects/multimodal-rag',
-    category: 'AI',
+    category: 'Gen AI',
     description:
       'Retrieval-augmented generation system that processes text and images for intelligent document understanding and knowledge insights.',
     visible: true,
@@ -59,7 +59,7 @@ export const projectRegistry: ProjectRegistryItem[] = [
     title: 'Offer Letter Generator',
     slug: 'offer-letter-generator',
     route: '/projects/offerletter-generator',
-    category: 'HR Automation',
+    category: 'HR',
     description:
       'AI-powered HR automation tool for generating offer letters, internship certificates, and downloadable employment documents instantly.',
     visible: true,
@@ -69,7 +69,7 @@ export const projectRegistry: ProjectRegistryItem[] = [
     title: 'PII Redaction Engine',
     slug: 'pii-redaction',
     route: '/projects/pii-redaction',
-    category: 'Compliance',
+    category: 'Gen AI',
     description:
       'Automated redaction pipeline for identifying and masking personally identifiable information from documents at scale.',
     visible: true,
@@ -99,7 +99,7 @@ export const projectRegistry: ProjectRegistryItem[] = [
     title: 'AI Customer Feedback Analyzer',
     slug: 'sentiment-analyzer',
     route: '/projects/sentiment-analyzer',
-    category: 'Customer Experience',
+    category: 'Gen AI',
     description:
       'Feedback analysis platform for sentiment, tone classification, and batch processing of customer responses.',
     visible: true,

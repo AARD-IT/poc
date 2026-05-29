@@ -6,7 +6,7 @@ const poc = {
   description: 'Redact Personal Identifiable Information from Documents using Generative AI',
   date: 'Updated May 2026',
   client: 'Data Privacy & Compliance',
-  industry: 'Gen AI / Privacy',
+  industry: 'Gen AI',
   function: 'Document Redaction & Compliance',
   tech: 'GPT-4o Vision, Python, OCR, Pydantic',
   contact: 'pii-redaction@example.com',

@@ -6,7 +6,7 @@ const poc = {
   description: 'Advanced Retrieval-Augmented Generation system that processes both text and images for intelligent document understanding.',
   date: 'Updated May 2026',
   client: 'Enterprise AI Solutions',
-  industry: 'Gen AI / Knowledge Management',
+  industry: 'Gen AI',
   function: 'Multimodal Document Processing & RAG',
   tech: 'Streamlit, Python, LLM, Vision Models',
   contact: 'rag@example.com',

@@ -7,11 +7,11 @@ const project = {
     'Automated RFQ-to-quote gold pricing and negotiation system that reads buyer RFQs, matches product SKUs, fetches live MCX gold pricing, calculates transparent quotes, generates branded PDFs, and manages multi-stage buyer negotiation workflows.',
   date: 'Updated May 2026',
   client: 'Analytics Avenue',
-  industry: 'Commodities & FinTech',
+  industry: 'Gen AI',
   function: 'AI Negotiation Automation',
   tech: 'Python, Gen AI, ChromaDB, Live MCX',
   contact: 'gold-ai@example.com',
-  tags: ['Gen AI', 'Commodities', 'Negotiation', 'PDF', 'Pricing'],
+  tags: ['Gen AI', 'Negotiation', 'PDF', 'Pricing'],
 }
 
 export function AiGoldNegotiationDetailPage() {

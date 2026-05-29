@@ -7,11 +7,11 @@ const poc = {
     'Intelligent prescription generation platform powered by generative AI that assists clinicians and career counsellors in producing accurate, personalised data-career prescriptions — with real-time domain-specific content, PDF/Word export, and direct email delivery.',
   date: 'Updated May 15, 2026',
   client: 'MedTech Innovations',
-  industry: 'Healthcare',
+  industry: 'Gen AI',
   function: 'AI & Automation',
   tech: 'Gen AI, Python, LLM',
   contact: 'health-ai@example.com',
-  tags: ['Gen AI', 'Healthcare', 'AI', 'Automation'],
+  tags: ['Gen AI', 'AI', 'Automation'],
 }
 
 export function AiPrescriptionDetailPage() {

@@ -7,11 +7,11 @@ const poc = {
     'Intelligent HR automation platform for generating professional pre-offer letters, offer letters, internship completion certificates, and downloadable HR documents with dynamic compensation structures and customizable templates.',
   date: 'Updated May 2026',
   client: 'Internal HR Automation',
-  industry: 'HR Tech',
+  industry: 'HR',
   function: 'Automation & Document Generation',
   tech: 'Streamlit, Python, Gen AI',
   contact: 'hr-automation@example.com',
-  tags: ['HR Automation', 'AI', 'Documents', 'Streamlit', 'Automation'],
+  tags: ['HR', 'AI', 'Documents', 'Automation'],
 }
 
 export function OfferLetterDetailPage() {

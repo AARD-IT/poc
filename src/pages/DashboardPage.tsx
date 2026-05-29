@@ -6,6 +6,7 @@ import { EnterpriseEmpty } from '@/components/empty-states/EnterpriseEmpty'
 import { useAuthStore } from '@/stores/authStore'
 import { isStaffRole } from '@/types/domain'
 import { fetchAllProjectRegistryItems, fetchMyProjectRegistryItems } from '@/services/pocs'
+import { useSearchFilters } from '@/contexts/SearchFiltersContext'
 import type { ProjectRegistryItem } from '@/types/domain'
 
 export function DashboardPage() {
@@ -15,6 +16,7 @@ export function DashboardPage() {
   const profileError = useAuthStore((s) => s.profileError)
   const [projects, setProjects] = useState<ProjectRegistryItem[]>([])
   const [loadingProjects, setLoadingProjects] = useState(true)
+  const { selectedFilters } = useSearchFilters()
 
   useEffect(() => {
     if (!profile || profile.status !== 'approved') {
@@ -105,18 +107,30 @@ export function DashboardPage() {
     <div className="p-6">
       <ControlBar />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {projects.map((project, index) => (
-          <SolutionCard
-            key={project.slug}
-            rank={index + 1}
-            title={project.title}
-            description={project.description}
-            tags={[project.category]}
-            date="Updated 2026"
-            featured={project.featured}
-            onClick={() => navigate(project.route)}
-          />
-        ))}
+        {(() => {
+          const norm = (s: string) => s.toLowerCase().trim()
+          const activeIndustryFilters = Array.from(selectedFilters)
+            .filter((f) => f.startsWith('Industry-'))
+            .map((f) => f.slice(f.indexOf('-') + 1))
+
+          const filtered = projects.filter((p) => {
+            if (activeIndustryFilters.length === 0) return true
+            return activeIndustryFilters.some((label) => norm(p.category) === norm(label))
+          })
+
+          return filtered.map((project, index) => (
+            <SolutionCard
+              key={project.slug}
+              rank={index + 1}
+              title={project.title}
+              description={project.description}
+              tags={[project.category]}
+              date="Updated 2026"
+              featured={project.featured}
+              onClick={() => navigate(project.route)}
+            />
+          ))
+        })()}
       </div>
     </div>
   )

@@ -7,11 +7,11 @@ const project = {
     'AI-powered document triage and extraction engine for invoices, contracts, identity documents, and signature verification. Supports file upload, OCR processing, structured JSON output, and internal demo mode for rapid evaluation.',
   date: 'Updated May 2026',
   client: 'Analytics Avenue',
-  industry: 'Document AI',
+  industry: 'Gen AI',
   function: 'Document Triage & Extraction',
   tech: 'FastAPI, OpenCV, OCR, LLM, Python',
   contact: 'idp@example.com',
-  tags: ['Document AI', 'OCR', 'Signature Verification', 'Gen AI', 'Automation'],
+  tags: ['Gen AI', 'OCR', 'Signature Verification', 'Automation'],
 }
 
 export function IntelligentDocumentProcessorDetailPage() {
