@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
+import analyticsLogo from '/logo/logo.png'
 
 export function AuthLayout({ children }: { children: ReactNode }) {
   return (
@@ -11,7 +12,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
 
       <div className="relative mx-auto flex w-full max-w-4xl flex-col items-center">
         <Link to="/login" className="mb-8 flex items-center gap-3 rounded-3xl bg-white/80 px-4 py-3 shadow-[0_12px_30px_rgba(15,23,42,0.08)] ring-1 ring-[#E2E8F0] backdrop-blur-xl transition-transform hover:-translate-y-0.5">
-          <img src="/logo/logo.png" alt="Analytics Avenue logo" className="h-14 w-14 object-contain" />
+          <img src={analyticsLogo} alt="Analytics Avenue logo" className="h-14 w-14 object-contain" />
           <div className="flex items-center gap-1 text-2xl font-bold tracking-tight">
             <span className="text-[#1C3D76]">Analytics</span>
             <span className="text-[#080808]">Avenue</span>

@@ -1,5 +1,6 @@
 import { Bell, LogOut, Menu, Settings, Shield, User } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import analyticsLogo from '/logo/logo.png'
 import { Link, useNavigate } from 'react-router'
 import {
   DropdownMenu,
@@ -44,7 +45,7 @@ export function Header() {
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-3">
         <div className="flex items-center gap-8">
           <Link to="/dashboard" className="flex items-center gap-3 rounded-2xl px-2 py-1 transition-colors hover:bg-[#F8FAFC]">
-            <img src="/logo/logo.png" alt="Analytics Avenue logo" className="h-12 w-12 object-contain" />
+            <img src={analyticsLogo} alt="Analytics Avenue logo" className="h-12 w-12 object-contain" />
             <div className="flex items-center gap-1 text-xl font-bold tracking-tight">
               <span className="text-[#1C3D76]">Analytics</span>
               <span className="text-[#080808]">Avenue</span>
