@@ -72,8 +72,11 @@ export function LoginPage() {
 
   return (
     <AuthLayout>
-      <h1 className="text-2xl font-bold text-[#1E293B] mb-1">Sign in</h1>
-      <p className="text-[15px] font-medium text-[#475569] mb-6">Access your enterprise solution library.</p>
+      <div className="mb-6 space-y-1.5">
+        <p className="text-[11px] uppercase tracking-[0.35em] text-[#0F766E] font-semibold">Secure sign in</p>
+        <h1 className="text-3xl font-semibold text-[#111827]">Welcome back</h1>
+        <p className="text-[15px] text-[#475569]">Access your enterprise solution library and continue where you left off.</p>
+      </div>
 
       {!configured && (
         <p className="text-sm font-medium text-[#B91C1C] mb-4">Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your environment.</p>
@@ -99,7 +102,7 @@ export function LoginPage() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-2.5 bg-white border-[1.5px] border-[#CBD5E1] rounded-lg text-[15px] font-medium text-[#1E293B] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/20"
+            className="w-full px-4 py-3 bg-white border border-[#CBD5E1] rounded-xl text-[15px] font-medium text-[#111827] shadow-sm transition focus:outline-none focus:border-[#0F766E] focus:ring-4 focus:ring-[#0F766E]/10"
           />
         </div>
         <div>
@@ -113,7 +116,7 @@ export function LoginPage() {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-2.5 bg-white border-[1.5px] border-[#CBD5E1] rounded-lg text-[15px] font-medium text-[#1E293B] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/20"
+            className="w-full px-4 py-3 bg-white border border-[#CBD5E1] rounded-xl text-[15px] font-medium text-[#111827] shadow-sm transition focus:outline-none focus:border-[#0F766E] focus:ring-4 focus:ring-[#0F766E]/10"
           />
         </div>
 
@@ -122,7 +125,7 @@ export function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2.5 bg-[#0F766E] text-white rounded-lg font-bold text-[15px] hover:bg-[#0D5F58] transition-colors disabled:opacity-60"
+          className="w-full py-3 rounded-xl bg-[linear-gradient(135deg,#0F766E_0%,#0D9488_45%,#0284C7_100%)] text-white font-semibold text-[15px] shadow-[0_12px_22px_rgba(15,118,110,0.25)] transition hover:shadow-[0_16px_28px_rgba(15,118,110,0.32)] disabled:opacity-60"
         >
           {loading ? 'Signing in…' : 'Sign in'}
         </button>

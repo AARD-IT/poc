@@ -3,18 +3,24 @@ import { Link } from 'react-router'
 
 export function AuthLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-[#F1F5F9] flex flex-col items-center justify-center p-6">
-      <Link to="/login" className="flex items-center gap-3 mb-10">
-        <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#0F766E] to-[#0284C7] flex items-center justify-center shadow-md">
-          <span className="text-white font-bold text-base">AA</span>
+    <div className="relative min-h-screen overflow-hidden bg-[linear-gradient(135deg,#F8FBFF_0%,#EEF6F8_45%,#F8FAFC_100%)] px-4 py-10 text-[#0F172A] lg:px-6">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-20 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full bg-[#0F766E]/10 blur-3xl" />
+        <div className="absolute bottom-0 right-0 h-64 w-64 rounded-full bg-[#0284C7]/10 blur-3xl" />
+      </div>
+
+      <div className="relative mx-auto flex w-full max-w-4xl flex-col items-center">
+        <Link to="/login" className="mb-8 flex items-center gap-3 rounded-3xl bg-white/80 px-4 py-3 shadow-[0_12px_30px_rgba(15,23,42,0.08)] ring-1 ring-[#E2E8F0] backdrop-blur-xl transition-transform hover:-translate-y-0.5">
+          <img src="/logo/logo.png" alt="Analytics Avenue logo" className="h-14 w-14 object-contain" />
+          <div className="flex items-center gap-1 text-2xl font-bold tracking-tight">
+            <span className="text-[#1C3D76]">Analytics</span>
+            <span className="text-[#080808]">Avenue</span>
+          </div>
+        </Link>
+
+        <div className="w-full max-w-md rounded-[28px] border border-[#E2E8F0] bg-white/95 p-6 shadow-[0_24px_60px_rgba(15,23,42,0.12)] backdrop-blur-xl lg:p-8">
+          {children}
         </div>
-        <span className="font-bold text-[#1E293B] text-lg">Analytics Avenue</span>
-      </Link>
-      <div
-        className="w-full max-w-md bg-white border-[1.5px] border-[#CBD5E1] rounded-xl p-8 shadow-sm"
-        style={{ boxShadow: '0 4px 12px rgba(15,23,42,0.08)' }}
-      >
-        {children}
       </div>
     </div>
   )
