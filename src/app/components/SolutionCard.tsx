@@ -24,7 +24,7 @@ export function SolutionCard({
   const remainingCount = tags.length - visibleTags.length
 
   return (
-    <div
+    <article
       onClick={onClick}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -34,34 +34,32 @@ export function SolutionCard({
       }}
       role="button"
       tabIndex={0}
-      className="bg-white border-[1.5px] border-[#CBD5E1] rounded-xl p-5 hover:shadow-[0_4px_16px_rgba(15,23,42,0.12)] hover:border-[#94A3B8] transition-all cursor-pointer"
-      style={{ boxShadow: '0 4px 12px rgba(15,23,42,0.08)' }}
+      className="aa-card group cursor-pointer p-6 transition-all duration-200 hover:-translate-y-1 hover:border-[#0F766E]/40 hover:shadow-[0_24px_48px_rgba(15,23,42,0.16)]"
     >
-      <div className="flex items-start gap-3 mb-3">
-        <div className="flex items-center gap-2">
-          <span className="text-base font-bold text-[#475569]">#{rank}</span>
-          <Star className="w-5 h-5 text-[#0284C7] fill-[#0284C7]" />
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div className="flex items-center gap-2 text-[#475569]">
+          <span className="rounded-full bg-[#F1F5F9] px-2.5 py-1 text-xs font-bold tracking-[0.18em] text-[#0F766E]">POC #{rank}</span>
+          <Star className="h-4 w-4 text-[#0284C7] fill-[#0284C7]" />
         </div>
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <h3 className="font-bold text-[#1E293B] text-lg leading-tight">{title}</h3>
-            {featured && (
-              <span className="px-2.5 py-1 text-xs font-bold bg-[#0F766E] text-white rounded-md shadow-sm">
-                Featured
-              </span>
-            )}
-          </div>
-        </div>
+        {featured && (
+          <span className="rounded-full bg-[#ECFDF5] px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[#047857] border border-[#A7F3D0]">
+            Featured
+          </span>
+        )}
       </div>
 
-      <p className="text-[15px] font-medium text-[#475569] mb-4 line-clamp-3 leading-relaxed">{description}</p>
+      <div className="mb-3 flex items-start gap-3">
+        <h3 className="text-xl font-semibold text-[#0F172A] leading-tight">{title}</h3>
+      </div>
+
+      <p className="mb-4 text-[15px] leading-6 text-[#475569] line-clamp-3">{description}</p>
 
       <div className="flex items-center justify-between">
         <div className="flex flex-wrap gap-2">
           {visibleTags.map((tag) => (
             <span
               key={tag}
-              className={`px-2.5 py-1 text-xs font-bold rounded-md border ${
+              className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${
                 tagColors[tag] || 'bg-[#E5E7EB] text-[#374151] border-[#D1D5DB]'
               }`}
             >
@@ -76,9 +74,10 @@ export function SolutionCard({
         </div>
       </div>
 
-      <div className="mt-4 pt-3 border-t-[1.5px] border-[#CBD5E1]">
-        <span className="text-xs font-semibold text-[#475569]">{date}</span>
+      <div className="mt-4 flex items-center justify-between border-t border-[#E2E8F0] pt-3 text-xs text-[#475569]">
+        <span className="font-semibold">{date}</span>
+        <span className="rounded-full bg-[#F8FAFC] px-2.5 py-1 font-semibold text-[#0F766E] group-hover:bg-[#ECFDF5] transition-colors">Open details →</span>
       </div>
-    </div>
+    </article>
   )
 }

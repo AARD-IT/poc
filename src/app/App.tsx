@@ -184,6 +184,16 @@ export default function App() {
 
         <main className="flex-1 overflow-y-auto">
           <div className="p-6">
+            <section className="mb-6 rounded-3xl border border-[#E2E8F0] bg-[linear-gradient(135deg,#ffffff_0%,#f8fbff_100%)] p-6 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#0F766E]">POC launchpad</p>
+              <div className="mt-2 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                <div>
+                  <h1 className="text-2xl font-bold text-[#0F172A]">Explore the portfolio in a cleaner, consistent view</h1>
+                  <p className="mt-2 max-w-2xl text-[#475569]">The underlying project metadata and routing stay unchanged; only the presentation layer has been refined for a more polished enterprise experience.</p>
+                </div>
+                <div className="rounded-2xl border border-[#D1FAE5] bg-[#ECFDF5] px-4 py-2 text-sm font-semibold text-[#047857]">Refined UI · stable data flow</div>
+              </div>
+            </section>
             <ControlBar />
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">

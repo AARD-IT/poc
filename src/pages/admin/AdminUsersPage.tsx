@@ -102,28 +102,37 @@ export function AdminUsersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-[#1E293B]">User management</h1>
-          <p className="text-[15px] font-medium text-[#475569] mt-1">Approve, reject, assign roles, and revoke access.</p>
+      <section className="rounded-3xl border border-[#E2E8F0] bg-[linear-gradient(135deg,#ffffff_0%,#f8fbff_100%)] p-6 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#0F766E]">User management</p>
+        <div className="mt-2 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-[#0F172A]">Approve, assign, and manage access</h1>
+            <p className="mt-2 max-w-2xl text-[#475569]">Keep user governance professional and easy to scan while preserving all existing approval and role workflows.</p>
+          </div>
         </div>
-        <div className="relative max-w-sm w-full">
-          <input
-            type="search"
-            placeholder="Search users…"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            className="w-full px-4 py-2.5 bg-white border-[1.5px] border-[#CBD5E1] rounded-lg text-[15px] font-medium text-[#1E293B] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/20 shadow-sm"
-          />
+      </section>
+
+      <section className="rounded-3xl border border-[#E2E8F0] bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-[#0F172A]">Workspace users</h2>
+            <p className="text-sm text-[#475569]">Search by name, email, or company and manage status in one place.</p>
+          </div>
+          <div className="relative w-full max-w-sm">
+            <input
+              type="search"
+              placeholder="Search users…"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              className="w-full rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-2.5 text-[15px] font-medium text-[#0F172A] shadow-sm placeholder:text-[#94A3B8] focus:border-[#0F766E] focus:outline-none focus:ring-4 focus:ring-[rgba(15,118,110,0.12)]"
+            />
+          </div>
         </div>
-      </div>
+      </section>
 
       {err && <p className="text-sm font-medium text-[#B91C1C]">{err}</p>}
 
-      <div
-        className="bg-white border-[1.5px] border-[#CBD5E1] rounded-xl overflow-hidden shadow-sm"
-        style={{ boxShadow: '0 4px 12px rgba(15,23,42,0.08)' }}
-      >
+      <section className="overflow-hidden rounded-3xl border border-[#E2E8F0] bg-white shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
         {loading ? (
           <p className="p-6 text-[15px] font-medium text-[#475569]">Loading…</p>
         ) : filtered.length === 0 ? (
@@ -229,7 +238,7 @@ export function AdminUsersPage() {
             </table>
           </div>
         )}
-      </div>
+      </section>
     </div>
   )
 }

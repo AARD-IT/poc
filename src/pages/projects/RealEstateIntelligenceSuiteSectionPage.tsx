@@ -380,7 +380,7 @@ export function RealEstateIntelligenceSuiteSectionPage() {
   const summaryKpis = filtered?.kpis ?? datasetKpis
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-[linear-gradient(180deg,#F8FAFC_0%,#F8FBFF_100%)] p-6 max-w-7xl mx-auto space-y-6">
       <div className="flex items-center justify-between gap-4">
         <div>
           <button
@@ -397,8 +397,8 @@ export function RealEstateIntelligenceSuiteSectionPage() {
         </div>
       </div>
 
-      <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
-        <div className="inline-flex overflow-hidden rounded-3xl border border-[#CBD5E1] bg-[#F8FAFC] p-1">
+      <div className="aa-card p-4 bg-white">
+        <div className="inline-flex overflow-hidden rounded-3xl border border-[#CBD5E1] bg-[#F8FAFC] p-1 shadow-sm">
           <button
             type="button"
             onClick={() => setTab('overview')}
@@ -431,7 +431,7 @@ export function RealEstateIntelligenceSuiteSectionPage() {
 
       {tab === 'overview' ? (
         <div className="grid gap-6 xl:grid-cols-[1.3fr_0.9fr]">
-          <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+          <div className="aa-card p-6">
             <h2 className="text-2xl font-bold text-[#0F172A] mb-4">Overview</h2>
             <p className="text-[15px] text-[#475569] leading-relaxed mb-6">
               The Real Estate Intelligence Suite is built on a FastAPI backend with pandas and scikit-learn. It loads real estate datasets, applies filters, computes KPIs, runs price prediction models, and creates insight summaries for smarter property decisions.
@@ -448,7 +448,7 @@ export function RealEstateIntelligenceSuiteSectionPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+          <div className="aa-card p-6">
             <h2 className="text-2xl font-bold text-[#0F172A] mb-4">Business impact</h2>
             <div className="space-y-4">
               {impactStatements.map((item) => (
@@ -464,7 +464,7 @@ export function RealEstateIntelligenceSuiteSectionPage() {
         </div>
       ) : tab === 'attributes' ? (
         <div className="grid gap-6 xl:grid-cols-[1.3fr_0.9fr]">
-          <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+          <div className="aa-card p-6">
             <h2 className="text-2xl font-bold text-[#0F172A] mb-4">Required Column Dictionary</h2>
             <div className="overflow-x-auto">
               <table className="min-w-full text-left text-sm text-[#334155]">
@@ -491,7 +491,7 @@ export function RealEstateIntelligenceSuiteSectionPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+          <div className="aa-card p-6">
             <h2 className="text-2xl font-bold text-[#0F172A] mb-4">Variable roles</h2>
             <div className="space-y-3">
               {['City', 'Property_Type', 'Area_sqft'].map((variable) => (
@@ -513,7 +513,7 @@ export function RealEstateIntelligenceSuiteSectionPage() {
         <div className="space-y-6">
           <div className="space-y-6">
             <div className="space-y-6">
-              <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+              <div className="aa-card p-6">
                 <div className="flex items-center justify-between gap-4 mb-6">
                   <div>
                     <p className="text-xs uppercase tracking-[0.24em] text-[#475569]">Step 1</p>
@@ -538,11 +538,7 @@ export function RealEstateIntelligenceSuiteSectionPage() {
                           setColumnMapping({ City: '', Property_Type: '', Area_sqft: '', Price: '' })
                           setErrorMessage(null)
                         }}
-                        className={`rounded-3xl border px-4 py-3 text-sm font-semibold transition ${
-                          loadMode === mode
-                            ? 'border-[#0F766E] bg-[#ECFDF5] text-[#0F766E]'
-                            : 'border-[#CBD5E1] bg-white text-[#475569] hover:border-[#94A3B8] hover:bg-[#F8FAFC]'
-                        }`}
+                        className={`aa-button ${loadMode === mode ? 'aa-button-primary' : 'aa-button-secondary'} px-4 py-3 text-sm`}
                       >
                         {label}
                       </button>
@@ -654,7 +650,7 @@ export function RealEstateIntelligenceSuiteSectionPage() {
                         type="button"
                         onClick={loadMode === 'upload-mapping' ? handleApplyMapping : handleUpload}
                         disabled={!selectedFile || (loadMode === 'upload-mapping' && !csvColumns.length)}
-                        className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#1D4ED8] px-4 py-3 text-sm font-semibold text-white hover:bg-[#1E40AF] disabled:opacity-60"
+                        className="aa-button aa-button-primary px-4 py-3 disabled:opacity-60"
                       >
                         <CloudUpload className="w-4 h-4" />
                         {loadMode === 'upload-mapping' ? 'Map and upload CSV' : 'Upload CSV'}
@@ -696,7 +692,7 @@ export function RealEstateIntelligenceSuiteSectionPage() {
                 ) : null}
               </div>
 
-              <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+              <div className="aa-card p-6">
                 <div className="flex items-center justify-between gap-4 mb-6">
                   <div>
                     <p className="text-xs uppercase tracking-[0.24em] text-[#475569]">Step 2</p>
@@ -832,7 +828,7 @@ export function RealEstateIntelligenceSuiteSectionPage() {
                     <button
                       type="button"
                       onClick={handleApplyFilters}
-                      className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-[#0F766E] px-5 py-3 text-sm font-semibold text-white hover:bg-[#0D5F58]"
+                      className="aa-button aa-button-primary mt-5 px-5 py-3"
                     >
                       <ArrowRight className="w-4 h-4" />
                       Apply filters
@@ -843,7 +839,7 @@ export function RealEstateIntelligenceSuiteSectionPage() {
                         type="button"
                         onClick={handleRunPrediction}
                         disabled={!activeData.length}
-                        className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#1D4ED8] px-5 py-3 text-sm font-semibold text-white hover:bg-[#1E40AF] disabled:cursor-not-allowed disabled:opacity-60"
+                        className="aa-button aa-button-primary px-5 py-3 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         <BarChart3 className="w-4 h-4" />
                         Run ML prediction
@@ -852,7 +848,7 @@ export function RealEstateIntelligenceSuiteSectionPage() {
                         type="button"
                         onClick={handleRunInsights}
                         disabled={!activeData.length}
-                        className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#7C3AED] px-5 py-3 text-sm font-semibold text-white hover:bg-[#6D28D9] disabled:cursor-not-allowed disabled:opacity-60"
+                        className="aa-button aa-button-secondary px-5 py-3 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         <Sparkles className="w-4 h-4" />
                         Generate automated insights
@@ -864,7 +860,7 @@ export function RealEstateIntelligenceSuiteSectionPage() {
             </div>
 
             <div className="space-y-6">
-              <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+              <div className="aa-card p-6">
                 <h3 className="text-lg font-bold text-[#0F172A] mb-4">Key metrics</h3>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="rounded-3xl border border-[#CBD5E1] bg-[#F8FAFC] p-4">
@@ -886,7 +882,7 @@ export function RealEstateIntelligenceSuiteSectionPage() {
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+              <div className="aa-card p-6">
                 <h3 className="text-lg font-bold text-[#0F172A] mb-4">Charts</h3>
                 <div className="space-y-6">
                   <div className="rounded-3xl border border-[#CBD5E1] bg-[#F8FAFC] p-4">
@@ -979,7 +975,7 @@ export function RealEstateIntelligenceSuiteSectionPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+          <div className="aa-card p-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <h2 className="text-2xl font-bold text-[#0F172A]">Filtered preview</h2>
@@ -988,7 +984,7 @@ export function RealEstateIntelligenceSuiteSectionPage() {
               <button
                 type="button"
                 onClick={handleDownload}
-                className="inline-flex items-center gap-2 rounded-2xl bg-[#0F766E] px-5 py-3 text-sm font-semibold text-white hover:bg-[#0D5F58]"
+                className="aa-button aa-button-primary px-5 py-3"
               >
                 <Download className="w-4 h-4" />
                 Download CSV
@@ -1023,7 +1019,7 @@ export function RealEstateIntelligenceSuiteSectionPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+          <div className="aa-card p-6">
             <h3 className="text-lg font-bold text-[#0F172A] mb-4">ML — Price prediction</h3>
             {prediction ? (
               <div className="overflow-x-auto">
@@ -1059,7 +1055,7 @@ export function RealEstateIntelligenceSuiteSectionPage() {
             )}
           </div>
 
-          <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+          <div className="aa-card p-6">
             <h3 className="text-lg font-bold text-[#0F172A] mb-4">Automated insights</h3>
             {insights && insights.insights.length ? (
               <div className="overflow-x-auto">

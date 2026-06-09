@@ -366,7 +366,7 @@ export function RealEstateDemandForecastingSectionPage() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-[linear-gradient(180deg,#F8FAFC_0%,#F8FBFF_100%)] p-6 max-w-7xl mx-auto space-y-6">
       <div className="space-y-4">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -375,24 +375,24 @@ export function RealEstateDemandForecastingSectionPage() {
               Load listing data, refine city and property type filters, and generate demand forecasts with a real estate analytics backend.
             </p>
           </div>
-          <div className="rounded-3xl border border-[#E2E8F0] bg-white p-4 shadow-sm">
+          <div className="aa-card p-4">
             <div className="text-xs uppercase tracking-[0.24em] text-[#475569]">Status</div>
             <div className="mt-3 text-2xl font-bold text-[#0F172A]">{loading ? 'Refreshing' : 'Ready'}</div>
             <div className="mt-1 text-sm text-[#64748B]">{selectedFiltersLabel}</div>
           </div>
         </div>
 
-        <div className="rounded-3xl border border-[#E2E8F0] bg-white p-4 shadow-sm">
-          <div className="inline-flex overflow-hidden rounded-3xl border border-[#CBD5E1] bg-[#F8FAFC] p-1">
+        <div className="aa-card p-4">
+          <div className="inline-flex overflow-hidden rounded-3xl border border-[#CBD5E1] bg-[#F8FAFC] p-1 shadow-sm">
             {(['overview', 'attributes', 'application'] as Tab[]).map((currentTab) => (
               <button
                 key={currentTab}
                 type="button"
                 onClick={() => setTab(currentTab)}
-                className={`rounded-3xl px-5 py-3 text-sm font-semibold transition ${
+                className={`aa-button px-5 py-3 text-sm ${
                   tab === currentTab
-                    ? 'bg-white text-[#0F172A] shadow-sm'
-                    : 'text-[#475569] hover:text-[#0F172A]'
+                    ? 'aa-button-primary'
+                    : 'aa-button-secondary'
                 }`}
               >
                 {currentTab === 'overview' ? 'Overview' : currentTab === 'attributes' ? 'Important Attributes' : 'Application'}
@@ -403,7 +403,7 @@ export function RealEstateDemandForecastingSectionPage() {
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {summaryCards.map((card) => (
-            <div key={card.label} className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+            <div key={card.label} className="aa-card p-6">
               <div className="text-sm font-semibold text-[#475569]">{card.label}</div>
               <div className="mt-4 text-3xl font-bold text-[#0F172A]">{card.value}</div>
             </div>
@@ -413,14 +413,14 @@ export function RealEstateDemandForecastingSectionPage() {
 
       {tab === 'overview' ? (
         <div className="grid gap-6 xl:grid-cols-[1.3fr_0.9fr]">
-          <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+          <div className="aa-card p-6">
             <h2 className="text-2xl font-bold text-[#0F172A] mb-4">Overview</h2>
             <p className="text-sm text-[#475569] leading-relaxed mb-6">
               A complete forecasting engine for real estate demand analysis. Tracks market cycles, price trends, inventory behavior, and predicts demand for the upcoming months.
             </p>
             <div className="space-y-4">
               {overviewFeatures.map((item) => (
-                <div key={item} className="rounded-3xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 text-sm text-[#334155]">
+                <div key={item} className="aa-surface-muted p-4 text-sm text-[#334155]">
                   {item}
                 </div>
               ))}
@@ -428,7 +428,7 @@ export function RealEstateDemandForecastingSectionPage() {
           </div>
 
           <div className="space-y-6">
-            <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+            <div className="aa-card p-6">
               <h2 className="text-2xl font-bold text-[#0F172A] mb-4">Business Impact</h2>
               <div className="space-y-3">
                 {impactStatements.map((item) => (
@@ -439,7 +439,7 @@ export function RealEstateDemandForecastingSectionPage() {
               </div>
             </div>
 
-            <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+            <div className="aa-card p-6">
               <h2 className="text-2xl font-bold text-[#0F172A] mb-4">High-Level KPIs</h2>
               <div className="grid gap-3 sm:grid-cols-2">
                 {overviewKpis.map((item) => (
@@ -453,7 +453,7 @@ export function RealEstateDemandForecastingSectionPage() {
         </div>
       ) : tab === 'attributes' ? (
         <div className="grid gap-6 xl:grid-cols-[1.3fr_0.9fr]">
-          <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+          <div className="aa-card p-6">
             <h2 className="text-2xl font-bold text-[#0F172A] mb-4">Required Column Dictionary</h2>
             <div className="overflow-x-auto">
               <table className="min-w-full text-left text-sm text-[#334155]">
@@ -481,7 +481,7 @@ export function RealEstateDemandForecastingSectionPage() {
           </div>
 
           <div className="space-y-4">
-            <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+            <div className="aa-card p-6">
               <h2 className="text-2xl font-bold text-[#0F172A] mb-4">Independent Variables</h2>
               {['City', 'Listing_Date', 'Property_Type', 'Price'].map((item) => (
                 <div key={item} className="rounded-3xl border border-[#CBD5E1] bg-[#F8FAFC] p-4 text-sm text-[#334155]">
@@ -490,7 +490,7 @@ export function RealEstateDemandForecastingSectionPage() {
               ))}
             </div>
 
-            <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+            <div className="aa-card p-6">
               <h2 className="text-2xl font-bold text-[#0F172A] mb-4">Dependent Variables</h2>
               {['Demand', 'Trend', 'Forecast'].map((item) => (
                 <div key={item} className="rounded-3xl border border-[#CBD5E1] bg-[#F8FAFC] p-4 text-sm text-[#334155]">
@@ -502,7 +502,7 @@ export function RealEstateDemandForecastingSectionPage() {
         </div>
       ) : (
         <div className="space-y-6">
-          <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+          <div className="aa-card p-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <p className="text-sm uppercase tracking-[0.24em] text-[#475569]">Step 1 � Load Dataset</p>
@@ -531,7 +531,7 @@ export function RealEstateDemandForecastingSectionPage() {
           </div>
 
           {appMode === 'default' && (
-            <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+            <div className="aa-card p-6">
               <h2 className="text-2xl font-bold text-[#0F172A] mb-4">Default dataset</h2>
               <p className="text-sm text-[#475569] mb-6">
                 Load the standard dataset from the backend and visualize results in the application panels below.
@@ -539,7 +539,7 @@ export function RealEstateDemandForecastingSectionPage() {
               <button
                 type="button"
                 onClick={loadDefaultDatasetFromApi}
-                className="inline-flex items-center gap-2 rounded-2xl bg-[#0F766E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#0D5F58]"
+                className="aa-button aa-button-primary px-4 py-3"
               >
                 <Download className="w-4 h-4" />
                 Load default dataset
@@ -548,12 +548,12 @@ export function RealEstateDemandForecastingSectionPage() {
           )}
 
           {appMode === 'upload' && (
-            <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+            <div className="aa-card p-6">
               <h2 className="text-2xl font-bold text-[#0F172A] mb-4">Upload CSV</h2>
               <button
                 type="button"
                 onClick={downloadSampleCsv}
-                className="inline-flex items-center gap-2 rounded-2xl bg-[#0F766E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#0D5F58]"
+                className="aa-button aa-button-primary px-4 py-3"
               >
                 <Download className="w-4 h-4" />
                 Download sample CSV
@@ -572,7 +572,7 @@ export function RealEstateDemandForecastingSectionPage() {
           )}
 
           {appMode === 'mapping' && (
-            <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+            <div className="aa-card p-6">
               <h2 className="text-2xl font-bold text-[#0F172A] mb-4">Upload CSV + Column mapping</h2>
               <div className="rounded-3xl border border-dashed border-[#94A3B8] bg-[#F8FAFC] p-6">
                 <label className="block cursor-pointer">
@@ -615,7 +615,7 @@ export function RealEstateDemandForecastingSectionPage() {
                   <button
                     type="button"
                     onClick={applyMapping}
-                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#0F766E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#0D5F58]"
+                    className="aa-button aa-button-primary px-4 py-3"
                   >
                     <MapPin className="w-4 h-4" />
                     Apply mapping
@@ -625,7 +625,7 @@ export function RealEstateDemandForecastingSectionPage() {
             </div>
           )}
 
-          <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+          <div className="aa-card p-6">
             <div className="flex items-center justify-between gap-4 mb-5">
               <div>
                 <p className="text-xs uppercase tracking-[0.24em] text-[#475569]">Step 2 � Filters</p>
@@ -634,7 +634,7 @@ export function RealEstateDemandForecastingSectionPage() {
               <button
                 type="button"
                 onClick={downloadFilteredDataset}
-                className="inline-flex items-center gap-2 rounded-2xl bg-[#0F766E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#0D5F58]"
+                className="aa-button aa-button-primary px-4 py-3"
               >
                 <Download className="w-4 h-4" />
                 Download filtered dataset
@@ -752,7 +752,7 @@ export function RealEstateDemandForecastingSectionPage() {
               <button
                 type="button"
                 onClick={applyFilterSelection}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#0F766E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#0D5F58]"
+                className="aa-button aa-button-primary px-4 py-3"
               >
                 <MapPin className="w-4 h-4" />
                 Apply filters
@@ -760,7 +760,7 @@ export function RealEstateDemandForecastingSectionPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+          <div className="aa-card p-6">
             <div className="flex items-center justify-between gap-4 mb-5">
               <div>
                 <p className="text-xs uppercase tracking-[0.24em] text-[#475569]">Data preview</p>
@@ -797,7 +797,7 @@ export function RealEstateDemandForecastingSectionPage() {
           </div>
 
           <div className="grid gap-6 xl:grid-cols-[1.3fr_0.9fr]">
-            <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+            <div className="aa-card p-6">
               <div className="flex items-center justify-between gap-4 mb-5">
                 <div>
                   <p className="text-xs uppercase tracking-[0.24em] text-[#475569]">Metrics</p>
@@ -819,7 +819,7 @@ export function RealEstateDemandForecastingSectionPage() {
               </div>
             </div>
 
-            <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm overflow-auto">
+            <div className="aa-card p-6 overflow-auto">
               <div className="flex items-center justify-between gap-4 mb-5">
                 <div>
                   <p className="text-xs uppercase tracking-[0.24em] text-[#475569]">Forecast summary</p>
@@ -838,7 +838,7 @@ export function RealEstateDemandForecastingSectionPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+          <div className="aa-card p-6">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <h2 className="text-2xl font-bold text-[#0F172A]">Monthly Demand Trend</h2>
@@ -873,7 +873,7 @@ export function RealEstateDemandForecastingSectionPage() {
           </div>
 
           <div className="grid gap-6">
-            <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+            <div className="aa-card p-6">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h2 className="text-2xl font-bold text-[#0F172A]">Demand by Property Type</h2>
@@ -896,7 +896,7 @@ export function RealEstateDemandForecastingSectionPage() {
               </div>
             </div>
 
-            <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm overflow-auto">
+            <div className="aa-card p-6 overflow-auto">
               <div className="flex items-center justify-between gap-4 mb-5">
                 <div>
                   <h2 className="text-2xl font-bold text-[#0F172A]">Automated insights</h2>
@@ -905,7 +905,7 @@ export function RealEstateDemandForecastingSectionPage() {
                 <button
                   type="button"
                   onClick={downloadInsights}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-[#0F766E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#0D5F58]"
+                  className="aa-button aa-button-primary px-4 py-3"
                 >
                   <Download className="w-4 h-4" />
                   Download insights
@@ -950,7 +950,7 @@ export function RealEstateDemandForecastingSectionPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+          <div className="aa-card p-6">
             <div className="flex items-center justify-between gap-4 mb-5">
               <div>
                 <h2 className="text-2xl font-bold text-[#0F172A]">6-Month Demand Forecast</h2>
@@ -959,7 +959,7 @@ export function RealEstateDemandForecastingSectionPage() {
               <button
                 type="button"
                 onClick={downloadForecast}
-                className="inline-flex items-center gap-2 rounded-2xl bg-[#0F766E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#0D5F58]"
+                className="aa-button aa-button-primary px-4 py-3"
               >
                 <Download className="w-4 h-4" />
                 Download forecast

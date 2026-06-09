@@ -88,7 +88,7 @@ export function IntelligentDocumentProcessorProjectPage() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-[linear-gradient(180deg,#F8FAFC_0%,#F8FBFF_100%)] p-6 max-w-7xl mx-auto space-y-6">
       <div className="mb-2">
         <button
           type="button"
@@ -98,15 +98,15 @@ export function IntelligentDocumentProcessorProjectPage() {
           ← Back
         </button>
       </div>
-      <div className="rounded-2xl border border-[#E2E8F0] bg-white p-8 shadow-sm">
+      <div className="aa-card p-8 bg-white">
         <h1 className="text-3xl font-bold text-[#0F172A] mb-4">Intelligent Document Processor (IDP)</h1>
         <p className="text-[16px] text-[#475569] leading-relaxed max-w-3xl">
           {overviewPurpose}
         </p>
       </div>
 
-      <div className="rounded-2xl border border-[#E2E8F0] bg-white p-4 shadow-sm">
-        <div className="inline-flex overflow-hidden rounded-2xl border border-[#CBD5E1] bg-[#F8FAFC] p-1">
+      <div className="aa-card p-4 bg-white">
+        <div className="inline-flex overflow-hidden rounded-2xl border border-[#CBD5E1] bg-[#F8FAFC] p-1 shadow-sm">
           <button
             type="button"
             onClick={() => setTab('overview')}
@@ -134,7 +134,7 @@ export function IntelligentDocumentProcessorProjectPage() {
 
       {tab === 'overview' ? (
         <div className="grid gap-6 lg:grid-cols-2">
-          <div className="rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+          <div className="aa-card bg-white p-6">
             <div className="flex items-center gap-3 mb-5">
               <Sparkles className="w-5 h-5 text-[#0284C7]" />
               <h2 className="text-lg font-bold text-[#0F172A]">Capabilities</h2>
@@ -149,7 +149,7 @@ export function IntelligentDocumentProcessorProjectPage() {
             </ul>
           </div>
 
-          <div className="rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+          <div className="aa-card bg-white p-6">
             <div className="flex items-center gap-3 mb-5">
               <ShieldCheck className="w-5 h-5 text-[#0F766E]" />
               <h2 className="text-lg font-bold text-[#0F172A]">Business Impact</h2>
@@ -166,28 +166,20 @@ export function IntelligentDocumentProcessorProjectPage() {
         </div>
       ) : (
         <div className="space-y-6">
-          <div className="rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+          <div className="aa-card bg-white p-6">
             <p className="text-sm font-semibold text-[#475569] mb-3">Input mode</p>
             <div className="grid gap-3 sm:grid-cols-2">
               <button
                 type="button"
                 onClick={() => setMode('upload')}
-                className={`rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition ${
-                  mode === 'upload'
-                    ? 'border-[#7C3AED] bg-[#EEF2FF] text-[#312E81]'
-                    : 'border-[#CBD5E1] bg-white text-[#475569] hover:border-[#94A3B8]'
-                }`}
+                className={`aa-button ${mode === 'upload' ? 'aa-button-primary' : 'aa-button-secondary'} px-4 py-3 text-left`}
               >
                 Upload Your Documents
               </button>
               <button
                 type="button"
                 onClick={() => setMode('demo')}
-                className={`rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition ${
-                  mode === 'demo'
-                    ? 'border-[#7C3AED] bg-[#EEF2FF] text-[#312E81]'
-                    : 'border-[#CBD5E1] bg-white text-[#475569] hover:border-[#94A3B8]'
-                }`}
+                className={`aa-button ${mode === 'demo' ? 'aa-button-primary' : 'aa-button-secondary'} px-4 py-3 text-left`}
               >
                 Run Demo (Internal Samples)
               </button>
@@ -195,7 +187,7 @@ export function IntelligentDocumentProcessorProjectPage() {
           </div>
 
           {mode === 'upload' ? (
-            <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-6 shadow-sm">
+            <div className="aa-surface-muted p-6">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="font-semibold text-[#0F172A]">Upload documents to analyze</p>
@@ -203,7 +195,7 @@ export function IntelligentDocumentProcessorProjectPage() {
                     Supported formats: PDF, JPG, PNG, GIF, DOCX, XLSX, TXT.
                   </p>
                 </div>
-                <label className="inline-flex items-center justify-center rounded-xl bg-white border border-[#CBD5E1] px-4 py-3 text-sm font-semibold text-[#1E293B] cursor-pointer hover:border-[#94A3B8]">
+                <label className="aa-button aa-button-secondary cursor-pointer px-4 py-3">
                   Browse files
                   <input type="file" multiple className="hidden" onChange={handleFileChange} />
                 </label>
@@ -253,14 +245,14 @@ export function IntelligentDocumentProcessorProjectPage() {
                 type="button"
                 onClick={handleProcess}
                 disabled={isProcessing}
-                className="inline-flex items-center gap-2 rounded-xl bg-[#0F766E] px-6 py-3 text-white font-semibold transition hover:bg-[#0D5F58] disabled:opacity-60 disabled:cursor-not-allowed"
+                className="aa-button aa-button-primary px-6 py-3 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Run Demo on Internal Samples'}
               </button>
             </div>
           )}
 
-          <div className="rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+          <div className="aa-card bg-white p-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm font-semibold text-[#475569]">Execution</p>
@@ -270,7 +262,7 @@ export function IntelligentDocumentProcessorProjectPage() {
                 type="button"
                 onClick={handleProcess}
                 disabled={isProcessing || (mode === 'upload' && files.length === 0)}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#7C3AED] px-6 py-3 text-white font-semibold transition hover:bg-[#6D28D9] disabled:opacity-60 disabled:cursor-not-allowed"
+                className="aa-button aa-button-primary px-6 py-3 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Start Processing'}
               </button>

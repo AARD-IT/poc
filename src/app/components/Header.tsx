@@ -1,4 +1,4 @@
-import { Bell, LogOut, Menu, Search, Settings, Shield, User } from 'lucide-react'
+import { Bell, LogOut, Menu, Settings, Shield, User } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import {
@@ -14,18 +14,10 @@ import { useAuthStore } from '@/stores/authStore'
 import { isStaffRole } from '@/types/domain'
 import type { NotificationRow } from '@/types/domain'
 
-export interface HeaderProps {
-  searchQuery?: string
-  onSearchChange?: (q: string) => void
-}
-
-export function Header({ searchQuery: controlledQ, onSearchChange }: HeaderProps) {
+export function Header() {
   const navigate = useNavigate()
   const profile = useAuthStore((s) => s.profile)
   const signOut = useAuthStore((s) => s.signOut)
-  const [localQ, setLocalQ] = useState('')
-  const q = controlledQ !== undefined ? controlledQ : localQ
-  const setQ = onSearchChange ?? setLocalQ
 
   const [notifications, setNotifications] = useState<NotificationRow[]>([])
   const [notifOpen, setNotifOpen] = useState(false)
@@ -48,36 +40,26 @@ export function Header({ searchQuery: controlledQ, onSearchChange }: HeaderProps
   const unread = notifications.filter((n) => !n.is_read).length
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white border-b-2 border-[#CBD5E1] shadow-sm">
-      <div className="flex items-center justify-between px-6 py-3">
+    <header className="sticky top-0 z-50 w-full border-b border-[#E2E8F0] bg-white/95 shadow-[0_12px_32px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-3">
         <div className="flex items-center gap-8">
-          <Link to="/dashboard" className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#0F766E] to-[#0284C7] flex items-center justify-center shadow-md">
-              <span className="text-white font-bold text-base">AA</span>
+          <Link to="/dashboard" className="flex items-center gap-3 rounded-2xl px-2 py-1 transition-colors hover:bg-[#F8FAFC]">
+            <img src="/logo/logo.svg" alt="Analytics Avenue logo" className="h-10 w-10 object-contain" />
+            <div className="flex items-center gap-1 text-xl font-bold tracking-tight">
+              <span className="text-[#1C3D76]">Analytics</span>
+              <span className="text-[#080808]">Avenue</span>
             </div>
-            <span className="font-bold text-[#1E293B] text-lg">Analytics Avenue</span>
           </Link>
         </div>
 
-        <div className="flex-1 max-w-2xl mx-8">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#475569]" />
-            <input
-              type="text"
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Search solutions..."
-              className="w-full pl-11 pr-4 py-2.5 bg-white border-[1.5px] border-[#CBD5E1] rounded-lg text-[15px] font-medium text-[#1E293B] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/20 shadow-sm"
-            />
-          </div>
-        </div>
+        <div className="flex-1" />
 
         <div className="flex items-center gap-3">
           <Popover open={notifOpen} onOpenChange={setNotifOpen}>
             <PopoverTrigger asChild>
               <button
                 type="button"
-                className="relative p-2.5 hover:bg-[#F1F5F9] rounded-lg transition-colors"
+                className="relative rounded-xl p-2.5 transition-all duration-200 hover:bg-[#F8FAFC] hover:text-[#0F766E]"
                 aria-label="Notifications"
               >
                 <Bell className="w-5 h-5 text-[#1E293B]" />
@@ -121,7 +103,7 @@ export function Header({ searchQuery: controlledQ, onSearchChange }: HeaderProps
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button type="button" className="p-1.5 hover:bg-[#F1F5F9] rounded-lg transition-colors">
+              <button type="button" className="rounded-xl p-1.5 transition-all duration-200 hover:bg-[#F8FAFC]">
                 <div className="w-9 h-9 rounded-full bg-[#0F766E] flex items-center justify-center shadow-md">
                   <User className="w-5 h-5 text-white" />
                 </div>
@@ -158,7 +140,7 @@ export function Header({ searchQuery: controlledQ, onSearchChange }: HeaderProps
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <button type="button" className="p-2.5 hover:bg-[#F1F5F9] rounded-lg transition-colors">
+          <button type="button" className="rounded-xl p-2.5 transition-all duration-200 hover:bg-[#F8FAFC]">
             <Menu className="w-5 h-5 text-[#1E293B]" />
           </button>
         </div>

@@ -2,35 +2,45 @@
 
 :root {
   --font-size: 16px;
-  --background: #ffffff;
-  --foreground: oklch(0.145 0 0);
-  --card: #ffffff;
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: #030213;
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.95 0.0058 264.53);
-  --secondary-foreground: #030213;
-  --muted: #ececf0;
-  --muted-foreground: #717182;
-  --accent: #e9ebef;
-  --accent-foreground: #030213;
-  --destructive: #d4183d;
-  --destructive-foreground: #ffffff;
-  --border: rgba(0, 0, 0, 0.1);
-  --input: transparent;
-  --input-background: #f3f3f5;
-  --switch-background: #cbced4;
+  --font-family: Inter, system-ui, sans-serif;
+  --background: #F8FAFC;
+  --foreground: #0F172A;
+  --card: #FFFFFF;
+  --surface-muted: #F8FAFC;
+  --surface-elevated: linear-gradient(135deg, #FFFFFF 0%, #F8FBFF 100%);
+  --card-foreground: #0F172A;
+  --popover: #FFFFFF;
+  --popover-foreground: #0F172A;
+  --primary: #0F766E;
+  --primary-foreground: #FFFFFF;
+  --primary-hover: #115E59;
+  --secondary: #ECFDF5;
+  --secondary-foreground: #0F766E;
+  --muted: #F1F5F9;
+  --muted-foreground: #475569;
+  --accent: #E2E8F0;
+  --accent-foreground: #0F172A;
+  --destructive: #DC2626;
+  --destructive-foreground: #FFFFFF;
+  --border: #E2E8F0;
+  --input: #FFFFFF;
+  --input-background: #FFFFFF;
+  --switch-background: #CBD5E1;
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --ring: oklch(0.708 0 0);
+  --ring: rgba(15, 118, 110, 0.25);
+  --success: #16A34A;
+  --warning: #D97706;
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.625rem;
+  --radius: 1rem;
+  --shadow-card: 0 18px 40px rgba(15, 23, 42, 0.08);
+  --shadow-soft: 0 12px 30px rgba(15, 23, 42, 0.08);
+  --shadow-hover: 0 24px 48px rgba(15, 23, 42, 0.14);
+  --focus-ring: rgba(15, 118, 110, 0.16);
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: #030213;
@@ -126,6 +136,97 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-family);
+    background-image: linear-gradient(180deg, #F8FAFC 0%, #F8FBFF 100%);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  button,
+  [role='button'],
+  input,
+  select,
+  textarea {
+    transition: all 180ms ease;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+  }
+
+  .aa-card,
+  .aa-surface {
+    border: 1px solid var(--border);
+    border-radius: 1.5rem;
+    background: var(--card);
+    box-shadow: var(--shadow-card);
+  }
+
+  .aa-surface-muted {
+    border: 1px solid var(--border);
+    border-radius: 1.25rem;
+    background: var(--surface-muted);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .aa-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    border-radius: 0.95rem;
+    padding: 0.7rem 1rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1;
+    box-shadow: var(--shadow-soft);
+    transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+  }
+
+  .aa-button:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-hover);
+  }
+
+  .aa-button-primary {
+    background: linear-gradient(135deg, #0F766E 0%, #0D9488 100%);
+    color: #FFFFFF;
+    border: 1px solid transparent;
+  }
+
+  .aa-button-primary:hover {
+    background: linear-gradient(135deg, #115E59 0%, #0F766E 100%);
+  }
+
+  .aa-button-secondary {
+    background: #FFFFFF;
+    color: #0F172A;
+    border: 1px solid #CBD5E1;
+  }
+
+  .aa-button-secondary:hover {
+    background: #F8FAFC;
+    border-color: #94A3B8;
+  }
+
+  .aa-field {
+    border-radius: 1rem;
+    border: 1px solid #CBD5E1;
+    background: #FFFFFF;
+    box-shadow: var(--shadow-soft);
+  }
+
+  .aa-field:focus-visible,
+  .aa-field:focus {
+    outline: none;
+    border-color: #0F766E;
+    box-shadow: 0 0 0 4px var(--focus-ring);
   }
 
   /**

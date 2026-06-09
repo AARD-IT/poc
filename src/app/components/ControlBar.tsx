@@ -1,37 +1,32 @@
-import { ChevronDown, Search } from 'lucide-react'
+import { Search } from 'lucide-react'
 import { useSearchFilters } from '@/contexts/SearchFiltersContext'
 
 export function ControlBar() {
   const { resultsQuery, setResultsQuery } = useSearchFilters()
 
   return (
-    <div className="flex items-center gap-4 mb-6">
-      <button
-        type="button"
-        className="px-5 py-2.5 bg-white border-[1.5px] border-[#CBD5E1] rounded-lg text-[15px] font-bold text-[#1E293B] hover:bg-[#F1F5F9] hover:border-[#94A3B8] transition-all flex items-center gap-2 shadow-sm"
-      >
-        Sort by: Relevance
-        <ChevronDown className="w-4 h-4" />
-      </button>
-
-      <div className="relative flex-1 max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#475569]" />
-        <input
-          type="text"
-          value={resultsQuery}
-          onChange={(e) => setResultsQuery(e.target.value)}
-          placeholder="Search in results..."
-          className="w-full pl-11 pr-4 py-2.5 bg-white border-[1.5px] border-[#CBD5E1] rounded-lg text-[15px] font-medium text-[#1E293B] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/20 shadow-sm"
-        />
+    <section className="mb-6 rounded-3xl border border-[#E2E8F0] bg-white/95 p-4 shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur-sm lg:p-5">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#0F766E]">Workspace view</p>
+          <h2 className="mt-1 text-xl font-semibold text-[#0F172A]">Explore enterprise-ready solutions across industries</h2>
+          <p className="mt-2 max-w-2xl text-[#475569]">Search and evaluate solutions spanning healthcare, HR, real estate, supply chain, document intelligence, and generative AI applications.</p>
+        </div>
       </div>
 
-      <div className="flex-1">
-        <input
-          type="text"
-          placeholder="Describe who you're meeting..."
-          className="w-full px-4 py-2.5 bg-white border-[1.5px] border-[#CBD5E1] rounded-lg text-[15px] font-medium text-[#1E293B] placeholder:text-[#94A3B8] focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/20 shadow-sm"
-        />
+      <div className="mt-4 flex flex-col gap-4 xl:flex-row xl:items-center">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#475569]" />
+          <input
+            type="text"
+            value={resultsQuery}
+            onChange={(e) => setResultsQuery(e.target.value)}
+            placeholder="Search in results..."
+            className="w-full rounded-2xl border border-[#E2E8F0] bg-white py-2.5 pl-11 pr-4 text-[15px] font-medium text-[#0F172A] shadow-sm placeholder:text-[#94A3B8] transition-all duration-200 focus:border-[#0F766E] focus:outline-none focus:ring-4 focus:ring-[rgba(15,118,110,0.12)]"
+          />
+        </div>
+
       </div>
-    </div>
+    </section>
   )
 }

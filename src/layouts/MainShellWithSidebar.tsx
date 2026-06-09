@@ -4,11 +4,11 @@ import { Header } from '@/app/components/Header'
 import { SearchFiltersProvider, useSearchFilters } from '@/contexts/SearchFiltersContext'
 
 function ShellInner() {
-  const { headerQuery, setHeaderQuery, selectedFilters, setSelectedFilters } = useSearchFilters()
+  const { selectedFilters, setSelectedFilters } = useSearchFilters()
 
   return (
     <div className="min-h-screen bg-[#F1F5F9]">
-      <Header searchQuery={headerQuery} onSearchChange={setHeaderQuery} />
+      <Header />
 
       <div className="flex h-[calc(100vh-57px)]">
         <FilterSidebar

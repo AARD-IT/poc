@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { ControlBar } from '@/app/components/ControlBar'
 import { SolutionCard } from '@/app/components/SolutionCard'
+import { Skeleton } from '@/app/components/ui/skeleton'
 import { EnterpriseEmpty } from '@/components/empty-states/EnterpriseEmpty'
 import { useAuthStore } from '@/stores/authStore'
 import { isStaffRole } from '@/types/domain'
@@ -16,7 +17,7 @@ export function DashboardPage() {
   const profileError = useAuthStore((s) => s.profileError)
   const [projects, setProjects] = useState<ProjectRegistryItem[]>([])
   const [loadingProjects, setLoadingProjects] = useState(true)
-  const { selectedFilters } = useSearchFilters()
+  const { resultsQuery, selectedFilters } = useSearchFilters()
 
   useEffect(() => {
     if (!profile || profile.status !== 'approved') {
@@ -42,7 +43,21 @@ export function DashboardPage() {
   if (profileLoading && !profile) {
     return (
       <div className="p-6">
-        <div className="text-[15px] font-medium text-[#475569] py-12 text-center">Loading your workspace…</div>
+        <div className="mb-6 rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+          <Skeleton className="h-6 w-48" />
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+          </div>
+        </div>
+        <div className="grid gap-5 lg:grid-cols-2">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} className="rounded-3xl border border-[#E2E8F0] bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <Skeleton className="h-5 w-24" />
+              <Skeleton className="mt-4 h-24 w-full" />
+            </div>
+          ))}
+        </div>
       </div>
     )
   }
@@ -86,7 +101,18 @@ export function DashboardPage() {
   if (loadingProjects) {
     return (
       <div className="p-6">
-        <div className="text-[15px] font-medium text-[#475569] py-12 text-center">Loading projects…</div>
+        <div className="mb-6 rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+          <Skeleton className="h-6 w-56" />
+          <Skeleton className="mt-3 h-4 w-80" />
+        </div>
+        <div className="grid gap-5 lg:grid-cols-2">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} className="rounded-3xl border border-[#E2E8F0] bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <Skeleton className="h-5 w-24" />
+              <Skeleton className="mt-4 h-24 w-full" />
+            </div>
+          ))}
+        </div>
       </div>
     )
   }
@@ -105,20 +131,33 @@ export function DashboardPage() {
 
   return (
     <div className="p-6">
+      <section className="mb-6 rounded-3xl border border-[#E2E8F0] bg-[linear-gradient(135deg,#ffffff_0%,#f8fbff_100%)] p-6 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#0F766E]">POC overview</p>
+        <div className="mt-2 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-[#0F172A]">Welcome to the Analytics Avenue Innovation Hub</h1>
+            <p className="mt-2 max-w-2xl text-[#475569]">Access a curated portfolio of AI, analytics, automation, and industry-specific proof-of-concepts developed to showcase practical business transformation opportunities.</p>
+          </div>
+        </div>
+      </section>
       <ControlBar />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {(() => {
-          const norm = (s: string) => s.toLowerCase().trim()
+          const norm = (s: string): string => s.toLowerCase().trim()
+          const searchTerm = norm(resultsQuery)
           const activeIndustryFilters = Array.from(selectedFilters)
             .filter((f) => f.startsWith('Industry-'))
             .map((f) => f.slice(f.indexOf('-') + 1))
 
-          const filtered = projects.filter((p) => {
+          const filtered = projects.filter((p: ProjectRegistryItem) => {
+            const haystack = norm([p.title, p.description, p.category].join(' '))
+            if (searchTerm && !haystack.includes(searchTerm)) return false
+
             if (activeIndustryFilters.length === 0) return true
             return activeIndustryFilters.some((label) => norm(p.category) === norm(label))
           })
 
-          return filtered.map((project, index) => (
+          return filtered.map((project: ProjectRegistryItem, index: number) => (
             <SolutionCard
               key={project.slug}
               rank={index + 1}

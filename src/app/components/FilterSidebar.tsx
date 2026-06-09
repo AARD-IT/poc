@@ -1,28 +1,30 @@
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { useState } from 'react'
+import { getVisibleProjects } from '@/config/projects'
 
 interface FilterSection {
   title: string
   items: { label: string; count: number }[]
 }
 
-const defaultSections: FilterSection[] = [
-  {
-    title: 'Industry',
-    items: [
-      { label: 'Gen AI', count: 12 },
-      { label: 'HR', count: 4 },
-      { label: 'Real Estate', count: 4 },
-      { label: 'Supply Chain', count: 2 },
-      { label: 'Solar Power', count: 1 },
-      { label: 'Healthcare', count: 3 },
-      { label: 'Manufacturing', count: 2 },
-      { label: 'Ev', count: 1 },
-      { label: 'Marketing', count: 2 },
-      { label: 'Automobile', count: 1 },
-    ],
-  },
-]
+function buildDefaultSections(): FilterSection[] {
+  const counts = getVisibleProjects().reduce<Record<string, number>>((acc, project) => {
+    const label = project.category?.trim() || 'Other'
+    acc[label] = (acc[label] ?? 0) + 1
+    return acc
+  }, {})
+
+  return [
+    {
+      title: 'Industry',
+      items: Object.entries(counts)
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+        .map(([label, count]) => ({ label, count })),
+    },
+  ]
+}
+
+const defaultSections = buildDefaultSections()
 
 export interface FilterSidebarProps {
   /** When provided, replaces static demo counts (e.g. derived from live POCs). */
@@ -64,10 +66,8 @@ export function FilterSidebar({ sections, selectedFilters: controlled, onSelecte
   }
 
   return (
-    <aside className="w-64 bg-white border-r-2 border-[#CBD5E1] overflow-y-auto">
+    <aside className="w-72 border-r border-[#E2E8F0] bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] shadow-[inset_-1px_0_0_rgba(226,232,240,0.7)] backdrop-blur-sm overflow-y-auto">
       <div className="p-4">
-        <h2 className="font-bold text-[#1E293B] text-lg mb-4">Filters</h2>
-
         <div className="space-y-1">
           {filterSections.map((section) => {
             const isExpanded = expandedSections.has(section.title)
@@ -77,7 +77,7 @@ export function FilterSidebar({ sections, selectedFilters: controlled, onSelecte
                 <button
                   type="button"
                   onClick={() => toggleSection(section.title)}
-                  className="w-full flex items-center justify-between py-2 hover:bg-[#F1F5F9] px-2 rounded-lg transition-colors"
+                  className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 transition-all duration-200 hover:bg-[#F8FAFC]"
                 >
                   <span className="font-bold text-[15px] text-[#1E293B]">{section.title}</span>
                   {isExpanded ? (
@@ -98,9 +98,9 @@ export function FilterSidebar({ sections, selectedFilters: controlled, onSelecte
                           type="button"
                           key={item.label}
                           onClick={() => toggleFilter(filterId)}
-                          className={`w-full flex items-center justify-between py-2 px-3 rounded-lg text-[15px] font-medium transition-all ${isSelected
-                              ? 'bg-[#0F766E]/15 text-[#0F766E] border border-[#0F766E]/30'
-                              : 'hover:bg-[#F1F5F9] text-[#1E293B] border border-transparent'
+                          className={`flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-[15px] font-medium transition-all duration-200 ${isSelected
+                              ? 'border-[#0F766E]/30 bg-[#ECFDF5] text-[#0F766E] shadow-sm'
+                              : 'border-transparent text-[#1E293B] hover:bg-[#F8FAFC] hover:border-[#E2E8F0]'
                             }`}
                         >
                           <span>{item.label}</span>

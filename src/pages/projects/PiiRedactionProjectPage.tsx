@@ -39,7 +39,7 @@ function OverviewTab() {
   return (
     <div>
       <div className="grid grid-cols-1 gap-6">
-        <div className="border border-[#E2E8F0] rounded-2xl p-6 bg-white shadow-sm">
+        <div className="aa-card p-6">
           <p className="text-[11px] font-bold text-[#0284C7] uppercase tracking-[0.18em] mb-3">
             Purpose
           </p>
@@ -47,7 +47,7 @@ function OverviewTab() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="border border-[#E2E8F0] rounded-2xl p-6 bg-white shadow-sm">
+          <div className="aa-card p-6">
             <div className="flex items-center gap-2 mb-4">
               <Sparkles className="w-5 h-5 text-[#0284C7]" />
               <h3 className="text-lg font-bold text-[#0F172A]">Capabilities</h3>
@@ -62,7 +62,7 @@ function OverviewTab() {
             </ul>
           </div>
 
-          <div className="border border-[#E2E8F0] rounded-2xl p-6 bg-white shadow-sm">
+          <div className="aa-card p-6">
             <div className="flex items-center gap-2 mb-4">
               <ShieldCheck className="w-5 h-5 text-[#0F766E]" />
               <h3 className="text-lg font-bold text-[#0F172A]">Business Impact</h3>
@@ -149,7 +149,7 @@ function ApplicationTab() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+      <div className="aa-card p-6">
         <p className="text-sm font-semibold text-[#475569] mb-3">Select Input Mode:</p>
         <div className="flex flex-col gap-3 sm:flex-row">
           <label className="inline-flex items-center gap-3 rounded-2xl border border-[#CBD5E1] px-4 py-3 w-full sm:w-auto cursor-pointer transition hover:border-[#94A3B8]">
@@ -178,13 +178,13 @@ function ApplicationTab() {
       </div>
 
       {mode === 'upload' ? (
-        <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-6 shadow-sm">
+        <div className="aa-card p-6 bg-[#F8FAFC]">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="font-semibold text-[#0F172A]">Upload single files or select a batch of files (PDF, Image, MS Office, TXT):</p>
               <p className="text-sm text-[#64748B] mt-1">Limit 200MB per file • PDF, JPG, JPEG, PNG, GIF, TIFF, DOCX, XLSX, XLS, TXT, TIF</p>
             </div>
-            <label className="inline-flex items-center justify-center rounded-xl bg-white border border-[#CBD5E1] px-4 py-3 text-sm font-semibold text-[#1E293B] cursor-pointer hover:border-[#94A3B8]">
+            <label className="aa-button aa-button-secondary px-4 py-3 cursor-pointer hover:border-[#94A3B8]">
               Browse files
               <input type="file" multiple className="hidden" onChange={handleFileChange} />
             </label>
@@ -230,7 +230,7 @@ function ApplicationTab() {
               type="button"
               onClick={handleStart}
               disabled={fileCount === 0 || isProcessing}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#0F766E] px-6 py-3 text-white font-semibold transition hover:bg-[#0D5F58] disabled:opacity-60 disabled:cursor-not-allowed"
+              className="aa-button aa-button-primary px-6 py-3 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isProcessing ? (
                 <>
@@ -244,7 +244,7 @@ function ApplicationTab() {
           </div>
         </div>
       ) : (
-        <div className="rounded-2xl border border-[#CBD5E1] bg-white p-6 shadow-sm">
+        <div className="aa-card p-6 bg-[#F8FAFC]">
           <p className="text-[16px] font-medium text-[#475569] mb-5">
             Run a demo using internal sample documents for quick evaluation.
           </p>
@@ -252,7 +252,7 @@ function ApplicationTab() {
             type="button"
             onClick={handleRunDemo}
             disabled={isProcessing}
-            className="inline-flex items-center gap-2 rounded-xl bg-[#0F766E] px-6 py-3 text-white font-semibold transition hover:bg-[#0D5F58] disabled:opacity-60 disabled:cursor-not-allowed"
+            className="aa-button aa-button-primary px-6 py-3 disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {isProcessing ? (
               <>
@@ -277,7 +277,7 @@ function ApplicationTab() {
       )}
 
       {summary && (
-        <div className="rounded-2xl border border-[#D1FAE5] bg-[#ECFDF5] p-4 text-sm text-[#166534]">
+        <div className="aa-card border-[#A7F3D0] bg-[#ECFDF5] p-4 text-sm text-[#166534]">
           <div className="font-semibold mb-1">Processing summary</div>
           <div className="flex flex-wrap gap-4">
             <span>Total files: {summary.total_files}</span>
@@ -293,7 +293,7 @@ function ApplicationTab() {
             <Sparkles className="w-5 h-5 text-[#0F766E]" /> Processing Results
           </div>
           {results.map((result, index) => (
-            <div key={`${result.file_name}-${index}`} className="rounded-2xl border border-[#CBD5E1] bg-white shadow-sm overflow-hidden">
+            <div key={`${result.file_name}-${index}`} className="aa-card overflow-hidden">
               <button
                 type="button"
                 onClick={() => setExpandedIndex((prev) => (prev === index ? null : index))}
@@ -327,7 +327,7 @@ function ApplicationTab() {
                           <div>{result.pii_types?.join(', ') || 'None'}</div>
                         </div>
                       </div>
-                      <div className="rounded-2xl border border-[#CBD5E1] bg-white p-4 whitespace-pre-wrap text-sm text-[#334155]">
+                      <div className="aa-surface-muted p-4 whitespace-pre-wrap text-sm text-[#334155]">
                         {result.redacted_text || 'No redacted text available.'}
                       </div>
                     </>
@@ -347,7 +347,7 @@ export function PiiRedactionProjectPage() {
   const [activeTab, setActiveTab] = useState<Tab>('overview')
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="min-h-screen bg-[linear-gradient(180deg,#F8FAFC_0%,#F8FBFF_100%)] p-6 max-w-6xl mx-auto">
       <button
         type="button"
         onClick={() => navigate(-1)}
@@ -358,7 +358,7 @@ export function PiiRedactionProjectPage() {
 
       <div className="mb-10">
         <div className="flex flex-col gap-4">
-          <div className="inline-flex items-center gap-3 rounded-3xl bg-white px-4 py-3 border border-[#E2E8F0] shadow-sm">
+          <div className="aa-card inline-flex items-center gap-3 px-4 py-3">
             <span className="text-4xl">🤖</span>
             <h1 className="text-[2.25rem] font-bold text-[#0F172A] leading-tight">
               Automated PII Redaction Solution (Gen AI)
@@ -370,15 +370,15 @@ export function PiiRedactionProjectPage() {
         </div>
       </div>
 
-      <div className="border-b-2 border-[#E2E8F0] mb-8">
+      <div className="mb-8 border-b border-[#E2E8F0]">
         <div className="flex flex-wrap gap-3">
           <button
             type="button"
             onClick={() => setActiveTab('overview')}
-            className={`px-5 py-3 text-[15px] font-semibold transition ${
+            className={`aa-button px-5 py-3 text-[15px] ${
               activeTab === 'overview'
-                ? 'text-[#0F172A] border-b-2 border-[#0F766E]'
-                : 'text-[#64748B] hover:text-[#0F172A]'
+                ? 'aa-button-primary'
+                : 'aa-button-secondary'
             }`}
           >
             Overview
@@ -386,10 +386,10 @@ export function PiiRedactionProjectPage() {
           <button
             type="button"
             onClick={() => setActiveTab('application')}
-            className={`px-5 py-3 text-[15px] font-semibold transition ${
+            className={`aa-button px-5 py-3 text-[15px] ${
               activeTab === 'application'
-                ? 'text-[#0F172A] border-b-2 border-[#0F766E]'
-                : 'text-[#64748B] hover:text-[#0F172A]'
+                ? 'aa-button-primary'
+                : 'aa-button-secondary'
             }`}
           >
             Application

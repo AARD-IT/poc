@@ -188,12 +188,15 @@ export function AdminAccessManagementPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-[#1E293B]">Project access management</h1>
-        <p className="text-[15px] font-medium text-[#475569] mt-1">
-          Assign available projects directly from the codebase registry and manage user permissions by project slug.
-        </p>
-      </div>
+      <section className="rounded-3xl border border-[#E2E8F0] bg-[linear-gradient(135deg,#ffffff_0%,#f8fbff_100%)] p-6 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#0F766E]">Access management</p>
+        <div className="mt-2 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-[#0F172A]">Project access management</h1>
+            <p className="mt-2 max-w-2xl text-[#475569]">Grant or revoke visibility for approved clients while keeping the same access-control logic and email notifications.</p>
+          </div>
+        </div>
+      </section>
 
       {err && <p className="text-sm font-medium text-[#B91C1C]">{err}</p>}
       {success && <p className="text-sm font-medium text-[#047857]">{success}</p>}
@@ -202,10 +205,7 @@ export function AdminAccessManagementPage() {
         <p className="text-[15px] font-medium text-[#475569]">Loading…</p>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div
-            className="lg:col-span-1 bg-white border-[1.5px] border-[#CBD5E1] rounded-xl p-5 shadow-sm h-fit"
-            style={{ boxShadow: '0 4px 12px rgba(15,23,42,0.08)' }}
-          >
+          <section className="lg:col-span-1 rounded-3xl border border-[#E2E8F0] bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.08)] h-fit">
             <h2 className="font-bold text-[#1E293B] mb-3">User</h2>
             <select
               value={userId}
@@ -242,12 +242,9 @@ export function AdminAccessManagementPage() {
                 {saving ? 'Granting…' : 'Grant full (visible) access'}
               </button>
             </div>
-          </div>
+          </section>
 
-          <div
-            className="lg:col-span-2 bg-white border-[1.5px] border-[#CBD5E1] rounded-xl p-5 shadow-sm"
-            style={{ boxShadow: '0 4px 12px rgba(15,23,42,0.08)' }}
-          >
+          <section className="lg:col-span-2 rounded-3xl border border-[#E2E8F0] bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
             <h2 className="font-bold text-[#1E293B] mb-4">Assign projects</h2>
             {!userId ? (
               <p className="text-[15px] font-medium text-[#475569]">Select a user to manage their project access.</p>
@@ -275,7 +272,7 @@ export function AdminAccessManagementPage() {
                 ))}
               </div>
             )}
-          </div>
+          </section>
         </div>
       )}
     </div>

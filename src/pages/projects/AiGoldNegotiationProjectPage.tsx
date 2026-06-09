@@ -22,14 +22,14 @@ function OverviewTab() {
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.4fr_0.9fr]">
-        <div className="rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+        <div className="aa-card bg-white p-6">
           <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-[#F59E0B] mb-3">Purpose</p>
           <p className="text-[15px] text-[#334155] leading-relaxed">
             Analytics Avenue receives gold RFQs from buyers, reads the request, matches products, fetches live MCX gold price, calculates a compliant quote with a 30% pre-GST margin, generates a branded PDF, sends the quote email, and manages buyer negotiations with a 20% minimum margin floor.
           </p>
         </div>
 
-        <div className="rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+        <div className="aa-card bg-white p-6">
           <div className="flex items-center gap-2 mb-4">
             <Zap className="w-5 h-5 text-[#F59E0B]" />
             <h3 className="text-lg font-bold text-[#0F172A]">Capabilities</h3>
@@ -46,7 +46,7 @@ function OverviewTab() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+        <div className="aa-card bg-white p-6">
           <div className="flex items-center gap-2 mb-4">
             <ShieldCheck className="w-5 h-5 text-[#0F766E]" />
             <h3 className="text-lg font-bold text-[#0F172A]">Business Impact</h3>
@@ -61,7 +61,7 @@ function OverviewTab() {
           </ul>
         </div>
 
-        <div className="rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+        <div className="aa-card bg-white p-6">
           <h3 className="text-lg font-bold text-[#0F172A] mb-4">Pricing Equation</h3>
           <div className="space-y-3 text-[14px] text-[#334155] leading-relaxed">
             <p>From CSV: C = PurchaseCost / g | M = Making / g | W = Wastage % | P = Packaging | H = Hallmark</p>
@@ -79,7 +79,7 @@ function OverviewTab() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+      <div className="aa-card bg-white p-6">
         <h3 className="text-lg font-bold text-[#0F172A] mb-4">Negotiation Logic</h3>
         <div className="space-y-3 text-[14px] text-[#334155] leading-relaxed">
           <p>Quote at 30% margin. Floor = 20% margin. Floor price is calculated as AdjustedCost ÷ 0.80 per item.</p>
@@ -107,7 +107,7 @@ function ApplicationTab() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+      <div className="aa-card bg-white p-6">
         <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-[#F59E0B] mb-3">Upload Buyer RFQ</p>
@@ -150,7 +150,7 @@ function ApplicationTab() {
       </div>
 
       {showSummary && selectedFile && (
-        <div className="rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+        <div className="aa-card bg-white p-6">
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_0.9fr]">
             <div className="space-y-4">
               <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-5">
@@ -182,7 +182,7 @@ function ApplicationTab() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
+            <div className="aa-card bg-white p-6">
               <p className="text-sm font-semibold text-[#475569] mb-3">Suggested next actions</p>
               <div className="space-y-3">
                 <button className="w-full rounded-xl border border-[#CBD5E1] bg-[#F8FAFC] px-4 py-3 text-left text-[#0F172A] font-semibold">Generate Quote PDF</button>
@@ -194,7 +194,7 @@ function ApplicationTab() {
         </div>
       )}
 
-      <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-6 shadow-sm">
+      <div className="aa-surface-muted p-6">
         <p className="text-[13px] font-semibold uppercase tracking-[0.24em] text-[#0F766E] mb-4">Sample file for testing</p>
         <div className="rounded-2xl border border-[#CBD5E1] bg-white px-5 py-4 text-sm text-[#0F172A]">
           input_folder/sample_rfq.txt
@@ -219,7 +219,7 @@ export function AiGoldNegotiationProjectPage() {
           ← Back
         </button>
       </div>
-      <div className="mb-8 rounded-3xl border border-[#E2E8F0] bg-white p-8 shadow-sm">
+      <div className="mb-8 aa-card p-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl">
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#F59E0B] mb-4">AI Gold Negotiation Orchestrator</p>

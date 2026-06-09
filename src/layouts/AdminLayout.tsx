@@ -1,3 +1,4 @@
+import { ArrowLeft, Briefcase, Shield, Users } from 'lucide-react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router'
 import { Header } from '@/app/components/Header'
 
@@ -15,35 +16,40 @@ export function AdminLayout() {
       <Header />
 
       <div className="flex h-[calc(100vh-57px)]">
-        <aside className="w-64 bg-white border-r-2 border-[#CBD5E1] overflow-y-auto shrink-0">
-          <div className="p-4 border-b border-[#CBD5E1]">
-            <p className="text-xs font-bold text-[#475569] uppercase tracking-wide">Administration</p>
-            <p className="font-bold text-[#1E293B] text-lg mt-1">Control center</p>
+        <aside className="w-72 shrink-0 border-r border-[#E2E8F0] bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] shadow-[inset_-1px_0_0_rgba(226,232,240,0.7)] overflow-y-auto">
+          <div className="border-b border-[#E2E8F0] p-5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#0F766E]">Administration</p>
+            <h2 className="mt-2 text-xl font-bold text-[#0F172A]">Control center</h2>
+            <p className="mt-1 text-sm text-[#475569]">Manage users, access, and workspace governance in a consistent enterprise view.</p>
           </div>
-          <nav className="p-2 space-y-0.5">
+          <nav className="space-y-1 p-3">
             {nav.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
                 end={item.end}
                 className={({ isActive }) =>
-                  `block px-3 py-2.5 rounded-lg text-[15px] font-bold transition-colors ${
+                  `flex items-center gap-3 rounded-2xl border px-4 py-3 text-[15px] font-semibold transition-all duration-200 ${
                     isActive
-                      ? 'bg-[#0F766E]/15 text-[#0F766E] border border-[#0F766E]/30'
-                      : 'text-[#1E293B] hover:bg-[#F1F5F9] border border-transparent'
+                      ? 'border-[#0F766E]/30 bg-[#ECFDF5] text-[#0F766E] shadow-sm'
+                      : 'border-transparent text-[#1E293B] hover:border-[#E2E8F0] hover:bg-[#F8FAFC]'
                   }`
                 }
               >
-                {item.label}
+                {item.label === 'Overview' && <Shield className="h-4 w-4" />}
+                {item.label === 'Users' && <Users className="h-4 w-4" />}
+                {item.label === 'Access' && <Briefcase className="h-4 w-4" />}
+                <span>{item.label}</span>
               </NavLink>
             ))}
           </nav>
-          <div className="p-4 mt-4">
+          <div className="p-4 pt-2">
             <Link
               to="/dashboard"
-              className="text-[14px] font-bold text-[#0284C7] hover:underline"
+              className="inline-flex items-center gap-2 rounded-2xl border border-[#E2E8F0] bg-white px-4 py-2.5 text-[14px] font-semibold text-[#0F172A] shadow-sm transition-colors hover:bg-[#F8FAFC]"
             >
-              ← Back to dashboard
+              <ArrowLeft className="h-4 w-4" />
+              Back to dashboard
             </Link>
           </div>
         </aside>

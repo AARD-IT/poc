@@ -30,7 +30,7 @@ function OverviewTab() {
       <h2 className="text-2xl font-bold text-[#0F172A] mb-6">Overview</h2>
 
       {/* Purpose card */}
-      <div className="border border-[#E2E8F0] rounded-xl p-6 mb-8 bg-white shadow-sm">
+      <div className="aa-card p-6 mb-8 bg-white">
         <p className="text-[11px] font-bold text-[#0284C7] tracking-widest uppercase mb-3">
           Purpose
         </p>
@@ -50,7 +50,7 @@ function OverviewTab() {
             <Zap className="w-5 h-5 text-[#0284C7]" />
             <h3 className="text-lg font-bold text-[#0F172A]">Capabilities</h3>
           </div>
-          <div className="border border-[#E2E8F0] rounded-xl p-5 bg-white shadow-sm h-full">
+          <div className="aa-card p-5 bg-white h-full">
             <ul className="space-y-3">
               {capabilities.map((item, i) => (
                 <li key={i} className="flex items-start gap-2.5 text-[14px] text-[#334155] leading-relaxed">
@@ -68,7 +68,7 @@ function OverviewTab() {
             <TrendingUp className="w-5 h-5 text-[#0F766E]" />
             <h3 className="text-lg font-bold text-[#0F172A]">Business Impact</h3>
           </div>
-          <div className="border border-[#E2E8F0] rounded-xl p-5 bg-white shadow-sm h-full">
+          <div className="aa-card p-5 bg-white h-full">
             <ul className="space-y-3">
               {businessImpact.map((item, i) => (
                 <li key={i} className="flex items-start gap-2.5 text-[14px] text-[#334155] leading-relaxed">
@@ -267,7 +267,7 @@ function ApplicationTab() {
     <div>
       <h2 className="text-xl font-bold text-[#0F172A] mb-5">Your Details</h2>
 
-      <div className="border border-[#E2E8F0] rounded-xl p-6 bg-white shadow-sm">
+      <div className="aa-card p-6 bg-white">
         {/* Row 1: Name + Status */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
           <div>
@@ -417,7 +417,7 @@ function ApplicationTab() {
           type="button"
           onClick={handleGeneratePrescription}
           disabled={loading}
-          className="inline-flex items-center gap-2 px-6 py-3 bg-[#1a3c6e] hover:bg-[#152e55] disabled:opacity-70 disabled:cursor-not-allowed text-white font-bold text-[15px] rounded-lg transition-all shadow-md hover:shadow-lg"
+          className="aa-button aa-button-primary px-6 py-3 disabled:opacity-70 disabled:cursor-not-allowed"
         >
           <Rocket className="w-4 h-4" />
           {loading ? 'Generating...' : 'Generate Prescription'}
@@ -440,14 +440,14 @@ function ApplicationTab() {
             <button
               type="button"
               onClick={handleDownloadPdf}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#15803D] hover:bg-[#13673D] text-white font-semibold rounded-lg transition shadow-sm"
+              className="aa-button aa-button-primary px-6 py-3"
             >
               📄 Download PDF
             </button>
             <button
               type="button"
               onClick={handleDownloadDocx}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#166534] hover:bg-[#14532d] text-white font-semibold rounded-lg transition shadow-sm"
+              className="aa-button aa-button-secondary px-6 py-3"
             >
               📄 Download Word (.docx)
             </button>
@@ -456,7 +456,7 @@ function ApplicationTab() {
       </div>
 
       {jobId && (
-        <div className="mt-8 border border-[#E2E8F0] rounded-xl p-6 bg-white shadow-sm">
+        <div className="mt-8 aa-card p-6 bg-white">
           <h3 className="text-lg font-bold text-[#0F172A] mb-4">Send Prescription by Email</h3>
 
           <div className="grid grid-cols-1 gap-5">
@@ -507,7 +507,7 @@ function ApplicationTab() {
                 type="button"
                 onClick={handleSendEmail}
                 disabled={loading}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-[#DC2626] hover:bg-[#B91C1C] disabled:opacity-70 disabled:cursor-not-allowed text-white font-bold rounded-lg transition shadow-sm"
+                className="aa-button aa-button-primary px-6 py-3 disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {loading ? 'Sending...' : 'Send Mail'}
               </button>
@@ -517,7 +517,7 @@ function ApplicationTab() {
       )}
 
       {aiContent && (
-        <div className="mt-8 border border-[#E2E8F0] rounded-xl p-6 bg-white shadow-sm">
+        <div className="mt-8 aa-card p-6 bg-white">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-[#0F172A]">AI Content</h3>
           </div>
@@ -563,7 +563,7 @@ export function AiPrescriptionProjectPage() {
         </div>
 
         {/* Tabs */}
-        <div className="border-b-2 border-[#E2E8F0] mb-8">
+        <div className="mb-8 rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-1 shadow-sm">
           <div className="flex gap-0">
             {(['overview', 'application'] as Tab[]).map((tab) => (
               <button

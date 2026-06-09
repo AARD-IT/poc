@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type ChangeEvent } from 'react'
 import Plot from 'react-plotly.js'
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs'
 import 'react-tabs/style/react-tabs.css'
+import { ProjectDetailCardSkeleton } from '@/components/projects/ProjectDetailCard'
 import API from '@/services/api'
 
 const API_BASE_URL =
@@ -373,28 +374,28 @@ export function HealthscopeInsightsProjectPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 p-6">
+    <div className="min-h-screen bg-[linear-gradient(180deg,#F8FAFC_0%,#F8FBFF_100%)] p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-10">
-          <div className="text-4xl font-bold text-[#064b86]">Healthscope Insights</div>
+          <div className="text-4xl font-bold text-[#0F172A]">Healthscope Insights</div>
           <p className="mt-3 text-slate-600 max-w-3xl">Enterprise healthcare analytics: patient trends, hospital performance, cost, and automated ML insights.</p>
         </div>
 
         <Tabs>
-          <TabList className="flex flex-wrap gap-3 border-b border-slate-200 pb-3 mb-8">
-            <Tab className="px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 cursor-pointer">Overview</Tab>
-            <Tab className="px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 cursor-pointer">Important Attributes</Tab>
-            <Tab className="px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 cursor-pointer">Application</Tab>
+          <TabList className="mb-8 flex flex-wrap gap-2 rounded-3xl border border-slate-200 bg-white p-2 shadow-sm">
+            <Tab className="rounded-2xl px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 data-[selected=true]:bg-[#0F766E] data-[selected=true]:text-white">Overview</Tab>
+            <Tab className="rounded-2xl px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 data-[selected=true]:bg-[#0F766E] data-[selected=true]:text-white">Important Attributes</Tab>
+            <Tab className="rounded-2xl px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 data-[selected=true]:bg-[#0F766E] data-[selected=true]:text-white">Application</Tab>
           </TabList>
 
           <TabPanel>
             <div className="space-y-6">
-              <div className="rounded-3xl bg-white p-8 shadow-sm border border-slate-200">
+              <div className="aa-card p-8">
                 <h2 className="text-3xl font-bold text-slate-900 mb-4">Overview</h2>
                 <p className="text-slate-600 leading-relaxed">Healthscope Insights provides a unified analytics experience for healthcare leaders, combining patient visit trends, hospital performance, departmental revenue, and ML-powered predictions for business-critical decisions.</p>
               </div>
               <div className="grid gap-6 md:grid-cols-2">
-                <div className="rounded-3xl bg-white p-8 shadow-sm border border-slate-200">
+                <div className="aa-card p-8">
                   <h3 className="text-xl font-semibold text-slate-900 mb-4">Purpose</h3>
                   <ul className="space-y-2 text-slate-600">
                     <li>Patient & visit analytics</li>
@@ -404,7 +405,7 @@ export function HealthscopeInsightsProjectPage() {
                     <li>Early indicators for hospital risk</li>
                   </ul>
                 </div>
-                <div className="rounded-3xl bg-white p-8 shadow-sm border border-slate-200">
+                <div className="aa-card p-8">
                   <h3 className="text-xl font-semibold text-slate-900 mb-4">KPIs</h3>
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="rounded-3xl bg-slate-50 p-6 text-center shadow-sm">
@@ -431,7 +432,7 @@ export function HealthscopeInsightsProjectPage() {
 
           <TabPanel>
             <div className="space-y-6">
-              <div className="rounded-3xl bg-white p-8 shadow-sm border border-slate-200 overflow-hidden">
+              <div className="aa-card p-8 overflow-hidden">
                 <h2 className="text-3xl font-bold text-slate-900 mb-4">Data Dictionary</h2>
                 <div className="overflow-auto">
                   <table className="w-full text-left border-separate border-spacing-0">
@@ -469,7 +470,7 @@ export function HealthscopeInsightsProjectPage() {
               </div>
 
               <div className="grid gap-6 md:grid-cols-2">
-                <div className="rounded-3xl bg-white p-8 shadow-sm border border-slate-200">
+                <div className="aa-card p-8">
                   <h3 className="text-2xl font-bold text-slate-900 mb-5">Independent Variables</h3>
                   <div className="space-y-3 text-slate-700">
                     <div className="rounded-2xl bg-slate-50 px-4 py-3">Hospital</div>
@@ -481,7 +482,7 @@ export function HealthscopeInsightsProjectPage() {
                     <div className="rounded-2xl bg-slate-50 px-4 py-3">TreatmentCost</div>
                   </div>
                 </div>
-                <div className="rounded-3xl bg-white p-8 shadow-sm border border-slate-200">
+                <div className="aa-card p-8">
                   <h3 className="text-2xl font-bold text-slate-900 mb-5">Dependent Variables</h3>
                   <div className="space-y-3 text-slate-700">
                     <div className="rounded-2xl bg-slate-50 px-4 py-3">Revenue</div>
@@ -499,27 +500,27 @@ export function HealthscopeInsightsProjectPage() {
                 <div className="rounded-3xl bg-rose-50 border border-rose-200 p-5 text-rose-700">{error}</div>
               )}
 
-              <div className="rounded-3xl bg-white p-8 shadow-sm border border-slate-200">
+              <div className="aa-card p-8">
                 <div className="flex items-center gap-4 mb-6">
                   <span className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Choose Option:</span>
                   <button
                     type="button"
                     onClick={() => loadDefault()}
-                    className={`rounded-full px-4 py-2 text-sm font-semibold ${mode === 'default' ? 'bg-[#064b86] text-white' : 'bg-white text-slate-700 border border-slate-300'}`}
+                    className={`aa-button ${mode === 'default' ? 'aa-button-primary' : 'aa-button-secondary'}`}
                   >
                     Default Dataset
                   </button>
                   <button
                     type="button"
                     onClick={() => setMode('upload')}
-                    className={`rounded-full px-4 py-2 text-sm font-semibold ${mode === 'upload' ? 'bg-[#064b86] text-white' : 'bg-white text-slate-700 border border-slate-300'}`}
+                    className={`aa-button ${mode === 'upload' ? 'aa-button-primary' : 'aa-button-secondary'}`}
                   >
                     Upload CSV
                   </button>
                   <button
                     type="button"
                     onClick={() => setMode('mapping')}
-                    className={`rounded-full px-4 py-2 text-sm font-semibold ${mode === 'mapping' ? 'bg-[#064b86] text-white' : 'bg-white text-slate-700 border border-slate-300'}`}
+                    className={`aa-button ${mode === 'mapping' ? 'aa-button-primary' : 'aa-button-secondary'}`}
                   >
                     Upload CSV + Mapping
                   </button>
@@ -578,7 +579,7 @@ export function HealthscopeInsightsProjectPage() {
                     )}
 
                     {mode === 'mapping' && fileColumns.length > 0 && (
-                      <div className="rounded-3xl bg-white p-6 shadow-sm border border-slate-200">
+                      <div className="aa-card p-6">
                         <h3 className="text-xl font-semibold text-slate-900 mb-4">Map columns</h3>
                         <div className="grid gap-4">
                           {MAPPING_FIELDS.map((field) => (
@@ -589,7 +590,7 @@ export function HealthscopeInsightsProjectPage() {
                                 onChange={(event) =>
                                   setMapping((current) => ({ ...current, [field.label]: event.target.value }))
                                 }
-                                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-700"
+                                className="aa-field w-full px-4 py-3 text-slate-700"
                               >
                                 <option value="">-- Select --</option>
                                 {fileColumns.map((column) => (
@@ -602,7 +603,7 @@ export function HealthscopeInsightsProjectPage() {
                         <button
                           type="button"
                           onClick={applyMapping}
-                          className="mt-6 rounded-2xl bg-[#064b86] px-6 py-3 text-sm font-semibold text-white hover:bg-[#053d6c]"
+                          className="aa-button aa-button-primary mt-6"
                         >
                           Apply Mapping
                         </button>
@@ -612,7 +613,7 @@ export function HealthscopeInsightsProjectPage() {
                 )}
               </div>
 
-              <div className="rounded-3xl bg-white p-8 shadow-sm border border-slate-200">
+              <div className="aa-card p-8">
                 <h2 className="text-2xl font-bold text-slate-900 mb-5">Step 2 — Filters</h2>
                 <div className="grid gap-6 md:grid-cols-3">
                   <div>
@@ -729,18 +730,16 @@ export function HealthscopeInsightsProjectPage() {
                 <button
                   type="button"
                   onClick={applyFilters}
-                  className="mt-6 rounded-3xl bg-[#064b86] px-8 py-3 text-sm font-semibold text-white hover:bg-[#053d6c]"
+                  className="aa-button aa-button-primary mt-6"
                 >
                   Apply Filters
                 </button>
               </div>
 
-              {loading && (
-                <div className="rounded-3xl bg-white p-8 shadow-sm border border-slate-200">Loading...</div>
-              )}
+              {loading && <ProjectDetailCardSkeleton />}
 
               {filtered.length > 0 && (
-                <div className="rounded-3xl bg-white p-8 shadow-sm border border-slate-200 overflow-auto">
+                <div className="aa-card p-8 overflow-auto">
                   <h2 className="text-2xl font-bold text-slate-900 mb-5">Filter Applied Table</h2>
                   <table className="min-w-full text-left text-sm text-slate-700">
                     <thead className="bg-slate-100">
@@ -763,7 +762,7 @@ export function HealthscopeInsightsProjectPage() {
                 </div>
               )}
 
-              <div className="rounded-3xl bg-white p-8 shadow-sm border border-slate-200">
+              <div className="aa-card p-8">
                 <h2 className="text-2xl font-bold text-slate-900 mb-5">Key Metrics</h2>
                 <div className="grid gap-4 md:grid-cols-4">
                   <div className="rounded-3xl bg-slate-50 p-6 text-center">
@@ -785,7 +784,7 @@ export function HealthscopeInsightsProjectPage() {
                 </div>
               </div>
 
-              <div className="rounded-3xl bg-white p-8 shadow-sm border border-slate-200">
+              <div className="aa-card p-8">
                 <h2 className="text-2xl font-bold text-slate-900 mb-5">Hospital Performance</h2>
                 <Plot
                   data={[
@@ -807,7 +806,7 @@ export function HealthscopeInsightsProjectPage() {
                 />
               </div>
 
-              <div className="rounded-3xl bg-white p-8 shadow-sm border border-slate-200">
+              <div className="aa-card p-8">
                 <h2 className="text-2xl font-bold text-slate-900 mb-5">Visits Over Time</h2>
                 <Plot
                   data={[
@@ -824,7 +823,7 @@ export function HealthscopeInsightsProjectPage() {
                 />
               </div>
 
-              <div className="rounded-3xl bg-white p-8 shadow-sm border border-slate-200">
+              <div className="aa-card p-8">
                 <h2 className="text-2xl font-bold text-slate-900 mb-5">ML: Revenue Prediction</h2>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="rounded-3xl bg-slate-50 p-6 text-center">
@@ -838,7 +837,7 @@ export function HealthscopeInsightsProjectPage() {
                 </div>
               </div>
 
-              <div className="rounded-3xl bg-white p-8 shadow-sm border border-slate-200 overflow-hidden">
+              <div className="aa-card p-8 overflow-hidden">
                 <h2 className="text-2xl font-bold text-slate-900 mb-5">Automated Insights</h2>
                 <div className="overflow-auto">
                   <table className="min-w-full text-left border-separate border-spacing-0">
@@ -864,7 +863,7 @@ export function HealthscopeInsightsProjectPage() {
                 <button
                   type="button"
                   onClick={downloadCsv}
-                  className="rounded-3xl bg-[#064b86] px-8 py-3 text-sm font-semibold text-white hover:bg-[#053d6c]"
+                  className="aa-button aa-button-primary"
                 >
                   Download CSV
                 </button>

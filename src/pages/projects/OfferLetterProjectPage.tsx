@@ -558,7 +558,7 @@ export function OfferLetterProjectPage() {
         stipend: preOfferStipend,
         incentive: preOfferIncentive === 'None' ? '' : preOfferIncentive,
         ctc_range: preOfferCtcRange,
-        training_period: preOfferForm.includeTraining ? preOfferTrainingPeriod : undefined,
+        training_period: preOfferForm.includeTraining ? (preOfferTrainingPeriod ?? undefined) : undefined,
         probation_start: probationStartDate,
         probation_dur: preOfferForm.probationDuration,
         has_probation: preOfferForm.includeProbation,
@@ -696,7 +696,7 @@ export function OfferLetterProjectPage() {
   }
 
   return (
-    <div className="min-h-full bg-white">
+    <div className="min-h-screen bg-[linear-gradient(180deg,#F8FAFC_0%,#F8FBFF_100%)]">
       <div className="max-w-6xl mx-auto px-8 py-10">
         <button
           type="button"
@@ -707,7 +707,7 @@ export function OfferLetterProjectPage() {
         </button>
 
         <div className="mb-7">
-          <div className="flex items-center gap-3 mb-3">
+          <div className="aa-card inline-flex items-center gap-3 px-4 py-3 mb-3">
             <span className="text-4xl leading-none">📝</span>
             <h1 className="text-[2.25rem] font-bold text-[#0F172A] leading-tight">
               Offer Letter Generator
@@ -718,7 +718,7 @@ export function OfferLetterProjectPage() {
           </p>
         </div>
 
-        <div className="border-b-2 border-[#E2E8F0] mb-10">
+        <div className="mb-10 border-b border-[#E2E8F0]">
           <div className="flex flex-wrap gap-2">
             {(
               [
@@ -732,16 +732,13 @@ export function OfferLetterProjectPage() {
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
-                className={`relative px-4 py-3 text-[15px] font-medium transition-colors ${
+                className={`aa-button px-4 py-3 text-[15px] ${
                   activeTab === tab.id
-                    ? 'text-[#1a3c6e] font-semibold'
-                    : 'text-[#64748B] hover:text-[#1E293B]'
+                    ? 'aa-button-primary'
+                    : 'aa-button-secondary'
                 }`}
               >
                 {tab.label}
-                {activeTab === tab.id && (
-                  <span className="absolute bottom-[-2px] left-0 right-0 h-[3px] rounded-t bg-[#E85D04]" />
-                )}
               </button>
             ))}
           </div>
@@ -1100,7 +1097,7 @@ export function OfferLetterProjectPage() {
             </div>
 
             <div className="space-y-6">
-              <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-6 shadow-sm">
+              <div className="aa-surface-muted p-6">
                 <div className="flex items-center gap-3 mb-5">
                   <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#fff] text-[#0F766E] shadow-sm">
                     <FileText className="w-5 h-5" />
@@ -1155,7 +1152,7 @@ export function OfferLetterProjectPage() {
                     type="button"
                     onClick={handleGeneratePreOffer}
                     disabled={preOfferLoading}
-                    className="mt-6 w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#0F766E] px-6 py-3 text-white font-semibold transition hover:bg-[#0D5F58] shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="aa-button aa-button-primary mt-6 w-full disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {preOfferLoading ? (
                       <>
@@ -1187,7 +1184,7 @@ export function OfferLetterProjectPage() {
                           type="button"
                           onClick={() => handleDownload('pdf', preOfferResult.job_id, 'pre-offer')}
                           disabled={downloadLoading === `pdf-${preOfferResult.job_id}`}
-                          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#15803D] px-5 py-3 text-white font-semibold transition hover:bg-[#13673D] disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="aa-button aa-button-primary inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {downloadLoading === `pdf-${preOfferResult.job_id}` ? (
                             <>
@@ -1204,7 +1201,7 @@ export function OfferLetterProjectPage() {
                           type="button"
                           onClick={() => handleDownload('docx', preOfferResult.job_id, 'pre-offer')}
                           disabled={downloadLoading === `docx-${preOfferResult.job_id}`}
-                          className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#166534] px-5 py-3 text-white font-semibold transition hover:bg-[#14532d] disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="aa-button aa-button-primary inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {downloadLoading === `docx-${preOfferResult.job_id}` ? (
                             <>
@@ -1807,7 +1804,7 @@ export function OfferLetterProjectPage() {
                     type="button"
                     onClick={handleGenerateInternship}
                     disabled={internshipLoading}
-                    className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#0F766E] text-white rounded-xl font-semibold transition hover:bg-[#0D5F58] shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="aa-button aa-button-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {internshipLoading ? (
                       <>
@@ -1835,7 +1832,7 @@ export function OfferLetterProjectPage() {
                         type="button"
                         onClick={() => handleDownload('pdf', internshipResult.job_id, 'internship-certificate')}
                         disabled={downloadLoading === `pdf-${internshipResult.job_id}`}
-                        className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#15803D] hover:bg-[#13673D] text-white rounded-xl font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="aa-button aa-button-primary inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {downloadLoading === `pdf-${internshipResult.job_id}` ? (
                           <>
@@ -1852,7 +1849,7 @@ export function OfferLetterProjectPage() {
                         type="button"
                         onClick={() => handleDownload('docx', internshipResult.job_id, 'internship-certificate')}
                         disabled={downloadLoading === `docx-${internshipResult.job_id}`}
-                        className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#166534] hover:bg-[#14532d] text-white rounded-xl font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="aa-button aa-button-primary inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {downloadLoading === `docx-${internshipResult.job_id}` ? (
                           <>
@@ -1879,7 +1876,7 @@ export function OfferLetterProjectPage() {
               title="History"
               description="Track generated HR documents, review recent activity, and clear history entries when needed."
             />
-            <div className="border border-[#E2E8F0] rounded-2xl bg-white p-6 shadow-sm">
+            <div className="aa-card p-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                 <div>
                   <p className="text-sm font-semibold text-[#0F172A]">Recent document activity</p>

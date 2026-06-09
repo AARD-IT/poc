@@ -1,15 +1,18 @@
+import { Activity, Briefcase, Shield, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { fetchAdminStats, type AdminStats } from '@/services/adminStats'
 
-function StatCard({ label, value }: { label: string; value: number | string }) {
+function StatCard({ label, value, icon }: { label: string; value: number | string; icon: React.ReactNode }) {
   return (
-    <div
-      className="bg-white border-[1.5px] border-[#CBD5E1] rounded-xl p-5 shadow-sm"
-      style={{ boxShadow: '0 4px 12px rgba(15,23,42,0.08)' }}
-    >
-      <p className="text-xs font-bold text-[#475569] uppercase tracking-wide mb-1">{label}</p>
-      <p className="text-3xl font-bold text-[#1E293B]">{value}</p>
-    </div>
+    <article className="rounded-3xl border border-[#E2E8F0] bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#0F766E]">{label}</p>
+          <p className="mt-3 text-3xl font-bold text-[#0F172A]">{value}</p>
+        </div>
+        <div className="rounded-2xl bg-[#ECFDF5] p-3 text-[#0F766E]">{icon}</div>
+      </div>
+    </article>
   )
 }
 
@@ -49,25 +52,28 @@ export function AdminOverviewPage() {
   }
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-[#1E293B]">Dashboard overview</h1>
-        <p className="text-[15px] font-medium text-[#475569] mt-1">Workspace health and recent activity.</p>
+    <div className="space-y-6">
+      <section className="rounded-3xl border border-[#E2E8F0] bg-[linear-gradient(135deg,#ffffff_0%,#f8fbff_100%)] p-6 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#0F766E]">Admin overview</p>
+        <div className="mt-2 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-[#0F172A]">Workspace health and recent activity</h1>
+            <p className="mt-2 max-w-2xl text-[#475569]">Monitor platform activity and user adoption without affecting any existing workflows or backend processes.</p>
+          </div>
+        </div>
+      </section>
+
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard label="Total users" value={stats.totalUsers} icon={<Users className="h-5 w-5" />} />
+        <StatCard label="Pending approvals" value={stats.pendingUsers} icon={<Shield className="h-5 w-5" />} />
+        <StatCard label="Active users" value={stats.approvedUsers} icon={<Activity className="h-5 w-5" />} />
+        <StatCard label="Total POCs" value={stats.totalPocs} icon={<Briefcase className="h-5 w-5" />} />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <StatCard label="Total users" value={stats.totalUsers} />
-        <StatCard label="Pending approvals" value={stats.pendingUsers} />
-        <StatCard label="Active users" value={stats.approvedUsers} />
-        <StatCard label="Total POCs" value={stats.totalPocs} />
-      </div>
-
-      <div
-        className="bg-white border-[1.5px] border-[#CBD5E1] rounded-xl p-6 shadow-sm"
-        style={{ boxShadow: '0 4px 12px rgba(15,23,42,0.08)' }}
-      >
-        <h2 className="font-bold text-[#1E293B] text-lg mb-4">Recently added users</h2>
-        <div className="divide-y divide-[#CBD5E1]">
+      <section className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+        <h2 className="text-xl font-bold text-[#0F172A]">Recently added users</h2>
+        <p className="mt-1 text-sm text-[#475569]">A quick view of newly registered or updated users in the current workspace.</p>
+        <div className="mt-5 divide-y divide-[#E2E8F0]">
           {stats.recentUsers.length === 0 ? (
             <p className="text-[15px] font-medium text-[#475569] py-4">No users yet.</p>
           ) : (
@@ -97,7 +103,7 @@ export function AdminOverviewPage() {
             ))
           )}
         </div>
-      </div>
+      </section>
     </div>
   )
 }

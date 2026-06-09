@@ -14,7 +14,7 @@ export function PocDetailBody({ poc, readOnly, onClose, showClose }: PocDetailBo
   const fn = poc.solution_function ?? '—'
 
   return (
-    <div className="relative bg-white rounded-2xl max-w-4xl w-full mx-auto max-h-[90vh] overflow-y-auto border-[1.5px] border-[#CBD5E1] shadow-lg">
+    <div className="aa-card relative mx-auto max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white shadow-lg">
       {showClose && onClose && (
         <button
           type="button"
@@ -36,7 +36,7 @@ export function PocDetailBody({ poc, readOnly, onClose, showClose }: PocDetailBo
             {!readOnly && (
               <button
                 type="button"
-                className="px-8 py-3.5 bg-[#0F766E] text-white rounded-lg hover:bg-[#0D5F58] transition-all font-bold text-[15px] shadow-md hover:shadow-lg"
+                className="aa-button aa-button-primary px-8 py-3.5 text-[15px]"
               >
                 View Full Details
               </button>
