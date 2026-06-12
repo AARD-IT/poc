@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router'
 import { PocDetailBody } from '@/app/components/PocDetailBody'
 import { EnterpriseEmpty } from '@/components/empty-states/EnterpriseEmpty'
 import { fetchPocBySlug, getCachedPocBySlug } from '@/services/pocs'
-import { fetchAccessForUser } from '@/services/pocAccess'
+import { deriveAllowedIndustries, fetchAccessForUser } from '@/services/pocAccess'
 import { useAuthStore } from '@/stores/authStore'
 import { isStaffRole } from '@/types/domain'
 import type { Poc } from '@/types/domain'
@@ -32,8 +32,9 @@ export function PocDetailPage() {
 
         if (!isStaffRole(profile.role)) {
           const rows = await fetchAccessForUser(profile.id)
-          const allowedSlugs = new Set(rows.map((row) => row.project_slug))
-          if (!allowedSlugs.has(slug)) {
+          const allowedIndustries = deriveAllowedIndustries(rows)
+          const project = await fetchPocBySlug(slug)
+          if (!project || !allowedIndustries.has(project.industry ?? '')) {
             if (!cancelled) setPoc(null)
             return
           }

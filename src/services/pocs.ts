@@ -1,4 +1,4 @@
-import { fetchAccessForUser } from '@/services/pocAccess'
+import { deriveAllowedIndustries, fetchAccessForUser } from '@/services/pocAccess'
 import { getAllProjects, getProjectBySlug, getVisibleProjects } from '@/config/projects'
 import type { Poc, ProjectRegistryItem } from '@/types/domain'
 
@@ -47,8 +47,8 @@ export function getCachedPocBySlug(slug: string): Poc | null {
 
 export async function fetchMyPocs(userId: string): Promise<Poc[]> {
   const rows = await fetchAccessForUser(userId)
-  const allowedSlugs = new Set(rows.map((row) => row.project_slug))
-  const projects = getVisibleProjects().filter((project) => allowedSlugs.has(project.slug))
+  const allowedIndustries = deriveAllowedIndustries(rows)
+  const projects = getVisibleProjects().filter((project) => allowedIndustries.has(project.category))
   const pocs = projects.map(mapRegistryProjectToPoc)
   myPocsCache = pocs
   cachePocs(pocs)
@@ -73,8 +73,8 @@ export async function fetchAllPocsAdmin(): Promise<Poc[]> {
 
 export async function fetchMyProjectRegistryItems(userId: string): Promise<ProjectRegistryItem[]> {
   const rows = await fetchAccessForUser(userId)
-  const allowedSlugs = new Set(rows.map((row) => row.project_slug))
-  return getVisibleProjects().filter((project) => allowedSlugs.has(project.slug))
+  const allowedIndustries = deriveAllowedIndustries(rows)
+  return getVisibleProjects().filter((project) => allowedIndustries.has(project.category))
 }
 
 export async function fetchAllProjectRegistryItems(): Promise<ProjectRegistryItem[]> {

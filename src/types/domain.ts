@@ -50,7 +50,8 @@ export interface ProjectRegistryItem {
 export interface ProjectAccess {
   id: string
   user_id: string
-  project_slug: string
+  project_slug: string | null
+  industry: string | null
   granted_by: string | null
   created_at: string
 }

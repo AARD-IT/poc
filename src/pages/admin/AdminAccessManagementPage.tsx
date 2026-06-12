@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
+  deriveAllowedIndustries,
   fetchAccessForUser,
   grantFullVisibleAccess,
-  grantProjectAccess,
+  grantIndustryAccess,
+  revokeIndustryAccess,
   revokeProjectAccess,
 } from '@/services/pocAccess'
 import { getVisibleProjects } from '@/config/projects'
@@ -16,6 +18,7 @@ export function AdminAccessManagementPage() {
   const actor = useAuthStore((s) => s.profile)
   const [users, setUsers] = useState<AppUser[]>([])
   const [projects, setProjects] = useState<ProjectRegistryItem[]>([])
+  const [industries, setIndustries] = useState<string[]>([])
   const [userId, setUserId] = useState('')
   const [selectedAccess, setSelectedAccess] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
@@ -29,7 +32,9 @@ export function AdminAccessManagementPage() {
     try {
       const usersResponse = await fetchAllUsers()
       setUsers(usersResponse.filter((u) => u.status === 'approved' && u.role === 'client'))
-      setProjects(getVisibleProjects())
+      const visibleProjects = getVisibleProjects()
+      setProjects(visibleProjects)
+      setIndustries(Array.from(new Set(visibleProjects.map((project) => project.category).filter(Boolean))))
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : 'Failed to load')
     } finally {
@@ -48,7 +53,7 @@ export function AdminAccessManagementPage() {
     }
     try {
       const rows = await fetchAccessForUser(uid)
-      setSelectedAccess(new Set(rows.map((r) => r.project_slug)))
+      setSelectedAccess(new Set(deriveAllowedIndustries(rows)))
     } catch {
       setSelectedAccess(new Set())
     }
@@ -60,11 +65,11 @@ export function AdminAccessManagementPage() {
 
   const selectedUser = useMemo(() => users.find((u) => u.id === userId), [users, userId])
 
-  function toggleProject(slug: string) {
+  function toggleIndustry(industry: string) {
     setSelectedAccess((prev) => {
       const next = new Set(prev)
-      if (next.has(slug)) next.delete(slug)
-      else next.add(slug)
+      if (next.has(industry)) next.delete(industry)
+      else next.add(industry)
       return next
     })
   }
@@ -85,12 +90,14 @@ export function AdminAccessManagementPage() {
     setSaving(true)
     try {
       const current = await fetchAccessForUser(userId)
-      const currentSlugs = new Set(current.map((r) => r.project_slug))
-      const removeSlugs = Array.from(currentSlugs).filter((slug) => !selectedAccess.has(slug))
-      const addSlugs = Array.from(selectedAccess).filter((slug) => !currentSlugs.has(slug))
+      const currentIndustries = deriveAllowedIndustries(current)
+      const legacyProjectSlugs = current.map((row) => row.project_slug).filter(Boolean) as string[]
+      const removeIndustries = Array.from(currentIndustries).filter((industry) => !selectedAccess.has(industry))
+      const addIndustries = Array.from(selectedAccess).filter((industry) => !currentIndustries.has(industry))
 
-      await Promise.all(removeSlugs.map((slug) => revokeProjectAccess(userId, slug)))
-      await Promise.all(addSlugs.map((slug) => grantProjectAccess(userId, slug, actor.id)))
+      await Promise.all(legacyProjectSlugs.map((slug) => revokeProjectAccess(userId, slug)))
+      await Promise.all(removeIndustries.map((industry) => revokeIndustryAccess(userId, industry)))
+      await Promise.all(addIndustries.map((industry) => grantIndustryAccess(userId, industry, actor.id)))
 
       let emailIssue: string | null = null
 
@@ -100,17 +107,17 @@ export function AdminAccessManagementPage() {
         console.warn('Notification failed after access update', notificationError)
       }
 
-      if (addSlugs.length > 0 && selectedUser) {
+      if (addIndustries.length > 0 && selectedUser) {
         try {
-          const assignedPocs = addSlugs.map((slug) => projects.find((project) => project.slug === slug)?.title ?? slug)
-          await sendAccess(selectedUser.email, selectedUser.name, assignedPocs)
+          const assignedIndustries = addIndustries.map((industry) => industry)
+          await sendAccess(selectedUser.email, selectedUser.name, assignedIndustries)
         } catch (emailError: unknown) {
           console.error('Access email failed', emailError)
           emailIssue = emailError instanceof Error ? emailError.message : String(emailError)
         }
       }
 
-      if (addSlugs.length === 0 && removeSlugs.length === 0) {
+      if (addIndustries.length === 0 && removeIndustries.length === 0) {
         setSuccess('No changes detected; access is already up to date.')
       } else if (emailIssue) {
         setSuccess('Access saved successfully, but email notification failed.')
@@ -149,6 +156,7 @@ export function AdminAccessManagementPage() {
     setSaving(true)
     try {
       const visible = projects.filter((project) => project.visible)
+      await Promise.all((await fetchAccessForUser(userId)).map((row) => row.project_slug ? revokeProjectAccess(userId, row.project_slug) : Promise.resolve()))
       await grantFullVisibleAccess(userId, actor.id, visible)
       try {
         await notifyUser(userId, 'Full library access', 'You have been granted access to all visible projects.')
@@ -166,7 +174,7 @@ export function AdminAccessManagementPage() {
         }
       }
       await loadAccess(userId)
-      setSelectedAccess(new Set(visible.map((project) => project.slug)))
+      setSelectedAccess(new Set(Array.from(new Set(visible.map((project) => project.category).filter(Boolean)))))
       if (emailIssue) {
         setSuccess('Full visible access granted successfully, but notification email failed.')
         setErr(`Email send error: ${emailIssue}`)
@@ -245,28 +253,25 @@ export function AdminAccessManagementPage() {
           </section>
 
           <section className="lg:col-span-2 rounded-3xl border border-[#E2E8F0] bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
-            <h2 className="font-bold text-[#1E293B] mb-4">Assign projects</h2>
+            <h2 className="font-bold text-[#1E293B] mb-4">Assign industries</h2>
             {!userId ? (
               <p className="text-[15px] font-medium text-[#475569]">Select a user to manage their project access.</p>
             ) : (
               <div className="max-h-[480px] overflow-y-auto space-y-2 pr-1">
-                {projects.map((project) => (
+                {industries.map((industry) => (
                   <label
-                    key={project.id}
+                    key={industry}
                     className="flex items-start gap-3 p-3 rounded-lg border border-[#CBD5E1] hover:bg-[#F8FAFC] cursor-pointer"
                   >
                     <input
                       type="checkbox"
                       className="mt-1"
-                      checked={selectedAccess.has(project.slug)}
-                      onChange={() => toggleProject(project.slug)}
+                      checked={selectedAccess.has(industry)}
+                      onChange={() => toggleIndustry(industry)}
                     />
                     <div>
-                      <p className="font-bold text-[#1E293B]">{project.title}</p>
-                      <p className="text-[13px] font-medium text-[#475569]">{project.slug}</p>
-                      <span className="inline-block mt-1 text-[10px] font-bold px-2 py-0.5 rounded border bg-[#DCFCE7] text-[#15803D] border-[#86EFAC]">
-                        visible
-                      </span>
+                      <p className="font-bold text-[#1E293B]">{industry}</p>
+                      <p className="text-[13px] font-medium text-[#475569]">All visible projects in this industry</p>
                     </div>
                   </label>
                 ))}
