@@ -799,7 +799,6 @@ function ApplicationTab({
 
             <div className="flex flex-wrap justify-end gap-3">
               <button type="button" onClick={handleSendEmail} disabled={loading} className="aa-button aa-button-primary px-6 py-3 disabled:opacity-70 disabled:cursor-not-allowed">{loading ? 'Sending...' : 'Send Mail'}</button>
-              <button type="button" onClick={handleResendEmail} disabled={loading} className="aa-button aa-button-secondary px-6 py-3 disabled:opacity-70 disabled:cursor-not-allowed">{loading ? 'Resending...' : 'Resend Mail'}</button>
             </div>
           </div>
           )}
