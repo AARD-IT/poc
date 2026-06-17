@@ -45,6 +45,17 @@ export const projectRegistry: ProjectRegistryItem[] = [
     visible: true,
   },
   {
+    id: 'machine-failure-predictive-maintenance-lab',
+    title: 'Machine Failure & Predictive Maintenance Lab',
+    slug: 'machine-failure-predictive-maintenance-lab',
+    route: '/projects/machine-failure-predictive-maintenance-lab',
+    category: 'Manufacturing',
+    description:
+      'Machine sensor telemetry and predictive maintenance analytics for failure detection, maintenance prioritization, and downtime reduction.',
+    visible: true,
+    featured: true,
+  },
+  {
     id: 'route-optimization-logistics-efficiency',
     title: 'Route Optimization & Logistics Efficiency',
     slug: 'route-optimization-logistics-efficiency',
