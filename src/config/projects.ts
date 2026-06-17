@@ -45,6 +45,17 @@ export const projectRegistry: ProjectRegistryItem[] = [
     visible: true,
   },
   {
+    id: 'route-optimization-logistics-efficiency',
+    title: 'Route Optimization & Logistics Efficiency',
+    slug: 'route-optimization-logistics-efficiency',
+    route: '/projects/route-optimization-logistics-efficiency',
+    category: 'Supply Chain',
+    description:
+      'FastAPI-powered route optimization and logistics intelligence platform with cost simulation, anomaly detection, EDA charts, and action playbooks.',
+    visible: true,
+    featured: true,
+  },
+  {
     id: 'multimodal-rag',
     title: 'Multimodal RAG System',
     slug: 'multimodal-rag',

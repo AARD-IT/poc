@@ -110,11 +110,9 @@ export default function ProjectDetailCard({ project, actions, eyebrow = 'Project
           <dl className="mt-5 space-y-4">
             {[
               ['Updated', project.date],
-              ['Client', project.client],
               ['Industry', project.industry],
               ['Function', project.function],
               ['Tech', project.tech],
-              ['Contact', project.contact],
             ].map(([label, value]) => (
               <div key={label} className="grid gap-1 rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 md:grid-cols-[110px_1fr] md:gap-4">
                 <dt className="text-[13px] font-semibold uppercase tracking-[0.18em] text-[#64748B]">{label}</dt>

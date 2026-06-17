@@ -6,6 +6,7 @@ export const tagColors: Record<string, string> = {
   Finance: 'bg-[#DCFCE7] text-[#15803D] border-[#86EFAC]',
   Healthcare: 'bg-[#FEE2E2] text-[#B91C1C] border-[#FCA5A5]',
   Retail: 'bg-[#FFEDD5] text-[#C2410C] border-[#FED7AA]',
+  'Supply Chain': 'bg-[#E0F2FE] text-[#075985] border-[#7DD3FC]',
   Dashboard: 'bg-[#E0E7FF] text-[#4F46E5] border-[#A5B4FC]',
   Automation: 'bg-[#FCE7F3] text-[#BE185D] border-[#F9A8D4]',
   'Power BI': 'bg-[#FEF3C7] text-[#A16207] border-[#FDE68A]',

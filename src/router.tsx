@@ -26,6 +26,8 @@ import { SentimentAnalyzerProjectPage } from '@/pages/projects/SentimentAnalyzer
 import { SentimentAnalyzerDetailPage } from '@/pages/projects/SentimentAnalyzerDetailPage'
 import { IntelligentDocumentProcessorProjectPage } from '@/pages/projects/IntelligentDocumentProcessorProjectPage'
 import { IntelligentDocumentProcessorDetailPage } from '@/pages/projects/IntelligentDocumentProcessorDetailPage'
+import { RouteOptimizationLogisticsEfficiencyProjectPage } from '@/pages/projects/RouteOptimizationLogisticsEfficiencyProjectPage'
+import { RouteOptimizationLogisticsEfficiencyDetailPage } from '@/pages/projects/RouteOptimizationLogisticsEfficiencyDetailPage'
 import { AiGoldNegotiationProjectPage } from '@/pages/projects/AiGoldNegotiationProjectPage'
 import { AiGoldNegotiationDetailPage } from '@/pages/projects/AiGoldNegotiationDetailPage'
 import { RealEstateIntelligenceSuiteDetailPage } from '@/pages/projects/RealEstateIntelligenceSuiteDetailPage'
@@ -128,6 +130,16 @@ export const router = createBrowserRouter([
                 path: 'projects/intelligent-document-processor/full',
                 element: <MainShellPlain />,
                 children: [{ index: true, element: <IntelligentDocumentProcessorProjectPage /> }],
+              },
+              {
+                path: 'projects/route-optimization-logistics-efficiency',
+                element: <MainShellWithSidebar />,
+                children: [{ index: true, element: <RouteOptimizationLogisticsEfficiencyDetailPage /> }],
+              },
+              {
+                path: 'projects/route-optimization-logistics-efficiency/full',
+                element: <MainShellPlain />,
+                children: [{ index: true, element: <RouteOptimizationLogisticsEfficiencyProjectPage /> }],
               },
               {
                 path: 'projects/ai-gold-negotiation',

@@ -107,6 +107,9 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.105.4
         version: 2.105.4
+      '@tanstack/react-table':
+        specifier: ^8.21.3
+        version: 8.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       axios:
         specifier: ^1.16.1
         version: 1.16.1
@@ -140,6 +143,9 @@ importers:
       next-themes:
         specifier: 0.4.6
         version: 0.4.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      plotly.js:
+        specifier: ^3.6.0
+        version: 3.6.0(mapbox-gl@1.13.3)
       plotly.js-dist-min:
         specifier: ^2.35.2
         version: 2.35.3
@@ -163,7 +169,7 @@ importers:
         version: 7.55.0(react@18.3.1)
       react-plotly.js:
         specifier: ^2.6.0
-        version: 2.6.0(plotly.js@3.5.1(mapbox-gl@1.13.3))(react@18.3.1)
+        version: 2.6.0(plotly.js@3.6.0(mapbox-gl@1.13.3))(react@18.3.1)
       react-popper:
         specifier: 2.3.0
         version: 2.3.0(@popperjs/core@2.11.8)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -1610,6 +1616,17 @@ packages:
     peerDependencies:
       vite: 6.3.5
 
+  '@tanstack/react-table@8.21.3':
+    resolution: {integrity: sha512-5nNMTSETP4ykGegmVkhjcS8tTLW6Vl4axfEGQN3v0zdHYbK4UfoqfPChclTrJ4EoK9QynqAu9oUf8VEmrpZ5Ww==}
+    engines: {node: '>=12'}
+    peerDependencies:
+      react: '>=16.8'
+      react-dom: '>=16.8'
+
+  '@tanstack/table-core@8.21.3':
+    resolution: {integrity: sha512-ldZXEhOBb8Is7xLs01fR3YEc3DERiz5silj8tnGkFZytt1abEvl/GhUmCE0PMLaMPTa3Jk4HbKmRlHmu+gCftg==}
+    engines: {node: '>=12'}
+
   '@turf/area@7.3.5':
     resolution: {integrity: sha512-sSn80wPT7XfBIDN3vurCPxhk9W4U8ozS/XImSqeLN8qveTICOxzZkhsGDMp0CuncaN+plWut4a2TdNM7mzZB6Q==}
 
@@ -2745,8 +2762,8 @@ packages:
   plotly.js-dist-min@2.35.3:
     resolution: {integrity: sha512-sz2HLP8gkysLx/BanM2PtJTtZ1PLPwdHwMWNri2YxLBy3IOeuDsVQtlmWa4hoK3j/fi4naaD3uZJqH5ozM3zGg==}
 
-  plotly.js@3.5.1:
-    resolution: {integrity: sha512-rUzQ7Q46whi1aWT2JlvKE2dnryNORPrxyy66OGSMXgejK3XgD4ysD9SapMOI1RzzUJyX0KbfVDFcB9/DqOyH9Q==}
+  plotly.js@3.6.0:
+    resolution: {integrity: sha512-Fu5IaetcuxaeQPULk4wfIik0MnvIsEb5ynOsPAMfhAnjkPOEDFG7eSb/3ZZq1DW5MwYvZFXaTFHpal4U1Q5Yig==}
     engines: {node: '>=18.0.0'}
 
   point-in-polygon@1.1.0:
@@ -4652,6 +4669,14 @@ snapshots:
       tailwindcss: 4.1.12
       vite: 6.3.5(jiti@2.7.0)(lightningcss@1.30.1)
 
+  '@tanstack/react-table@8.21.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@tanstack/table-core': 8.21.3
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+
+  '@tanstack/table-core@8.21.3': {}
+
   '@turf/area@7.3.5':
     dependencies:
       '@turf/helpers': 7.3.5
@@ -5840,7 +5865,7 @@ snapshots:
 
   plotly.js-dist-min@2.35.3: {}
 
-  plotly.js@3.5.1(mapbox-gl@1.13.3):
+  plotly.js@3.6.0(mapbox-gl@1.13.3):
     dependencies:
       '@plotly/d3': 3.8.2
       '@plotly/d3-sankey': 0.7.2
@@ -5969,9 +5994,9 @@ snapshots:
 
   react-is@19.2.6: {}
 
-  react-plotly.js@2.6.0(plotly.js@3.5.1(mapbox-gl@1.13.3))(react@18.3.1):
+  react-plotly.js@2.6.0(plotly.js@3.6.0(mapbox-gl@1.13.3))(react@18.3.1):
     dependencies:
-      plotly.js: 3.5.1(mapbox-gl@1.13.3)
+      plotly.js: 3.6.0(mapbox-gl@1.13.3)
       prop-types: 15.8.1
       react: 18.3.1
 

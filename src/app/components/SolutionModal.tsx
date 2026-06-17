@@ -112,10 +112,6 @@ export function SolutionModal({ solution, onClose }: SolutionModalProps) {
                     <span className="text-[15px] font-semibold text-[#1E293B]">{solution.date}</span>
                   </div>
                   <div className="flex border-b-[1.5px] border-[#CBD5E1] pb-3">
-                    <span className="text-[15px] font-bold text-[#475569] w-32">Client</span>
-                    <span className="text-[15px] font-semibold text-[#1E293B]">{solution.client || '—'}</span>
-                  </div>
-                  <div className="flex border-b-[1.5px] border-[#CBD5E1] pb-3">
                     <span className="text-[15px] font-bold text-[#475569] w-32">Industry</span>
                     <span className="text-[15px] font-semibold text-[#1E293B]">{solution.industry || '—'}</span>
                   </div>
@@ -126,10 +122,6 @@ export function SolutionModal({ solution, onClose }: SolutionModalProps) {
                   <div className="flex border-b-[1.5px] border-[#CBD5E1] pb-3">
                     <span className="text-[15px] font-bold text-[#475569] w-32">Tech</span>
                     <span className="text-[15px] font-semibold text-[#1E293B]">{solution.tech || '—'}</span>
-                  </div>
-                  <div className="flex border-b-[1.5px] border-[#CBD5E1] pb-3">
-                    <span className="text-[15px] font-bold text-[#475569] w-32">Contact</span>
-                    <span className="text-[15px] font-semibold text-[#1E293B]">{solution.contact || '—'}</span>
                   </div>
                 </div>
 
