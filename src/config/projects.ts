@@ -67,6 +67,17 @@ export const projectRegistry: ProjectRegistryItem[] = [
     featured: true,
   },
   {
+    id: 'inventory-pileup-shortage-analytics-lab',
+    title: 'Inventory Pileup & Shortage Analytics Lab',
+    slug: 'inventory-pileup-shortage-analytics-lab',
+    route: '/projects/inventory-pileup-shortage-analytics-lab',
+    category: 'Manufacturing',
+    description:
+      'Inventory analytics lab for tracking demand, production, procurement, safety stock risks, shortage and pileup events, and inventory strategy simulation.',
+    visible: true,
+    featured: true,
+  },
+  {
     id: 'route-optimization-logistics-efficiency',
     title: 'Route Optimization & Logistics Efficiency',
     slug: 'route-optimization-logistics-efficiency',

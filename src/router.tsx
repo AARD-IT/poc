@@ -38,6 +38,8 @@ import { MachineFailurePredictiveMaintenanceDetailPage } from '@/pages/projects/
 import { MachineFailurePredictiveMaintenanceProjectPage } from '@/pages/projects/MachineFailurePredictiveMaintenanceProjectPage'
 import { OrderToDeliveryAnalyticsLabDetailPage } from '@/pages/projects/OrderToDeliveryAnalyticsLabDetailPage'
 import { OrderToDeliveryAnalyticsLabProjectPage } from '@/pages/projects/OrderToDeliveryAnalyticsLabProjectPage'
+import { InventoryPileupShortageAnalyticsLabDetailPage } from '@/pages/projects/InventoryPileupShortageAnalyticsLabDetailPage'
+import { InventoryPileupShortageAnalyticsLabProjectPage } from '@/pages/projects/InventoryPileupShortageAnalyticsLabProjectPage'
 
 import { ProfilePage } from '@/pages/ProfilePage'
 import { SettingsPage } from '@/pages/SettingsPage'
@@ -214,6 +216,16 @@ export const router = createBrowserRouter([
                 path: 'projects/order-to-delivery-analytics-lab/full',
                 element: <MainShellPlain />,
                 children: [{ index: true, element: <OrderToDeliveryAnalyticsLabProjectPage /> }],
+              },
+              {
+                path: 'projects/inventory-pileup-shortage-analytics-lab',
+                element: <MainShellWithSidebar />,
+                children: [{ index: true, element: <InventoryPileupShortageAnalyticsLabDetailPage /> }],
+              },
+              {
+                path: 'projects/inventory-pileup-shortage-analytics-lab/full',
+                element: <MainShellPlain />,
+                children: [{ index: true, element: <InventoryPileupShortageAnalyticsLabProjectPage /> }],
               },
             ],
           },
