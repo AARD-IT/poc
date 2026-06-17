@@ -56,6 +56,17 @@ export const projectRegistry: ProjectRegistryItem[] = [
     featured: true,
   },
   {
+    id: 'order-to-delivery-analytics-lab',
+    title: 'Order-to-Delivery Analytics Lab',
+    slug: 'order-to-delivery-analytics-lab',
+    route: '/projects/order-to-delivery-analytics-lab',
+    category: 'Manufacturing',
+    description:
+      'Lead-time analytics lab for tracking scheduling delays, production delays, machine delays, dispatch delays, and delivery prediction.',
+    visible: true,
+    featured: true,
+  },
+  {
     id: 'route-optimization-logistics-efficiency',
     title: 'Route Optimization & Logistics Efficiency',
     slug: 'route-optimization-logistics-efficiency',

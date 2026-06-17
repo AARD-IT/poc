@@ -36,6 +36,8 @@ import { RealEstateDemandForecastingDetailPage } from '@/pages/projects/RealEsta
 import { RealEstateDemandForecastingSectionPage } from '@/pages/projects/RealEstateDemandForecastingSectionPage'
 import { MachineFailurePredictiveMaintenanceDetailPage } from '@/pages/projects/MachineFailurePredictiveMaintenanceDetailPage'
 import { MachineFailurePredictiveMaintenanceProjectPage } from '@/pages/projects/MachineFailurePredictiveMaintenanceProjectPage'
+import { OrderToDeliveryAnalyticsLabDetailPage } from '@/pages/projects/OrderToDeliveryAnalyticsLabDetailPage'
+import { OrderToDeliveryAnalyticsLabProjectPage } from '@/pages/projects/OrderToDeliveryAnalyticsLabProjectPage'
 
 import { ProfilePage } from '@/pages/ProfilePage'
 import { SettingsPage } from '@/pages/SettingsPage'
@@ -202,6 +204,16 @@ export const router = createBrowserRouter([
                 path: 'projects/machine-failure-predictive-maintenance-lab/full',
                 element: <MainShellPlain />,
                 children: [{ index: true, element: <MachineFailurePredictiveMaintenanceProjectPage /> }],
+              },
+              {
+                path: 'projects/order-to-delivery-analytics-lab',
+                element: <MainShellWithSidebar />,
+                children: [{ index: true, element: <OrderToDeliveryAnalyticsLabDetailPage /> }],
+              },
+              {
+                path: 'projects/order-to-delivery-analytics-lab/full',
+                element: <MainShellPlain />,
+                children: [{ index: true, element: <OrderToDeliveryAnalyticsLabProjectPage /> }],
               },
             ],
           },
