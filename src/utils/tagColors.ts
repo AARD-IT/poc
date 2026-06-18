@@ -9,6 +9,7 @@ export const tagColors: Record<string, string> = {
   'Patient Analytics': 'bg-[#CCFBF1] text-[#0F766E] border-[#5EEAD4]',
   'Admission Forecasting': 'bg-[#FCE7F3] text-[#BE185D] border-[#F9A8D4]',
   'Solar Power': 'bg-[#FEF3C7] text-[#A16207] border-[#FDE68A]',
+  'PV Degradation': 'bg-[#CCFBF1] text-[#0F766E] border-[#5EEAD4]',
   'Predictive Maintenance': 'bg-[#CCFBF1] text-[#0F766E] border-[#5EEAD4]',
   'Thermal Stress': 'bg-[#FEE2E2] text-[#B91C1C] border-[#FCA5A5]',
   'Electrical Anomaly': 'bg-[#DBEAFE] text-[#1D4ED8] border-[#93C5FD]',

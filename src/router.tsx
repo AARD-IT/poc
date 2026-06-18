@@ -18,6 +18,8 @@ import { HealthscopeInsightsProjectPage } from '@/pages/projects/HealthscopeInsi
 import { HealthscopeInsightsDetailPage } from '@/pages/projects/HealthscopeInsightsDetailPage'
 import { PatientVisitAnalyticsHospitalPerformanceDetailPage } from '@/pages/projects/PatientVisitAnalyticsHospitalPerformanceDetailPage'
 import { PatientVisitAnalyticsHospitalPerformanceProjectPage } from '@/pages/projects/PatientVisitAnalyticsHospitalPerformanceProjectPage'
+import { PVPanelDegradationIntelligenceLabDetailPage } from '@/pages/projects/PVPanelDegradationIntelligenceLabDetailPage'
+import { PVPanelDegradationIntelligenceLabProjectPage } from '@/pages/projects/PVPanelDegradationIntelligenceLabProjectPage'
 import { SolarPowerGenerationForecastingLabDetailPage } from '@/pages/projects/SolarPowerGenerationForecastingLabDetailPage'
 import { SolarPowerGenerationForecastingLabProjectPage } from '@/pages/projects/SolarPowerGenerationForecastingLabProjectPage'
 import { InverterFailurePredictionLabDetailPage } from '@/pages/projects/InverterFailurePredictionLabDetailPage'
@@ -126,6 +128,16 @@ export const router = createBrowserRouter([
                 path: 'projects/patient-visit-analytics-hospital-performance/full',
                 element: <MainShellPlain />,
                 children: [{ index: true, element: <PatientVisitAnalyticsHospitalPerformanceProjectPage /> }],
+              },
+              {
+                path: 'projects/pv-panel-degradation-intelligence-lab',
+                element: <MainShellWithSidebar />,
+                children: [{ index: true, element: <PVPanelDegradationIntelligenceLabDetailPage /> }],
+              },
+              {
+                path: 'projects/pv-panel-degradation-intelligence-lab/full',
+                element: <MainShellPlain />,
+                children: [{ index: true, element: <PVPanelDegradationIntelligenceLabProjectPage /> }],
               },
               {
                 path: 'projects/solar-power-generation-forecasting-lab',

@@ -68,6 +68,17 @@ export const projectRegistry: ProjectRegistryItem[] = [
     featured: true,
   },
   {
+    id: 'pv-panel-degradation-intelligence-lab',
+    title: 'PV Panel Degradation Intelligence Lab',
+    slug: 'pv-panel-degradation-intelligence-lab',
+    route: '/projects/pv-panel-degradation-intelligence-lab',
+    category: 'Solar Power',
+    description:
+      'Panel-level degradation intelligence for efficiency loss monitoring, hotspot detection, soiling analysis, and temperature stress correlation.',
+    visible: true,
+    featured: true,
+  },
+  {
     id: 'inverter-failure-prediction-lab',
     title: 'Inverter Failure Prediction Lab',
     slug: 'inverter-failure-prediction-lab',
