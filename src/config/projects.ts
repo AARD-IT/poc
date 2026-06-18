@@ -78,6 +78,17 @@ export const projectRegistry: ProjectRegistryItem[] = [
     featured: true,
   },
   {
+    id: 'order-fulfillment-sla-analytics',
+    title: 'Order Fulfillment & SLA Analytics',
+    slug: 'order-fulfillment-sla-analytics',
+    route: '/projects/order-fulfillment-sla-analytics',
+    category: 'Supply Chain',
+    description:
+      'Fulfillment analytics workspace for SLA breach prediction, warehouse trend analysis, and operations playbooks.',
+    visible: true,
+    featured: true,
+  },
+  {
     id: 'route-optimization-logistics-efficiency',
     title: 'Route Optimization & Logistics Efficiency',
     slug: 'route-optimization-logistics-efficiency',

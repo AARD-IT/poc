@@ -40,6 +40,8 @@ import { OrderToDeliveryAnalyticsLabDetailPage } from '@/pages/projects/OrderToD
 import { OrderToDeliveryAnalyticsLabProjectPage } from '@/pages/projects/OrderToDeliveryAnalyticsLabProjectPage'
 import { InventoryPileupShortageAnalyticsLabDetailPage } from '@/pages/projects/InventoryPileupShortageAnalyticsLabDetailPage'
 import { InventoryPileupShortageAnalyticsLabProjectPage } from '@/pages/projects/InventoryPileupShortageAnalyticsLabProjectPage'
+import { OrderFulfillmentSlaAnalyticsDetailPage } from '@/pages/projects/OrderFulfillmentSlaAnalyticsDetailPage'
+import { OrderFulfillmentSlaAnalyticsProjectPage } from '@/pages/projects/OrderFulfillmentSlaAnalyticsProjectPage'
 
 import { ProfilePage } from '@/pages/ProfilePage'
 import { SettingsPage } from '@/pages/SettingsPage'
@@ -226,6 +228,16 @@ export const router = createBrowserRouter([
                 path: 'projects/inventory-pileup-shortage-analytics-lab/full',
                 element: <MainShellPlain />,
                 children: [{ index: true, element: <InventoryPileupShortageAnalyticsLabProjectPage /> }],
+              },
+              {
+                path: 'projects/order-fulfillment-sla-analytics',
+                element: <MainShellWithSidebar />,
+                children: [{ index: true, element: <OrderFulfillmentSlaAnalyticsDetailPage /> }],
+              },
+              {
+                path: 'projects/order-fulfillment-sla-analytics/full',
+                element: <MainShellPlain />,
+                children: [{ index: true, element: <OrderFulfillmentSlaAnalyticsProjectPage /> }],
               },
             ],
           },
