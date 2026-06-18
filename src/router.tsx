@@ -18,6 +18,8 @@ import { HealthscopeInsightsProjectPage } from '@/pages/projects/HealthscopeInsi
 import { HealthscopeInsightsDetailPage } from '@/pages/projects/HealthscopeInsightsDetailPage'
 import { PatientVisitAnalyticsHospitalPerformanceDetailPage } from '@/pages/projects/PatientVisitAnalyticsHospitalPerformanceDetailPage'
 import { PatientVisitAnalyticsHospitalPerformanceProjectPage } from '@/pages/projects/PatientVisitAnalyticsHospitalPerformanceProjectPage'
+import { SolarPowerGenerationForecastingLabDetailPage } from '@/pages/projects/SolarPowerGenerationForecastingLabDetailPage'
+import { SolarPowerGenerationForecastingLabProjectPage } from '@/pages/projects/SolarPowerGenerationForecastingLabProjectPage'
 import { OfferLetterProjectPage } from '@/pages/projects/OfferLetterProjectPage'
 import { OfferLetterDetailPage } from '@/pages/projects/OfferLetterDetailPage'
 import { PiiRedactionProjectPage } from '@/pages/projects/PiiRedactionProjectPage'
@@ -122,6 +124,16 @@ export const router = createBrowserRouter([
                 path: 'projects/patient-visit-analytics-hospital-performance/full',
                 element: <MainShellPlain />,
                 children: [{ index: true, element: <PatientVisitAnalyticsHospitalPerformanceProjectPage /> }],
+              },
+              {
+                path: 'projects/solar-power-generation-forecasting-lab',
+                element: <MainShellWithSidebar />,
+                children: [{ index: true, element: <SolarPowerGenerationForecastingLabDetailPage /> }],
+              },
+              {
+                path: 'projects/solar-power-generation-forecasting-lab/full',
+                element: <MainShellPlain />,
+                children: [{ index: true, element: <SolarPowerGenerationForecastingLabProjectPage /> }],
               },
               {
                 path: 'projects/offerletter-generator',

@@ -8,6 +8,7 @@ export const tagColors: Record<string, string> = {
   'Hospital Operations': 'bg-[#DBEAFE] text-[#1D4ED8] border-[#93C5FD]',
   'Patient Analytics': 'bg-[#CCFBF1] text-[#0F766E] border-[#5EEAD4]',
   'Admission Forecasting': 'bg-[#FCE7F3] text-[#BE185D] border-[#F9A8D4]',
+  'Solar Power': 'bg-[#FEF3C7] text-[#A16207] border-[#FDE68A]',
   Retail: 'bg-[#FFEDD5] text-[#C2410C] border-[#FED7AA]',
   'Supply Chain': 'bg-[#E0F2FE] text-[#075985] border-[#7DD3FC]',
   Dashboard: 'bg-[#E0E7FF] text-[#4F46E5] border-[#A5B4FC]',

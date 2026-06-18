@@ -57,6 +57,17 @@ export const projectRegistry: ProjectRegistryItem[] = [
     featured: true,
   },
   {
+    id: 'solar-power-generation-forecasting-lab',
+    title: 'Solar Power Generation Forecasting Lab',
+    slug: 'solar-power-generation-forecasting-lab',
+    route: '/projects/solar-power-generation-forecasting-lab',
+    category: 'Solar Power',
+    description:
+      'Solar generation forecasting dashboard for SCADA telemetry, weather impact analysis, forecast accuracy, and plant ranking.',
+    visible: true,
+    featured: true,
+  },
+  {
     id: 'intelligent-document-processor',
     title: 'Intelligent Document Processor',
     slug: 'intelligent-document-processor',
