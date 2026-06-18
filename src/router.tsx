@@ -16,6 +16,8 @@ import { AiPrescriptionProjectPage } from '@/pages/projects/AiPrescriptionProjec
 import { AiPrescriptionDetailPage } from '@/pages/projects/AiPrescriptionDetailPage'
 import { HealthscopeInsightsProjectPage } from '@/pages/projects/HealthscopeInsightsProjectPage'
 import { HealthscopeInsightsDetailPage } from '@/pages/projects/HealthscopeInsightsDetailPage'
+import { PatientVisitAnalyticsHospitalPerformanceDetailPage } from '@/pages/projects/PatientVisitAnalyticsHospitalPerformanceDetailPage'
+import { PatientVisitAnalyticsHospitalPerformanceProjectPage } from '@/pages/projects/PatientVisitAnalyticsHospitalPerformanceProjectPage'
 import { OfferLetterProjectPage } from '@/pages/projects/OfferLetterProjectPage'
 import { OfferLetterDetailPage } from '@/pages/projects/OfferLetterDetailPage'
 import { PiiRedactionProjectPage } from '@/pages/projects/PiiRedactionProjectPage'
@@ -42,6 +44,8 @@ import { InventoryPileupShortageAnalyticsLabDetailPage } from '@/pages/projects/
 import { InventoryPileupShortageAnalyticsLabProjectPage } from '@/pages/projects/InventoryPileupShortageAnalyticsLabProjectPage'
 import { OrderFulfillmentSlaAnalyticsDetailPage } from '@/pages/projects/OrderFulfillmentSlaAnalyticsDetailPage'
 import { OrderFulfillmentSlaAnalyticsProjectPage } from '@/pages/projects/OrderFulfillmentSlaAnalyticsProjectPage'
+import { MarketingCampaignPerformanceAnalyzerDetailPage } from '@/pages/projects/MarketingCampaignPerformanceAnalyzerDetailPage'
+import { MarketingCampaignPerformanceAnalyzerProjectPage } from '@/pages/projects/MarketingCampaignPerformanceAnalyzerProjectPage'
 
 import { ProfilePage } from '@/pages/ProfilePage'
 import { SettingsPage } from '@/pages/SettingsPage'
@@ -108,6 +112,16 @@ export const router = createBrowserRouter([
                 path: 'projects/healthscope-insights-detail',
                 element: <MainShellWithSidebar />,
                 children: [{ index: true, element: <HealthscopeInsightsDetailPage /> }],
+              },
+              {
+                path: 'projects/patient-visit-analytics-hospital-performance',
+                element: <MainShellWithSidebar />,
+                children: [{ index: true, element: <PatientVisitAnalyticsHospitalPerformanceDetailPage /> }],
+              },
+              {
+                path: 'projects/patient-visit-analytics-hospital-performance/full',
+                element: <MainShellPlain />,
+                children: [{ index: true, element: <PatientVisitAnalyticsHospitalPerformanceProjectPage /> }],
               },
               {
                 path: 'projects/offerletter-generator',
@@ -238,6 +252,16 @@ export const router = createBrowserRouter([
                 path: 'projects/order-fulfillment-sla-analytics/full',
                 element: <MainShellPlain />,
                 children: [{ index: true, element: <OrderFulfillmentSlaAnalyticsProjectPage /> }],
+              },
+              {
+                path: 'projects/marketing-campaign-performance-analyzer',
+                element: <MainShellWithSidebar />,
+                children: [{ index: true, element: <MarketingCampaignPerformanceAnalyzerDetailPage /> }],
+              },
+              {
+                path: 'projects/marketing-campaign-performance-analyzer/full',
+                element: <MainShellPlain />,
+                children: [{ index: true, element: <MarketingCampaignPerformanceAnalyzerProjectPage /> }],
               },
             ],
           },

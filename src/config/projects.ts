@@ -13,6 +13,17 @@ export const projectRegistry: ProjectRegistryItem[] = [
     featured: true,
   },
   {
+    id: 'marketing-campaign-performance-analyzer',
+    title: 'Marketing Campaign Performance Analyzer',
+    slug: 'marketing-campaign-performance-analyzer',
+    route: '/projects/marketing-campaign-performance-analyzer',
+    category: 'Marketing Analytics',
+    description:
+      'FastAPI and Pandas dashboard for campaign performance, lead generation, conversion efficiency, and ROI analysis across marketing channels.',
+    visible: true,
+    featured: true,
+  },
+  {
     id: 'ai-prescription',
     title: 'AI Prescription Generator',
     slug: 'ai-prescription',
@@ -31,6 +42,17 @@ export const projectRegistry: ProjectRegistryItem[] = [
     category: 'Healthcare',
     description:
       'Healthcare analytics and insights platform for hospital performance, patient trends, revenue, and operational intelligence.',
+    visible: true,
+    featured: true,
+  },
+  {
+    id: 'patient-visit-analytics-hospital-performance',
+    title: 'Patient Visit Analytics & Hospital Performance',
+    slug: 'patient-visit-analytics-hospital-performance',
+    route: '/projects/patient-visit-analytics-hospital-performance',
+    category: 'Healthcare',
+    description:
+      'Patient visit, admission, revenue, and doctor performance analytics with dynamic filters, forecasting signals, and admission prediction.',
     visible: true,
     featured: true,
   },
