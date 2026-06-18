@@ -20,6 +20,8 @@ import { PatientVisitAnalyticsHospitalPerformanceDetailPage } from '@/pages/proj
 import { PatientVisitAnalyticsHospitalPerformanceProjectPage } from '@/pages/projects/PatientVisitAnalyticsHospitalPerformanceProjectPage'
 import { SolarPowerGenerationForecastingLabDetailPage } from '@/pages/projects/SolarPowerGenerationForecastingLabDetailPage'
 import { SolarPowerGenerationForecastingLabProjectPage } from '@/pages/projects/SolarPowerGenerationForecastingLabProjectPage'
+import { InverterFailurePredictionLabDetailPage } from '@/pages/projects/InverterFailurePredictionLabDetailPage'
+import { InverterFailurePredictionLabProjectPage } from '@/pages/projects/InverterFailurePredictionLabProjectPage'
 import { OfferLetterProjectPage } from '@/pages/projects/OfferLetterProjectPage'
 import { OfferLetterDetailPage } from '@/pages/projects/OfferLetterDetailPage'
 import { PiiRedactionProjectPage } from '@/pages/projects/PiiRedactionProjectPage'
@@ -134,6 +136,16 @@ export const router = createBrowserRouter([
                 path: 'projects/solar-power-generation-forecasting-lab/full',
                 element: <MainShellPlain />,
                 children: [{ index: true, element: <SolarPowerGenerationForecastingLabProjectPage /> }],
+              },
+              {
+                path: 'projects/inverter-failure-prediction-lab',
+                element: <MainShellWithSidebar />,
+                children: [{ index: true, element: <InverterFailurePredictionLabDetailPage /> }],
+              },
+              {
+                path: 'projects/inverter-failure-prediction-lab/full',
+                element: <MainShellPlain />,
+                children: [{ index: true, element: <InverterFailurePredictionLabProjectPage /> }],
               },
               {
                 path: 'projects/offerletter-generator',

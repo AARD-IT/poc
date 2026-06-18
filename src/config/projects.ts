@@ -68,6 +68,17 @@ export const projectRegistry: ProjectRegistryItem[] = [
     featured: true,
   },
   {
+    id: 'inverter-failure-prediction-lab',
+    title: 'Inverter Failure Prediction Lab',
+    slug: 'inverter-failure-prediction-lab',
+    route: '/projects/inverter-failure-prediction-lab',
+    category: 'Solar Power',
+    description:
+      'Inverter telemetry monitoring and failure prediction lab for thermal stress detection, fault analysis, and preventive maintenance planning.',
+    visible: true,
+    featured: true,
+  },
+  {
     id: 'intelligent-document-processor',
     title: 'Intelligent Document Processor',
     slug: 'intelligent-document-processor',
