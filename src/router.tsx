@@ -18,6 +18,10 @@ import { HealthscopeInsightsProjectPage } from '@/pages/projects/HealthscopeInsi
 import { HealthscopeInsightsDetailPage } from '@/pages/projects/HealthscopeInsightsDetailPage'
 import { PatientVisitAnalyticsHospitalPerformanceDetailPage } from '@/pages/projects/PatientVisitAnalyticsHospitalPerformanceDetailPage'
 import { PatientVisitAnalyticsHospitalPerformanceProjectPage } from '@/pages/projects/PatientVisitAnalyticsHospitalPerformanceProjectPage'
+import { EvDynamicRangePredictionAnxietyReductionLabDetailPage } from '@/pages/projects/EvDynamicRangePredictionAnxietyReductionLabDetailPage'
+import { EvDynamicRangePredictionAnxietyReductionLabProjectPage } from '@/pages/projects/EvDynamicRangePredictionAnxietyReductionLabProjectPage'
+import { RealEstatePriceVsPropertyFeaturesAnalyzerDetailPage } from '@/pages/projects/RealEstatePriceVsPropertyFeaturesAnalyzerDetailPage'
+import { RealEstatePriceVsPropertyFeaturesAnalyzerProjectPage } from '@/pages/projects/RealEstatePriceVsPropertyFeaturesAnalyzerProjectPage'
 import { PVPanelDegradationIntelligenceLabDetailPage } from '@/pages/projects/PVPanelDegradationIntelligenceLabDetailPage'
 import { PVPanelDegradationIntelligenceLabProjectPage } from '@/pages/projects/PVPanelDegradationIntelligenceLabProjectPage'
 import { SolarPowerGenerationForecastingLabDetailPage } from '@/pages/projects/SolarPowerGenerationForecastingLabDetailPage'
@@ -128,6 +132,26 @@ export const router = createBrowserRouter([
                 path: 'projects/patient-visit-analytics-hospital-performance/full',
                 element: <MainShellPlain />,
                 children: [{ index: true, element: <PatientVisitAnalyticsHospitalPerformanceProjectPage /> }],
+              },
+              {
+                path: 'projects/real-estate-price-vs-property-features-analyzer',
+                element: <MainShellWithSidebar />,
+                children: [{ index: true, element: <RealEstatePriceVsPropertyFeaturesAnalyzerDetailPage /> }],
+              },
+              {
+                path: 'projects/real-estate-price-vs-property-features-analyzer/full',
+                element: <MainShellPlain />,
+                children: [{ index: true, element: <RealEstatePriceVsPropertyFeaturesAnalyzerProjectPage /> }],
+              },
+              {
+                path: 'projects/ev-dynamic-range-prediction-anxiety-reduction-lab',
+                element: <MainShellWithSidebar />,
+                children: [{ index: true, element: <EvDynamicRangePredictionAnxietyReductionLabDetailPage /> }],
+              },
+              {
+                path: 'projects/ev-dynamic-range-prediction-anxiety-reduction-lab/full',
+                element: <MainShellPlain />,
+                children: [{ index: true, element: <EvDynamicRangePredictionAnxietyReductionLabProjectPage /> }],
               },
               {
                 path: 'projects/pv-panel-degradation-intelligence-lab',

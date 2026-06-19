@@ -57,6 +57,28 @@ export const projectRegistry: ProjectRegistryItem[] = [
     featured: true,
   },
   {
+    id: 'real-estate-price-vs-property-features-analyzer',
+    title: 'Real Estate Price vs Property Features Analyzer',
+    slug: 'real-estate-price-vs-property-features-analyzer',
+    route: '/projects/real-estate-price-vs-property-features-analyzer',
+    category: 'Real Estate',
+    description:
+      'Feature-level real estate pricing analysis with property validation, dynamic filters, interactive charts, ML price prediction, and automated valuation insights.',
+    visible: true,
+    featured: true,
+  },
+  {
+    id: 'ev-dynamic-range-prediction-anxiety-reduction-lab',
+    title: 'EV Dynamic Range Prediction & Anxiety Reduction Lab',
+    slug: 'ev-dynamic-range-prediction-anxiety-reduction-lab',
+    route: '/projects/ev-dynamic-range-prediction-anxiety-reduction-lab',
+    category: 'EV',
+    description:
+      'EV range prediction and anxiety reduction lab with default dataset loading, CSV uploads, manual mapping, ML range prediction, anxiety classification, and driver clustering.',
+    visible: true,
+    featured: true,
+  },
+  {
     id: 'solar-power-generation-forecasting-lab',
     title: 'Solar Power Generation Forecasting Lab',
     slug: 'solar-power-generation-forecasting-lab',
