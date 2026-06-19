@@ -20,6 +20,8 @@ import { PatientVisitAnalyticsHospitalPerformanceDetailPage } from '@/pages/proj
 import { PatientVisitAnalyticsHospitalPerformanceProjectPage } from '@/pages/projects/PatientVisitAnalyticsHospitalPerformanceProjectPage'
 import { EvDynamicRangePredictionAnxietyReductionLabDetailPage } from '@/pages/projects/EvDynamicRangePredictionAnxietyReductionLabDetailPage'
 import { EvDynamicRangePredictionAnxietyReductionLabProjectPage } from '@/pages/projects/EvDynamicRangePredictionAnxietyReductionLabProjectPage'
+import { EvChargingStationFaultDetectionLabDetailPage } from '@/pages/projects/EvChargingStationFaultDetectionLabDetailPage'
+import { EvChargingStationFaultDetectionLabProjectPage } from '@/pages/projects/EvChargingStationFaultDetectionLabProjectPage'
 import { RealEstatePriceVsPropertyFeaturesAnalyzerDetailPage } from '@/pages/projects/RealEstatePriceVsPropertyFeaturesAnalyzerDetailPage'
 import { RealEstatePriceVsPropertyFeaturesAnalyzerProjectPage } from '@/pages/projects/RealEstatePriceVsPropertyFeaturesAnalyzerProjectPage'
 import { PVPanelDegradationIntelligenceLabDetailPage } from '@/pages/projects/PVPanelDegradationIntelligenceLabDetailPage'
@@ -152,6 +154,16 @@ export const router = createBrowserRouter([
                 path: 'projects/ev-dynamic-range-prediction-anxiety-reduction-lab/full',
                 element: <MainShellPlain />,
                 children: [{ index: true, element: <EvDynamicRangePredictionAnxietyReductionLabProjectPage /> }],
+              },
+              {
+                path: 'projects/ev-charging-station-fault-detection-lab',
+                element: <MainShellWithSidebar />,
+                children: [{ index: true, element: <EvChargingStationFaultDetectionLabDetailPage /> }],
+              },
+              {
+                path: 'projects/ev-charging-station-fault-detection-lab/full',
+                element: <MainShellPlain />,
+                children: [{ index: true, element: <EvChargingStationFaultDetectionLabProjectPage /> }],
               },
               {
                 path: 'projects/pv-panel-degradation-intelligence-lab',

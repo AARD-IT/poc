@@ -79,6 +79,17 @@ export const projectRegistry: ProjectRegistryItem[] = [
     featured: true,
   },
   {
+    id: 'ev-charging-station-fault-detection-lab',
+    title: 'EV Charging Station Fault Detection Lab',
+    slug: 'ev-charging-station-fault-detection-lab',
+    route: '/projects/ev-charging-station-fault-detection-lab',
+    category: 'EV',
+    description:
+      'EV charger fault detection and predictive maintenance lab with charger filters, thermal risk monitoring, fault classification, anomaly detection, and automated insights.',
+    visible: true,
+    featured: true,
+  },
+  {
     id: 'solar-power-generation-forecasting-lab',
     title: 'Solar Power Generation Forecasting Lab',
     slug: 'solar-power-generation-forecasting-lab',
