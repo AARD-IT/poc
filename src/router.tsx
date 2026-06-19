@@ -18,6 +18,8 @@ import { HealthscopeInsightsProjectPage } from '@/pages/projects/HealthscopeInsi
 import { HealthscopeInsightsDetailPage } from '@/pages/projects/HealthscopeInsightsDetailPage'
 import { PatientVisitAnalyticsHospitalPerformanceDetailPage } from '@/pages/projects/PatientVisitAnalyticsHospitalPerformanceDetailPage'
 import { PatientVisitAnalyticsHospitalPerformanceProjectPage } from '@/pages/projects/PatientVisitAnalyticsHospitalPerformanceProjectPage'
+import { PatientFlowNavigatorDetailPage } from '@/pages/projects/PatientFlowNavigatorDetailPage'
+import { PatientFlowNavigatorProjectPage } from '@/pages/projects/PatientFlowNavigatorProjectPage'
 import { EvDynamicRangePredictionAnxietyReductionLabDetailPage } from '@/pages/projects/EvDynamicRangePredictionAnxietyReductionLabDetailPage'
 import { EvDynamicRangePredictionAnxietyReductionLabProjectPage } from '@/pages/projects/EvDynamicRangePredictionAnxietyReductionLabProjectPage'
 import { EvChargingStationFaultDetectionLabDetailPage } from '@/pages/projects/EvChargingStationFaultDetectionLabDetailPage'
@@ -134,6 +136,16 @@ export const router = createBrowserRouter([
                 path: 'projects/patient-visit-analytics-hospital-performance/full',
                 element: <MainShellPlain />,
                 children: [{ index: true, element: <PatientVisitAnalyticsHospitalPerformanceProjectPage /> }],
+              },
+              {
+                path: 'projects/patientflow-navigator',
+                element: <MainShellWithSidebar />,
+                children: [{ index: true, element: <PatientFlowNavigatorDetailPage /> }],
+              },
+              {
+                path: 'projects/patientflow-navigator/full',
+                element: <MainShellPlain />,
+                children: [{ index: true, element: <PatientFlowNavigatorProjectPage /> }],
               },
               {
                 path: 'projects/real-estate-price-vs-property-features-analyzer',

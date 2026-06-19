@@ -57,6 +57,17 @@ export const projectRegistry: ProjectRegistryItem[] = [
     featured: true,
   },
   {
+    id: 'patientflow-navigator',
+    title: 'PatientFlow Navigator',
+    slug: 'patientflow-navigator',
+    route: '/projects/patientflow-navigator',
+    category: 'Healthcare',
+    description:
+      'Patient journey, readmission risk, treatment cost, and hospital capacity analytics with dataset loading, CSV upload, column mapping, charts, ML predictions, and automated insights.',
+    visible: true,
+    featured: true,
+  },
+  {
     id: 'real-estate-price-vs-property-features-analyzer',
     title: 'Real Estate Price vs Property Features Analyzer',
     slug: 'real-estate-price-vs-property-features-analyzer',
