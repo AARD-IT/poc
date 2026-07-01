@@ -199,6 +199,17 @@ export const projectRegistry: ProjectRegistryItem[] = [
     featured: true,
   },
   {
+    id: 'warehouse-operations-analytics',
+    title: 'Warehouse Operations Analytics',
+    slug: 'warehouse-operations-analytics',
+    route: '/projects/warehouse-operations-analytics',
+    category: 'Supply Chain',
+    description:
+      'Analyse picking efficiency, slotting, layout, and equipment usage. Use this to rebalance workload, resolve congestion, and cut operational costs.',
+    visible: true,
+    featured: true,
+  },
+  {
     id: 'multimodal-rag',
     title: 'Multimodal RAG System',
     slug: 'multimodal-rag',
