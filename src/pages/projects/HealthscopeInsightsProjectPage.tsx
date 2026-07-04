@@ -1,9 +1,22 @@
 import { useEffect, useMemo, useState, type ChangeEvent } from 'react'
+import { useNavigate } from 'react-router'
 import Plot from 'react-plotly.js'
-import { Tab, TabList, TabPanel, Tabs } from 'react-tabs'
-import 'react-tabs/style/react-tabs.css'
 import { ProjectDetailCardSkeleton } from '@/components/projects/ProjectDetailCard'
 import API from '@/services/api'
+import {
+  ChevronLeft,
+  ChevronRight,
+  Target,
+  TrendingUp,
+  X,
+  Download,
+  Stethoscope,
+  Activity,
+  HeartPulse,
+  Users,
+  FileUp,
+  Check,
+} from 'lucide-react'
 
 const API_BASE_URL =
   import.meta.env.VITE_HEALTHSCOPE_INSIGHTS_API_URL ||
@@ -62,6 +75,7 @@ type VisitTrendItem = {
 }
 
 type DatasetMode = 'default' | 'upload' | 'mapping'
+type ActiveTab = 'overview' | 'attributes' | 'application'
 
 async function handleResponse(response: Response) {
   if (!response.ok) {
@@ -72,9 +86,50 @@ async function handleResponse(response: Response) {
   return response.json()
 }
 
-export function HealthscopeInsightsProjectPage() {
-  const BLUE = '#064b86'
+/* ─── Shared Premium Style Tokens ────────────────────────────── */
+const inputCls =
+  'w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-[#0F766E] transition'
+const selectCls =
+  'w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none focus:border-[#0F766E] transition cursor-pointer'
+const cardCls =
+  'rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_40px_rgba(15,23,42,0.08)]'
+const btnPrimaryCls =
+  'inline-flex items-center gap-2 rounded-full bg-[#0F766E] px-5 py-3 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(15,118,110,0.22)] transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(15,118,110,0.26)] active:translate-y-0 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none'
+const btnSecondaryCls =
+  'inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60 disabled:cursor-not-allowed'
 
+/* ─── SectionHeading (matches PatientFlow/AI Prescription patterns) ─── */
+function SectionHeading({ eyebrow, title, description }: { eyebrow: string; title: string; description?: string }) {
+  return (
+    <div>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">{eyebrow}</p>
+      <h2 className="mt-2 text-3xl font-bold tracking-tight text-[#0F172A]">{title}</h2>
+      {description && <p className="mt-3 max-w-3xl text-[15px] leading-7 text-[#475569]">{description}</p>}
+    </div>
+  )
+}
+
+/* ─── MetricCard ────────────────────────────────────────────── */
+function MetricCard({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: string; accent: string }) {
+  return (
+    <div className="rounded-3xl border border-[#E2E8F0] bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.08)] transition hover:shadow-[0_24px_50px_rgba(15,23,42,0.12)]">
+      <div className="flex items-center gap-3">
+        <div className={`rounded-2xl p-3 ${accent}`}>{icon}</div>
+        <div>
+          <p className="text-sm font-medium text-slate-500">{label}</p>
+          <p className="mt-1 text-2xl font-bold text-[#0F172A]">{value}</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export function HealthscopeInsightsProjectPage() {
+  const navigate = useNavigate()
+  const BRAND_TEAL = '#0F766E'
+  const CHART_BLUE = '#2563EB'
+
+  const [activeTab, setActiveTab] = useState<ActiveTab>('overview')
   const [mode, setMode] = useState<DatasetMode>('default')
   const [data, setData] = useState<any[]>([])
   const [filtered, setFiltered] = useState<any[]>([])
@@ -97,6 +152,7 @@ export function HealthscopeInsightsProjectPage() {
       current.includes(department) ? current.filter((value) => value !== department) : [...current, department]
     )
   }
+
   const [hospitalPerformance, setHospitalPerformance] = useState<HospitalPerformanceItem[]>([])
   const [visitTrend, setVisitTrend] = useState<VisitTrendItem[]>([])
   const [mlMetrics, setMlMetrics] = useState<MlMetrics | null>(null)
@@ -373,505 +429,682 @@ export function HealthscopeInsightsProjectPage() {
     }
   }
 
+  const tabs: { key: ActiveTab; label: string }[] = [
+    { key: 'overview', label: 'Overview' },
+    { key: 'attributes', label: 'Important Attributes' },
+    { key: 'application', label: 'Application' },
+  ]
+
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#F8FAFC_0%,#F8FBFF_100%)] p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-10">
-          <div className="text-4xl font-bold text-[#0F172A]">Healthscope Insights</div>
-          <p className="mt-3 text-slate-600 max-w-3xl">Enterprise healthcare analytics: patient trends, hospital performance, cost, and automated ML insights.</p>
+    <div className="mx-auto max-w-7xl p-6">
+      {/* ── Redesigned Standalone Back Button ── */}
+      <button
+        type="button"
+        onClick={() => navigate(-1)}
+        className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#E2E8F0] bg-white px-4 py-2 text-sm font-semibold text-[#475569] shadow-sm transition hover:-translate-y-0.5 hover:border-[#CBD5E1] hover:text-[#0F172A] hover:shadow-md active:translate-y-0"
+      >
+        <ChevronLeft className="w-4 h-4" />
+        Back
+      </button>
+
+      {/* ── Premium Hero Banner (PatientFlow / AI Prescription theme) ── */}
+      <div className="mb-8 rounded-[32px] bg-[linear-gradient(135deg,#F0FDFA_0%,#FFFFFF_40%,#EFF6FF_100%)] p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)] md:p-8">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#0F766E]">Healthcare project</p>
+          <h1 className="mt-2 text-4xl font-black tracking-tight text-[#0F172A] md:text-5xl">Healthscope Insights</h1>
+          <p className="mt-4 max-w-3xl text-[16px] leading-7 text-[#334155]">
+            Enterprise healthcare analytics: patient trends, hospital performance, cost, and automated ML insights.
+          </p>
         </div>
+      </div>
 
-        <Tabs>
-          <TabList className="mb-8 flex flex-wrap gap-2 rounded-3xl border border-slate-200 bg-white p-2 shadow-sm">
-            <Tab className="rounded-2xl px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 data-[selected=true]:bg-[#0F766E] data-[selected=true]:text-white">Overview</Tab>
-            <Tab className="rounded-2xl px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 data-[selected=true]:bg-[#0F766E] data-[selected=true]:text-white">Important Attributes</Tab>
-            <Tab className="rounded-2xl px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 data-[selected=true]:bg-[#0F766E] data-[selected=true]:text-white">Application</Tab>
-          </TabList>
+      {/* ── Custom Pill Tabs Container (Real Estate style) ── */}
+      <div className="aa-card p-4 bg-white mb-6">
+        <div className="inline-flex overflow-hidden rounded-3xl border border-[#CBD5E1] bg-[#F8FAFC] p-1 shadow-sm">
+          {tabs.map(({ key, label }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setActiveTab(key)}
+              className={`rounded-3xl px-5 py-3 text-sm font-semibold transition ${
+                activeTab === key
+                  ? 'bg-white text-[#0F172A] shadow-sm'
+                  : 'text-[#475569] hover:text-[#0F172A]'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
 
-          <TabPanel>
-            <div className="space-y-6">
-              <div className="aa-card p-8">
-                <h2 className="text-3xl font-bold text-slate-900 mb-4">Overview</h2>
-                <p className="text-slate-600 leading-relaxed">Healthscope Insights provides a unified analytics experience for healthcare leaders, combining patient visit trends, hospital performance, departmental revenue, and ML-powered predictions for business-critical decisions.</p>
+      {/* ── TAB CONTENT ── */}
+
+      {/* 1. Overview Tab */}
+      {activeTab === 'overview' && (
+        <div className="space-y-8 pt-6">
+          <SectionHeading
+            eyebrow="Overview"
+            title="Healthcare Enterprise Dashboard"
+            description="Healthscope Insights provides a unified analytics experience for healthcare leaders, combining patient visit trends, hospital performance, departmental revenue, and ML-powered predictions for business-critical decisions."
+          />
+
+          {/* Metric Cards Grid */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <MetricCard
+              icon={<Users className="h-5 w-5 text-[#0F766E]" />}
+              label="Total Visits"
+              value={kpis?.total_visits != null ? kpis.total_visits.toLocaleString('en-IN') : '—'}
+              accent="bg-[#ECFDF5]"
+            />
+            <MetricCard
+              icon={<Activity className="h-5 w-5 text-[#1D4ED8]" />}
+              label="Total Revenue"
+              value={kpis?.total_revenue != null ? `₹${Math.round(kpis.total_revenue).toLocaleString('en-IN')}` : '—'}
+              accent="bg-[#EFF6FF]"
+            />
+            <MetricCard
+              icon={<HeartPulse className="h-5 w-5 text-[#A16207]" />}
+              label="Avg Recovery Rate"
+              value={kpis?.avg_recovery_rate != null ? `${kpis.avg_recovery_rate}%` : '—'}
+              accent="bg-[#FFFBEB]"
+            />
+            <MetricCard
+              icon={<Stethoscope className="h-5 w-5 text-[#BE123C]" />}
+              label="Avg Satisfaction"
+              value={kpis?.avg_satisfaction != null ? String(kpis.avg_satisfaction) : '—'}
+              accent="bg-[#FFF1F2]"
+            />
+          </div>
+
+          {/* Purpose & Business Impact Columns */}
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className={cardCls}>
+              <div className="flex items-center gap-2 mb-4">
+                <Target className="w-5 h-5 text-[#0F766E]" />
+                <h3 className="text-xl font-bold text-[#0F172A]">Purpose</h3>
               </div>
-              <div className="grid gap-6 md:grid-cols-2">
-                <div className="aa-card p-8">
-                  <h3 className="text-xl font-semibold text-slate-900 mb-4">Purpose</h3>
-                  <ul className="space-y-2 text-slate-600">
-                    <li>Patient & visit analytics</li>
-                    <li>Revenue & cost tracking</li>
-                    <li>Department performance insights</li>
-                    <li>Recovery rate benchmarking</li>
-                    <li>Early indicators for hospital risk</li>
-                  </ul>
-                </div>
-                <div className="aa-card p-8">
-                  <h3 className="text-xl font-semibold text-slate-900 mb-4">KPIs</h3>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="rounded-3xl bg-slate-50 p-6 text-center shadow-sm">
-                      <p className="text-3xl font-bold text-[#064b86]">{kpis?.total_visits ?? '—'}</p>
-                      <p className="mt-2 text-slate-500">Total Visits</p>
-                    </div>
-                    <div className="rounded-3xl bg-slate-50 p-6 text-center shadow-sm">
-                      <p className="text-3xl font-bold text-[#064b86]">₹ {kpis ? Math.round(kpis.total_revenue) : '—'}</p>
-                      <p className="mt-2 text-slate-500">Total Revenue</p>
-                    </div>
-                    <div className="rounded-3xl bg-slate-50 p-6 text-center shadow-sm">
-                      <p className="text-3xl font-bold text-[#064b86]">{kpis?.avg_recovery_rate ?? '—'}%</p>
-                      <p className="mt-2 text-slate-500">Avg Recovery Rate</p>
-                    </div>
-                    <div className="rounded-3xl bg-slate-50 p-6 text-center shadow-sm">
-                      <p className="text-3xl font-bold text-[#064b86]">{kpis?.avg_satisfaction ?? '—'}</p>
-                      <p className="mt-2 text-slate-500">Avg Satisfaction</p>
-                    </div>
-                  </div>
-                </div>
+              <ul className="space-y-3 text-sm leading-6 text-slate-600">
+                {[
+                  'Unified patient & visit analytics tracking',
+                  'Granular revenue & treatment cost optimization',
+                  'Departmental operational performance insights',
+                  'Recovery rate profiling and benchmarks',
+                  'Early warning indicators for hospital risk assessment',
+                ].map((item, i) => (
+                  <li key={i} className="flex items-start gap-2.5">
+                    <ChevronRight className="w-4 h-4 text-[#0F766E] shrink-0 mt-0.5" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className={cardCls}>
+              <div className="flex items-center gap-2 mb-4">
+                <TrendingUp className="w-5 h-5 text-[#0F766E]" />
+                <h3 className="text-xl font-bold text-[#0F172A]">Business Impact</h3>
+              </div>
+              <ul className="space-y-3 text-sm leading-6 text-slate-600">
+                {[
+                  'Optimized revenue cycles and billing transparently across key hospital units.',
+                  'Informed doctor scheduling and resource allocation schemes.',
+                  'Targeted quality-of-care improvements leveraging satisfaction intelligence.',
+                  'Direct clinical benchmarking through comparative hospital diagnostics.',
+                ].map((item, i) => (
+                  <li key={i} className="flex items-start gap-2.5">
+                    <Check className="w-4 h-4 text-[#0F766E] shrink-0 mt-0.5" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 2. Important Attributes Tab */}
+      {activeTab === 'attributes' && (
+        <div className="space-y-8 pt-6">
+          <SectionHeading
+            eyebrow="Data Schema"
+            title="Required Column Dictionary"
+            description="Ensure that your uploaded dataset matches the clinical variables and naming formats specified in the schema registry."
+          />
+
+          {/* Dictionary Table Card */}
+          <div className={cardCls}>
+            <div className="overflow-x-auto rounded-[24px] border border-slate-200">
+              <table className="min-w-full text-left text-sm">
+                <thead className="bg-slate-50 text-[12px] uppercase tracking-[0.08em] text-slate-600 border-b border-slate-200">
+                  <tr>
+                    <th className="px-4 py-3 font-semibold">Column Name</th>
+                    <th className="px-4 py-3 font-semibold">Data Type</th>
+                    <th className="px-4 py-3 font-semibold">Description</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  <tr className="bg-white">
+                    <td className="px-4 py-3.5 font-semibold text-slate-800">Date</td>
+                    <td className="px-4 py-3.5 text-slate-600">Date</td>
+                    <td className="px-4 py-3.5 text-slate-600">Appointment / visit date</td>
+                  </tr>
+                  <tr className="bg-slate-50/50">
+                    <td className="px-4 py-3.5 font-semibold text-slate-800">Hospital</td>
+                    <td className="px-4 py-3.5 text-slate-600">String</td>
+                    <td className="px-4 py-3.5 text-slate-600">Hospital name</td>
+                  </tr>
+                  <tr className="bg-white">
+                    <td className="px-4 py-3.5 font-semibold text-slate-800">Department</td>
+                    <td className="px-4 py-3.5 text-slate-600">String</td>
+                    <td className="px-4 py-3.5 text-slate-600">Department of treatment</td>
+                  </tr>
+                  <tr className="bg-slate-50/50">
+                    <td className="px-4 py-3.5 font-semibold text-slate-800">Revenue</td>
+                    <td className="px-4 py-3.5 text-slate-600">Float</td>
+                    <td className="px-4 py-3.5 text-slate-600">Revenue generated</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Variables Split Cards */}
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className={cardCls}>
+              <h3 className="text-lg font-bold text-[#0F172A] mb-4">Independent Variables</h3>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  'Hospital',
+                  'Department',
+                  'Doctor',
+                  'AgeGroup',
+                  'Gender',
+                  'Visits',
+                  'TreatmentCost',
+                ].map((item) => (
+                  <span
+                    key={item}
+                    className="inline-flex items-center rounded-full bg-[#EFF6FF] px-3.5 py-1.5 text-sm font-semibold text-[#1D4ED8]"
+                  >
+                    {item}
+                  </span>
+                ))}
               </div>
             </div>
-          </TabPanel>
 
-          <TabPanel>
-            <div className="space-y-6">
-              <div className="aa-card p-8 overflow-hidden">
-                <h2 className="text-3xl font-bold text-slate-900 mb-4">Data Dictionary</h2>
-                <div className="overflow-auto">
-                  <table className="w-full text-left border-separate border-spacing-0">
-                    <thead>
-                      <tr className="bg-slate-100">
-                        <th className="px-4 py-3 text-sm font-semibold text-slate-700">Column Name</th>
-                        <th className="px-4 py-3 text-sm font-semibold text-slate-700">Data Type</th>
-                        <th className="px-4 py-3 text-sm font-semibold text-slate-700">Description</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="border-t border-slate-200">
-                        <td className="px-4 py-3">Date</td>
-                        <td className="px-4 py-3">Date</td>
-                        <td className="px-4 py-3">Appointment / visit date</td>
-                      </tr>
-                      <tr className="border-t border-slate-200 bg-slate-50">
-                        <td className="px-4 py-3">Hospital</td>
-                        <td className="px-4 py-3">String</td>
-                        <td className="px-4 py-3">Hospital name</td>
-                      </tr>
-                      <tr className="border-t border-slate-200">
-                        <td className="px-4 py-3">Department</td>
-                        <td className="px-4 py-3">String</td>
-                        <td className="px-4 py-3">Department of treatment</td>
-                      </tr>
-                      <tr className="border-t border-slate-200 bg-slate-50">
-                        <td className="px-4 py-3">Revenue</td>
-                        <td className="px-4 py-3">Float</td>
-                        <td className="px-4 py-3">Revenue generated</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              <div className="grid gap-6 md:grid-cols-2">
-                <div className="aa-card p-8">
-                  <h3 className="text-2xl font-bold text-slate-900 mb-5">Independent Variables</h3>
-                  <div className="space-y-3 text-slate-700">
-                    <div className="rounded-2xl bg-slate-50 px-4 py-3">Hospital</div>
-                    <div className="rounded-2xl bg-slate-50 px-4 py-3">Department</div>
-                    <div className="rounded-2xl bg-slate-50 px-4 py-3">Doctor</div>
-                    <div className="rounded-2xl bg-slate-50 px-4 py-3">AgeGroup</div>
-                    <div className="rounded-2xl bg-slate-50 px-4 py-3">Gender</div>
-                    <div className="rounded-2xl bg-slate-50 px-4 py-3">Visits</div>
-                    <div className="rounded-2xl bg-slate-50 px-4 py-3">TreatmentCost</div>
-                  </div>
-                </div>
-                <div className="aa-card p-8">
-                  <h3 className="text-2xl font-bold text-slate-900 mb-5">Dependent Variables</h3>
-                  <div className="space-y-3 text-slate-700">
-                    <div className="rounded-2xl bg-slate-50 px-4 py-3">Revenue</div>
-                    <div className="rounded-2xl bg-slate-50 px-4 py-3">RecoveryRate</div>
-                    <div className="rounded-2xl bg-slate-50 px-4 py-3">SatisfactionScore</div>
-                  </div>
-                </div>
+            <div className={cardCls}>
+              <h3 className="text-lg font-bold text-[#0F172A] mb-4">Dependent Variables</h3>
+              <div className="flex flex-wrap gap-2">
+                {['Revenue', 'RecoveryRate', 'SatisfactionScore'].map((item) => (
+                  <span
+                    key={item}
+                    className="inline-flex items-center rounded-full bg-[#ECFDF5] px-3.5 py-1.5 text-sm font-semibold text-[#0F766E]"
+                  >
+                    {item}
+                  </span>
+                ))}
               </div>
             </div>
-          </TabPanel>
+          </div>
+        </div>
+      )}
 
-          <TabPanel>
-            <div className="space-y-8">
-              {error && (
-                <div className="rounded-3xl bg-rose-50 border border-rose-200 p-5 text-rose-700">{error}</div>
+      {/* 3. Application Tab */}
+      {activeTab === 'application' && (
+        <div className="space-y-6 pt-6">
+          {error && (
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+              {error}
+            </div>
+          )}
+
+          {/* ── Step 1: Load Dataset ── */}
+          <div className={cardCls}>
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-5">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#0F766E] mb-1">Step 1</p>
+                <h3 className="text-xl font-bold text-[#0F172A]">Load Dataset</h3>
+              </div>
+              {data.length > 0 && (
+                <span className="self-start md:self-auto rounded-full bg-[#ECFDF5] px-4 py-1.5 text-sm font-semibold text-[#166534]">
+                  {data.length.toLocaleString()} rows loaded
+                </span>
               )}
+            </div>
 
-              <div className="aa-card p-8">
-                <div className="flex items-center gap-4 mb-6">
-                  <span className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Choose Option:</span>
-                  <button
-                    type="button"
-                    onClick={() => loadDefault()}
-                    className={`aa-button ${mode === 'default' ? 'aa-button-primary' : 'aa-button-secondary'}`}
-                  >
-                    Default Dataset
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setMode('upload')}
-                    className={`aa-button ${mode === 'upload' ? 'aa-button-primary' : 'aa-button-secondary'}`}
-                  >
-                    Upload CSV
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setMode('mapping')}
-                    className={`aa-button ${mode === 'mapping' ? 'aa-button-primary' : 'aa-button-secondary'}`}
-                  >
-                    Upload CSV + Mapping
-                  </button>
-                </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {[
+                { key: 'default', label: 'Default Dataset' },
+                { key: 'upload', label: 'Upload CSV' },
+                { key: 'mapping', label: 'Upload CSV + Mapping' },
+              ].map(({ key, label }) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => {
+                    setMode(key as DatasetMode)
+                    if (key === 'default') {
+                      loadDefault()
+                    } else {
+                      setPreviewRows([])
+                      setFileColumns([])
+                    }
+                  }}
+                  className={`rounded-2xl px-4 py-3 text-sm font-semibold border transition ${
+                    mode === key
+                      ? 'border-[#0F766E] bg-[#ECFDF5] text-[#0F766E]'
+                      : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
 
-                <h2 className="text-2xl font-bold text-slate-900 mb-4">Step 1 — Load Dataset</h2>
-                {mode === 'default' && (
-                  <div className="space-y-4">
-                    <p className="text-sm text-slate-500">Using the default sample dataset provided by the backend.</p>
-                    <div className="rounded-3xl bg-slate-50 p-6 border border-slate-200">
-                      <div className="text-sm font-medium text-slate-700">Dataset preview</div>
-                      {dataPreview.length ? (
-                        <div className="overflow-auto mt-4 rounded-2xl border border-slate-200 bg-white">
-                          <table className="min-w-full text-left text-sm text-slate-700">
-                            <thead className="bg-slate-100">
-                              <tr>
-                                {Object.keys(dataPreview[0] || {}).map((column) => (
-                                  <th key={column} className="px-3 py-2 font-semibold">{column}</th>
-                                ))}
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {dataPreview.map((row, rowIndex) => (
-                                <tr key={rowIndex} className={rowIndex % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
-                                  {Object.values(row).map((value, cellIndex) => (
-                                    <td key={cellIndex} className="px-3 py-2 truncate max-w-[180px]">{String(value)}</td>
-                                  ))}
-                                </tr>
+            {/* Inner Views */}
+            {mode === 'default' && (
+              <div className="mt-5 space-y-4">
+                <p className="text-sm text-slate-500">Using the default sample dataset loaded dynamically from the API.</p>
+                {dataPreview.length > 0 && (
+                  <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
+                    <p className="text-sm font-semibold text-slate-800 mb-3">Dataset preview</p>
+                    <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+                      <table className="min-w-full text-left text-xs">
+                        <thead className="bg-slate-50 border-b border-slate-200 text-slate-600">
+                          <tr>
+                            {Object.keys(dataPreview[0] || {}).map((column) => (
+                              <th key={column} className="px-3 py-2 font-semibold whitespace-nowrap">{column}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 text-slate-700">
+                          {dataPreview.map((row, rowIndex) => (
+                            <tr key={rowIndex} className={rowIndex % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                              {Object.values(row).map((value, cellIndex) => (
+                                <td key={cellIndex} className="px-3 py-2 truncate max-w-[150px]">{String(value)}</td>
                               ))}
-                            </tbody>
-                          </table>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {(mode === 'upload' || mode === 'mapping') && (
+              <div className="mt-5 space-y-5">
+                <label className="flex cursor-pointer flex-col gap-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50/50 p-8 text-center text-slate-600 hover:border-slate-400 hover:bg-slate-50 transition">
+                  <FileUp className="mx-auto h-10 w-10 text-slate-400" />
+                  <span className="text-base font-semibold text-slate-800">
+                    {uploadFile ? uploadFile.name : 'Upload your dataset'}
+                  </span>
+                  <span className="text-sm text-slate-500">Drag and drop file here or click to browse</span>
+                  <span className="text-xs text-slate-400">Limit 200MB per file • CSV</span>
+                  <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} />
+                </label>
+
+                {mode === 'mapping' && fileColumns.length > 0 && (
+                  <div className="rounded-2xl border border-slate-200 p-5 bg-white space-y-4">
+                    <h4 className="text-base font-bold text-slate-900">Map Columns</h4>
+                    <p className="text-xs text-slate-500">Align variables in your CSV to Healthscope application fields.</p>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {MAPPING_FIELDS.map((field) => (
+                        <div key={field.label}>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                            {field.label} Column
+                          </label>
+                          <div className="relative">
+                            <select
+                              value={mapping[field.label] || ''}
+                              onChange={(e) =>
+                                setMapping((current) => ({ ...current, [field.label]: e.target.value }))
+                              }
+                              className={selectCls}
+                            >
+                              <option value="">-- Select Column --</option>
+                              {fileColumns.map((col) => (
+                                <option key={col} value={col}>{col}</option>
+                              ))}
+                            </select>
+                            <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 rotate-90 pointer-events-none" />
+                          </div>
                         </div>
+                      ))}
+                    </div>
+                    <button type="button" onClick={applyMapping} className={btnPrimaryCls}>
+                      Apply Column Mapping
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* ── Step 2: Filters ── */}
+          {data.length > 0 && (
+            <div className={cardCls}>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#0F766E] mb-1">Step 2</p>
+              <h3 className="text-xl font-bold text-[#0F172A] mb-5">Apply Filters</h3>
+
+              <div className="grid gap-6 md:grid-cols-3">
+                {/* Hospital selection list */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm font-semibold text-slate-700">Hospital</label>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedHospitals([])}
+                      className="text-xs font-semibold text-[#0F766E] hover:underline"
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-3">
+                    <div className="min-h-[46px] max-h-[100px] overflow-y-auto flex flex-wrap gap-1.5">
+                      {selectedHospitals.length > 0 ? (
+                        selectedHospitals.map((hosp) => (
+                          <span
+                            key={hosp}
+                            className="inline-flex items-center gap-1 rounded-full bg-[#ECFDF5] px-2.5 py-1 text-xs font-semibold text-[#0F766E]"
+                          >
+                            {hosp}
+                            <button
+                              type="button"
+                              onClick={() => setSelectedHospitals((curr) => curr.filter((x) => x !== hosp))}
+                            >
+                              <X className="w-3 h-3 hover:text-red-500" />
+                            </button>
+                          </span>
+                        ))
                       ) : (
-                        <p className="text-sm text-slate-500">Default dataset preview will appear here after loading.</p>
+                        <span className="text-xs text-slate-400">None selected</span>
                       )}
                     </div>
-                  </div>
-                )}
-
-                {(mode === 'upload' || mode === 'mapping') && (
-                  <div className="space-y-6">
-                    <div className="rounded-3xl bg-slate-50 p-6 border border-slate-200">
-                      <label className="flex cursor-pointer flex-col gap-4 rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-600 hover:border-slate-400">
-                        <span className="text-lg font-semibold">Upload your dataset</span>
-                        <span className="text-sm text-slate-500">Drag and drop file here</span>
-                        <span className="text-xs text-slate-400">Limit 200MB per file • CSV</span>
-                        <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} />
-                      </label>
-                    </div>
-
-                    {uploadFile && (
-                      <div className="rounded-3xl bg-white p-6 border border-slate-200">
-                        <div className="text-sm text-slate-700 font-semibold mb-3">Uploaded file</div>
-                        <div className="text-sm text-slate-500">{uploadFile.name}</div>
-                      </div>
-                    )}
-
-                    {mode === 'mapping' && fileColumns.length > 0 && (
-                      <div className="aa-card p-6">
-                        <h3 className="text-xl font-semibold text-slate-900 mb-4">Map columns</h3>
-                        <div className="grid gap-4">
-                          {MAPPING_FIELDS.map((field) => (
-                            <div key={field.label}>
-                              <label className="block text-sm font-semibold text-slate-700 mb-2">Map → {field.label}</label>
-                              <select
-                                value={mapping[field.label]}
-                                onChange={(event) =>
-                                  setMapping((current) => ({ ...current, [field.label]: event.target.value }))
-                                }
-                                className="aa-field w-full px-4 py-3 text-slate-700"
-                              >
-                                <option value="">-- Select --</option>
-                                {fileColumns.map((column) => (
-                                  <option key={column} value={column}>{column}</option>
-                                ))}
-                              </select>
-                            </div>
-                          ))}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={applyMapping}
-                          className="aa-button aa-button-primary mt-6"
-                        >
-                          Apply Mapping
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <div className="aa-card p-8">
-                <h2 className="text-2xl font-bold text-slate-900 mb-5">Step 2 — Filters</h2>
-                <div className="grid gap-6 md:grid-cols-3">
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <label className="block text-sm font-semibold text-slate-700">Hospital</label>
-                      <button
-                        type="button"
-                        onClick={() => setSelectedHospitals([])}
-                        className="text-xs font-semibold text-slate-500 hover:text-slate-700"
-                      >
-                        Clear
-                      </button>
-                    </div>
-                    <div className="rounded-3xl border border-slate-300 bg-white p-4 min-h-[160px]">
-                      <div className="mb-3 min-h-[46px] overflow-x-auto">
-                        {selectedHospitals.length > 0 ? (
-                          <div className="flex flex-wrap gap-2">
-                            {selectedHospitals.map((hospital) => (
-                              <button
-                                key={hospital}
-                                type="button"
-                                onClick={() => setSelectedHospitals((current) => current.filter((value) => value !== hospital))}
-                                className="inline-flex items-center gap-2 rounded-full bg-[#FEE2E2] px-3 py-1 text-sm font-semibold text-[#B91C1C]"
-                              >
-                                {hospital}
-                                <span aria-hidden="true">×</span>
-                              </button>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="text-sm text-slate-500">Choose hospitals one by one</div>
-                        )}
-                      </div>
-                      <div className="grid gap-2 max-h-[120px] overflow-y-auto">
-                        {hospitals.map((hospital) => (
+                    <div className="border-t border-slate-200/60 pt-3 max-h-[140px] overflow-y-auto space-y-1">
+                      {hospitals.map((hosp) => {
+                        const active = selectedHospitals.includes(hosp)
+                        return (
                           <button
-                            key={hospital}
+                            key={hosp}
                             type="button"
-                            onClick={() => toggleHospital(hospital)}
-                            className={`w-full rounded-2xl px-3 py-2 text-left text-sm transition ${selectedHospitals.includes(hospital) ? 'bg-[#064b86] text-white' : 'bg-white text-slate-700 hover:bg-slate-100'}`}
+                            onClick={() => toggleHospital(hosp)}
+                            className={`w-full text-left rounded-xl px-3 py-2 text-xs font-semibold transition ${
+                              active ? 'bg-[#0F766E] text-white shadow-sm' : 'bg-white border border-slate-100 hover:bg-slate-100 text-slate-700'
+                            }`}
                           >
-                            {hospital}
+                            {hosp}
                           </button>
-                        ))}
-                      </div>
+                        )
+                      })}
                     </div>
                   </div>
+                </div>
 
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <label className="block text-sm font-semibold text-slate-700">Department</label>
-                      <button
-                        type="button"
-                        onClick={() => setSelectedDepartments([])}
-                        className="text-xs font-semibold text-slate-500 hover:text-slate-700"
-                      >
-                        Clear
-                      </button>
+                {/* Department selection list */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm font-semibold text-slate-700">Department</label>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedDepartments([])}
+                      className="text-xs font-semibold text-[#0F766E] hover:underline"
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-3">
+                    <div className="min-h-[46px] max-h-[100px] overflow-y-auto flex flex-wrap gap-1.5">
+                      {selectedDepartments.length > 0 ? (
+                        selectedDepartments.map((dept) => (
+                          <span
+                            key={dept}
+                            className="inline-flex items-center gap-1 rounded-full bg-[#ECFDF5] px-2.5 py-1 text-xs font-semibold text-[#0F766E]"
+                          >
+                            {dept}
+                            <button
+                              type="button"
+                              onClick={() => setSelectedDepartments((curr) => curr.filter((x) => x !== dept))}
+                            >
+                              <X className="w-3 h-3 hover:text-red-500" />
+                            </button>
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-xs text-slate-400">None selected</span>
+                      )}
                     </div>
-                    <div className="rounded-3xl border border-slate-300 bg-white p-4 min-h-[160px]">
-                      <div className="mb-3 min-h-[46px] overflow-x-auto">
-                        {selectedDepartments.length > 0 ? (
-                          <div className="flex flex-wrap gap-2">
-                            {selectedDepartments.map((department) => (
-                              <button
-                                key={department}
-                                type="button"
-                                onClick={() => setSelectedDepartments((current) => current.filter((value) => value !== department))}
-                                className="inline-flex items-center gap-2 rounded-full bg-[#FEE2E2] px-3 py-1 text-sm font-semibold text-[#B91C1C]"
-                              >
-                                {department}
-                                <span aria-hidden="true">×</span>
-                              </button>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="text-sm text-slate-500">Choose departments one by one</div>
-                        )}
-                      </div>
-                      <div className="grid gap-2 max-h-[120px] overflow-y-auto">
-                        {departments.map((department) => (
+                    <div className="border-t border-slate-200/60 pt-3 max-h-[140px] overflow-y-auto space-y-1">
+                      {departments.map((dept) => {
+                        const active = selectedDepartments.includes(dept)
+                        return (
                           <button
-                            key={department}
+                            key={dept}
                             type="button"
-                            onClick={() => toggleDepartment(department)}
-                            className={`w-full rounded-2xl px-3 py-2 text-left text-sm transition ${selectedDepartments.includes(department) ? 'bg-[#064b86] text-white' : 'bg-white text-slate-700 hover:bg-slate-100'}`}
+                            onClick={() => toggleDepartment(dept)}
+                            className={`w-full text-left rounded-xl px-3 py-2 text-xs font-semibold transition ${
+                              active ? 'bg-[#0F766E] text-white shadow-sm' : 'bg-white border border-slate-100 hover:bg-slate-100 text-slate-700'
+                            }`}
                           >
-                            {department}
+                            {dept}
                           </button>
-                        ))}
-                      </div>
+                        )
+                      })}
                     </div>
                   </div>
+                </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Date Range</label>
-                    <div className="grid gap-4">
+                {/* Date range filters */}
+                <div className="flex flex-col justify-between">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-1.5">Start Date</label>
                       <input
                         type="date"
                         value={dateStart}
-                        onChange={(event) => setDateStart(event.target.value)}
-                        className="w-full rounded-3xl border border-slate-300 bg-white px-4 py-3 text-slate-700"
+                        onChange={(e) => setDateStart(e.target.value)}
+                        className={inputCls}
                       />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-1.5">End Date</label>
                       <input
                         type="date"
                         value={dateEnd}
-                        onChange={(event) => setDateEnd(event.target.value)}
-                        className="w-full rounded-3xl border border-slate-300 bg-white px-4 py-3 text-slate-700"
+                        onChange={(e) => setDateEnd(e.target.value)}
+                        className={inputCls}
                       />
                     </div>
                   </div>
+
+                  <button type="button" onClick={applyFilters} className={`${btnPrimaryCls} mt-4 self-start`}>
+                    <Activity className="w-4 h-4" />
+                    Apply Filters
+                  </button>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={applyFilters}
-                  className="aa-button aa-button-primary mt-6"
-                >
-                  Apply Filters
-                </button>
               </div>
+            </div>
+          )}
 
-              {loading && <ProjectDetailCardSkeleton />}
+          {/* Loading Indicator */}
+          {loading && <ProjectDetailCardSkeleton />}
 
-              {filtered.length > 0 && (
-                <div className="aa-card p-8 overflow-auto">
-                  <h2 className="text-2xl font-bold text-slate-900 mb-5">Filter Applied Table</h2>
-                  <table className="min-w-full text-left text-sm text-slate-700">
-                    <thead className="bg-slate-100">
+          {/* ── Table & Graphs Content ── */}
+          {filtered.length > 0 && (
+            <div className="space-y-6">
+              {/* Filtered Data Preview Table */}
+              <div className={cardCls}>
+                <h3 className="text-lg font-bold text-[#0F172A] mb-4">Filtered Dataset Preview (Top Rows)</h3>
+                <div className="overflow-x-auto rounded-[24px] border border-slate-200">
+                  <table className="min-w-full text-left text-xs">
+                    <thead className="bg-slate-50 text-slate-600 border-b border-slate-200">
                       <tr>
                         {Object.keys(filtered[0] || {}).map((column) => (
-                          <th key={column} className="px-3 py-2 font-semibold">{column}</th>
+                          <th key={column} className="px-3 py-3 font-semibold whitespace-nowrap">{column}</th>
                         ))}
                       </tr>
                     </thead>
-                    <tbody>
-                      {filtered.slice(0, 8).map((row, rowIndex) => (
-                        <tr key={rowIndex} className={rowIndex % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
-                          {Object.values(row).map((value, cellIndex) => (
-                            <td key={cellIndex} className="px-3 py-2 truncate max-w-[180px]">{String(value)}</td>
+                    <tbody className="divide-y divide-slate-100 text-slate-700">
+                      {filtered.slice(0, 8).map((row, rIndex) => (
+                        <tr key={rIndex} className={rIndex % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
+                          {Object.values(row).map((val, cIndex) => (
+                            <td key={cIndex} className="px-3 py-2.5 truncate max-w-[150px]">{String(val)}</td>
                           ))}
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-              )}
+              </div>
 
-              <div className="aa-card p-8">
-                <h2 className="text-2xl font-bold text-slate-900 mb-5">Key Metrics</h2>
+              {/* Dynamic KPI Cards */}
+              <div className={cardCls}>
+                <h3 className="text-lg font-bold text-[#0F172A] mb-5">Filtered Key Performance Indicators</h3>
                 <div className="grid gap-4 md:grid-cols-4">
-                  <div className="rounded-3xl bg-slate-50 p-6 text-center">
-                    <div className="text-3xl font-bold text-[#064b86]">{kpis?.total_visits ?? '—'}</div>
-                    <div className="mt-2 text-slate-600">Total Visits</div>
+                  <div className="rounded-3xl bg-slate-50 border border-slate-200/60 p-6 text-center shadow-sm">
+                    <div className="text-3xl font-black text-[#0F766E]">{kpis?.total_visits ?? '—'}</div>
+                    <div className="mt-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">Total Visits</div>
                   </div>
-                  <div className="rounded-3xl bg-slate-50 p-6 text-center">
-                    <div className="text-3xl font-bold text-[#064b86]">₹ {kpis ? Math.round(kpis.total_revenue) : '—'}</div>
-                    <div className="mt-2 text-slate-600">Total Revenue</div>
+                  <div className="rounded-3xl bg-slate-50 border border-slate-200/60 p-6 text-center shadow-sm">
+                    <div className="text-3xl font-black text-[#0F766E]">
+                      ₹ {kpis?.total_revenue != null ? Math.round(kpis.total_revenue).toLocaleString('en-IN') : '—'}
+                    </div>
+                    <div className="mt-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">Total Revenue</div>
                   </div>
-                  <div className="rounded-3xl bg-slate-50 p-6 text-center">
-                    <div className="text-3xl font-bold text-[#064b86]">{kpis?.avg_recovery_rate ?? '—'}%</div>
-                    <div className="mt-2 text-slate-600">Avg Recovery Rate</div>
+                  <div className="rounded-3xl bg-slate-50 border border-slate-200/60 p-6 text-center shadow-sm">
+                    <div className="text-3xl font-black text-[#0F766E]">{kpis?.avg_recovery_rate ?? '—'}%</div>
+                    <div className="mt-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">Avg Recovery Rate</div>
                   </div>
-                  <div className="rounded-3xl bg-slate-50 p-6 text-center">
-                    <div className="text-3xl font-bold text-[#064b86]">{kpis?.avg_satisfaction ?? '—'}</div>
-                    <div className="mt-2 text-slate-600">Avg Satisfaction</div>
+                  <div className="rounded-3xl bg-slate-50 border border-slate-200/60 p-6 text-center shadow-sm">
+                    <div className="text-3xl font-black text-[#0F766E]">{kpis?.avg_satisfaction ?? '—'}</div>
+                    <div className="mt-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">Avg Satisfaction</div>
                   </div>
                 </div>
               </div>
 
-              <div className="aa-card p-8">
-                <h2 className="text-2xl font-bold text-slate-900 mb-5">Hospital Performance</h2>
-                <Plot
-                  data={[
-                    {
-                      x: hospitalPerformance.map((item) => item.Hospital),
-                      y: hospitalPerformance.map((item) => item.Visits),
-                      type: 'bar',
-                      name: 'Visits',
-                    },
-                    {
-                      x: hospitalPerformance.map((item) => item.Hospital),
-                      y: hospitalPerformance.map((item) => item.Revenue),
-                      type: 'bar',
-                      name: 'Revenue',
-                    },
-                  ]}
-                  layout={{ barmode: 'group', autosize: true, height: 420, margin: { t: 30, l: 40, r: 20, b: 40 } }}
-                  style={{ width: '100%' }}
-                />
+              {/* Graphical Performance Plots */}
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className={cardCls}>
+                  <h3 className="text-lg font-bold text-[#0F172A] mb-4">Hospital Performance</h3>
+                  <div className="overflow-hidden rounded-2xl bg-slate-50 p-2">
+                    <Plot
+                      data={[
+                        {
+                          x: hospitalPerformance.map((item) => item.Hospital),
+                          y: hospitalPerformance.map((item) => item.Visits),
+                          type: 'bar',
+                          name: 'Visits',
+                          marker: { color: BRAND_TEAL },
+                        },
+                        {
+                          x: hospitalPerformance.map((item) => item.Hospital),
+                          y: hospitalPerformance.map((item) => item.Revenue),
+                          type: 'bar',
+                          name: 'Revenue',
+                          marker: { color: CHART_BLUE },
+                        },
+                      ]}
+                      layout={{
+                        barmode: 'group',
+                        autosize: true,
+                        height: 380,
+                        margin: { t: 25, l: 45, r: 15, b: 35 },
+                        plot_bgcolor: 'rgba(0,0,0,0)',
+                        paper_bgcolor: 'rgba(0,0,0,0)',
+                      }}
+                      style={{ width: '100%' }}
+                      useResizeHandler
+                    />
+                  </div>
+                </div>
+
+                <div className={cardCls}>
+                  <h3 className="text-lg font-bold text-[#0F172A] mb-4">Visits Over Time</h3>
+                  <div className="overflow-hidden rounded-2xl bg-slate-50 p-2">
+                    <Plot
+                      data={[
+                        {
+                          x: visitTrend.map((item) => item.Date),
+                          y: visitTrend.map((item) => item.Visits),
+                          type: 'scatter',
+                          mode: 'lines+markers',
+                          marker: { color: BRAND_TEAL },
+                          line: { color: BRAND_TEAL, width: 2 },
+                        },
+                      ]}
+                      layout={{
+                        autosize: true,
+                        height: 380,
+                        margin: { t: 25, l: 45, r: 15, b: 35 },
+                        plot_bgcolor: 'rgba(0,0,0,0)',
+                        paper_bgcolor: 'rgba(0,0,0,0)',
+                      }}
+                      style={{ width: '100%' }}
+                      useResizeHandler
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div className="aa-card p-8">
-                <h2 className="text-2xl font-bold text-slate-900 mb-5">Visits Over Time</h2>
-                <Plot
-                  data={[
-                    {
-                      x: visitTrend.map((item) => item.Date),
-                      y: visitTrend.map((item) => item.Visits),
-                      type: 'scatter',
-                      mode: 'lines+markers',
-                      marker: { color: BLUE },
-                    },
-                  ]}
-                  layout={{ autosize: true, height: 420, margin: { t: 30, l: 40, r: 20, b: 40 } }}
-                  style={{ width: '100%' }}
-                />
-              </div>
-
-              <div className="aa-card p-8">
-                <h2 className="text-2xl font-bold text-slate-900 mb-5">ML: Revenue Prediction</h2>
+              {/* Machine Learning Output */}
+              <div className={cardCls}>
+                <h3 className="text-lg font-bold text-[#0F172A] mb-4">ML: Revenue Prediction Model Metrics</h3>
                 <div className="grid gap-4 md:grid-cols-2">
-                  <div className="rounded-3xl bg-slate-50 p-6 text-center">
-                    <div className="text-3xl font-bold text-[#064b86]">{mlMetrics?.rmse ?? '—'}</div>
-                    <div className="mt-2 text-slate-600">RMSE</div>
+                  <div className="rounded-2xl bg-slate-50 p-5 border border-slate-200/60 text-center">
+                    <div className="text-2xl font-black text-[#0F766E]">{mlMetrics?.rmse ?? '—'}</div>
+                    <div className="mt-1 text-sm text-slate-500 font-semibold">Root Mean Squared Error (RMSE)</div>
                   </div>
-                  <div className="rounded-3xl bg-slate-50 p-6 text-center">
-                    <div className="text-3xl font-bold text-[#064b86]">{mlMetrics?.r2_score ?? '—'}</div>
-                    <div className="mt-2 text-slate-600">R² Score</div>
+                  <div className="rounded-2xl bg-slate-50 p-5 border border-slate-200/60 text-center">
+                    <div className="text-2xl font-black text-[#0F766E]">{mlMetrics?.r2_score ?? '—'}</div>
+                    <div className="mt-1 text-sm text-slate-500 font-semibold">Coefficient of Determination (R²)</div>
                   </div>
                 </div>
               </div>
 
-              <div className="aa-card p-8 overflow-hidden">
-                <h2 className="text-2xl font-bold text-slate-900 mb-5">Automated Insights</h2>
-                <div className="overflow-auto">
-                  <table className="min-w-full text-left border-separate border-spacing-0">
-                    <thead>
-                      <tr className="bg-slate-100">
-                        <th className="px-4 py-3 text-sm font-semibold text-slate-700">Insight</th>
-                        <th className="px-4 py-3 text-sm font-semibold text-slate-700">Value</th>
+              {/* Automated Insights Table */}
+              <div className={cardCls}>
+                <h3 className="text-lg font-bold text-[#0F172A] mb-4">Automated Data Insights</h3>
+                <div className="overflow-x-auto rounded-[24px] border border-slate-200">
+                  <table className="min-w-full text-left text-sm">
+                    <thead className="bg-slate-50 text-[12px] uppercase tracking-[0.08em] text-slate-600 border-b border-slate-200">
+                      <tr>
+                        <th className="px-4 py-3 font-semibold">Insight Statement</th>
+                        <th className="px-4 py-3 font-semibold">Value</th>
                       </tr>
                     </thead>
-                    <tbody>
-                      {insights.map((item, index) => (
-                        <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
-                          <td className="px-4 py-3 text-slate-700">{item.Insight}</td>
-                          <td className="px-4 py-3 text-slate-700">{item.Value}</td>
+                    <tbody className="divide-y divide-slate-100 text-slate-700">
+                      {insights.length > 0 ? (
+                        insights.map((item, index) => (
+                          <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
+                            <td className="px-4 py-3.5 font-medium">{item.Insight}</td>
+                            <td className="px-4 py-3.5 font-bold text-[#0F766E]">{item.Value}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={2} className="px-4 py-6 text-center text-slate-400">
+                            No insights computed yet.
+                          </td>
                         </tr>
-                      ))}
+                      )}
                     </tbody>
                   </table>
                 </div>
               </div>
 
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={downloadCsv}
-                  className="aa-button aa-button-primary"
-                >
-                  Download CSV
+              {/* Download CSV Action Bar */}
+              <div className="flex justify-end pt-2">
+                <button type="button" onClick={downloadCsv} className={btnPrimaryCls}>
+                  <Download className="w-4 h-4" />
+                  Download Filtered CSV
                 </button>
               </div>
             </div>
-          </TabPanel>
-        </Tabs>
-      </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
