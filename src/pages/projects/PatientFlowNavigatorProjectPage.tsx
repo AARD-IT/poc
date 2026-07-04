@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState, type ChangeEvent } from 'react'
+import { useNavigate } from 'react-router'
 import Plot from 'react-plotly.js'
-import { Tab, TabList, TabPanel, Tabs } from 'react-tabs'
-import 'react-tabs/style/react-tabs.css'
-import { Download, FileUp, Loader2, Stethoscope, Users, IndianRupee, ClipboardList } from 'lucide-react'
+import { Download, FileUp, Loader2, Stethoscope, Users, IndianRupee, ClipboardList, ChevronLeft } from 'lucide-react'
 
 const API_BASE_URL =
   import.meta.env.VITE_PATIENT_FLOW_NAVIGATOR_API_URL ||
@@ -54,6 +53,7 @@ type InsightRow = { Insight: string; Value: string; Metric: string; Action: stri
 type ModelResult = { accuracy_pct?: number; rmse?: number; feature_importance?: Array<{ Feature: string; Importance: number }> }
 type PredictReadmissionForm = { age: number; gender: string; department: string; riskScore: number; lengthOfStay: number }
 type PredictCostForm = { age: number; gender: string; department: string; riskScore: number; lengthOfStay: number }
+type ActiveTab = 'overview' | 'attributes' | 'application'
 
 function readJson<T>(response: Response): Promise<T> {
   if (response.ok) return response.json() as Promise<T>
@@ -89,20 +89,20 @@ function DataTable({ rows }: { rows: Row[] }) {
   if (!rows.length) return <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-500">No rows to display.</div>
 
   return (
-    <div className="overflow-x-auto rounded-3xl border border-slate-200">
+    <div className="overflow-x-auto rounded-[24px] border border-slate-200">
       <table className="min-w-full text-left text-sm">
         <thead className="bg-slate-50 text-[12px] uppercase tracking-[0.08em] text-slate-600">
           <tr>
             {columns.map((column) => (
-              <th key={column} className="whitespace-nowrap px-3 py-3">{column}</th>
+              <th key={column} className="whitespace-nowrap px-4 py-3.5 font-bold">{column}</th>
             ))}
           </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y divide-slate-100 bg-white">
           {rows.map((row, rowIndex) => (
-            <tr key={rowIndex} className="border-t border-slate-200">
+            <tr key={rowIndex} className="hover:bg-slate-50/50">
               {columns.map((column) => (
-                <td key={`${rowIndex}-${column}`} className="max-w-[220px] whitespace-normal px-3 py-3 text-slate-700">{formatValue(row[column])}</td>
+                <td key={`${rowIndex}-${column}`} className="max-w-[220px] whitespace-normal px-4 py-3 text-slate-700">{formatValue(row[column])}</td>
               ))}
             </tr>
           ))}
@@ -114,11 +114,11 @@ function DataTable({ rows }: { rows: Row[] }) {
 
 function MetricCard({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: string; accent: string }) {
   return (
-    <div className="rounded-3xl border border-[#E2E8F0] bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
-      <div className="flex items-center gap-3">
-        <div className={`rounded-2xl p-3 ${accent}`}>{icon}</div>
+    <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-[0_18px_40px_rgba(15,23,42,0.08)] transition hover:shadow-[0_24px_50px_rgba(15,23,42,0.12)]">
+      <div className="flex items-center gap-4">
+        <div className={`rounded-2xl p-4 shrink-0 ${accent}`}>{icon}</div>
         <div>
-          <p className="text-sm font-medium text-slate-500">{label}</p>
+          <p className="text-base font-bold text-slate-500 tracking-tight">{label}</p>
           <p className="mt-1 text-2xl font-bold text-[#0F172A]">{value}</p>
         </div>
       </div>
@@ -148,23 +148,23 @@ function MultiSelectPills({
                 key={option}
                 type="button"
                 onClick={() => onToggle(option)}
-                className="rounded-full bg-[#ECFDF5] px-3 py-1 text-sm font-semibold text-[#0F766E]"
+                className="rounded-full bg-[#ECFDF5] px-3 py-1 text-sm font-semibold text-[#0F766E] hover:text-red-500 transition"
               >
                 {option} ×
               </button>
             ))}
           </div>
         ) : (
-          <div className="text-sm text-slate-500">Choose one or more {label.toLowerCase()}</div>
+          <div className="text-sm text-slate-400">Choose one or more {label.toLowerCase()}</div>
         )}
       </div>
-      <div className="grid max-h-56 gap-2 overflow-y-auto">
+      <div className="grid max-h-56 gap-2 overflow-y-auto pr-1">
         {values.map((option) => (
           <button
             key={option}
             type="button"
             onClick={() => onToggle(option)}
-            className={`w-full rounded-2xl px-3 py-2 text-left text-sm transition ${selected.includes(option) ? 'bg-[#0F766E] text-white' : 'bg-white text-slate-700 hover:bg-slate-100'}`}
+            className={`w-full rounded-2xl px-3 py-2 text-left text-sm transition ${selected.includes(option) ? 'bg-[#0F766E] text-white shadow-sm font-bold' : 'bg-white border border-slate-100 text-slate-700 hover:bg-slate-100'}`}
           >
             {option}
           </button>
@@ -181,7 +181,11 @@ function MappingRow({ field, columns, value, onChange }: { field: string; column
         <p className="text-sm font-semibold text-slate-800">{field}</p>
         <p className="mt-1 text-xs text-slate-500">{REQUIRED_FIELD_DESCRIPTIONS[field]}</p>
       </div>
-      <select className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm" value={value} onChange={(event) => onChange(event.target.value)}>
+      <select
+        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 outline-none focus:border-[#0F766E]"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      >
         <option value="">Not mapped</option>
         {columns.map((column) => (
           <option key={column} value={column}>{column}</option>
@@ -215,13 +219,13 @@ function PredictionInputGrid({
       <input
         type="number"
         min="0"
-        className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-[#0F766E]"
+        className="rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm outline-none focus:border-[#0F766E]"
         value={values.age}
         onChange={(event) => onChange({ ...values, age: Number(event.target.value) })}
         placeholder="Age"
       />
       <select
-        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-[#0F766E]"
+        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm outline-none focus:border-[#0F766E]"
         value={values.gender}
         onChange={(event) => onChange({ ...values, gender: event.target.value })}
       >
@@ -231,7 +235,7 @@ function PredictionInputGrid({
         <option value="Other">Other</option>
       </select>
       <select
-        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-[#0F766E]"
+        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm outline-none focus:border-[#0F766E]"
         value={values.department}
         onChange={(event) => onChange({ ...values, department: event.target.value })}
       >
@@ -247,7 +251,7 @@ function PredictionInputGrid({
         min="0"
         max="10"
         step="0.1"
-        className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-[#0F766E]"
+        className="rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm outline-none focus:border-[#0F766E]"
         value={values.riskScore}
         onChange={(event) => onChange({ ...values, riskScore: Number(event.target.value) })}
         placeholder="Risk score"
@@ -255,7 +259,7 @@ function PredictionInputGrid({
       <input
         type="number"
         min="0"
-        className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-[#0F766E]"
+        className="rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm outline-none focus:border-[#0F766E]"
         value={values.lengthOfStay}
         onChange={(event) => onChange({ ...values, lengthOfStay: Number(event.target.value) })}
         placeholder="Length of stay"
@@ -285,6 +289,8 @@ function toInsightRows(insights: InsightRow[]) {
 }
 
 export function PatientFlowNavigatorProjectPage() {
+  const navigate = useNavigate()
+  const [activeTab, setActiveTab] = useState<ActiveTab>('overview')
   const [mode, setMode] = useState<DatasetMode>('default')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -552,8 +558,6 @@ export function PatientFlowNavigatorProjectPage() {
 
   const diseaseLabels = diseaseChart.map((item) => item.Disease)
   const diseaseCounts = diseaseChart.map((item) => item.Count)
-  const costBins = costHistogram.map((item) => `${Number(item.bin_start).toFixed(0)}-${Number(item.bin_end).toFixed(0)}`)
-  const costCounts = costHistogram.map((item) => item.count)
   const readmissionFeatures = readmissionMl?.feature_importance?.map((item) => item.Feature) ?? []
   const readmissionImportances = readmissionMl?.feature_importance?.map((item) => item.Importance) ?? []
   const costFeatures = costMl?.feature_importance?.map((item) => item.Feature) ?? []
@@ -563,122 +567,210 @@ export function PatientFlowNavigatorProjectPage() {
   const readmissionPrediction = predictReadmission(readmissionForm, departments)
   const costPrediction = predictCost(costForm, activeRows)
 
+  const tabs = [
+    { key: 'overview', label: 'Overview' },
+    { key: 'attributes', label: 'Important Attributes' },
+    { key: 'application', label: 'Application' },
+  ] as const
+
   return (
-    <div className="mx-auto max-w-7xl p-6">
-      <div className="mb-8 rounded-[32px] bg-[linear-gradient(135deg,#F0FDFA_0%,#FFFFFF_40%,#EFF6FF_100%)] p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)] md:p-8">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <div className="min-h-screen bg-[linear-gradient(180deg,#F8FAFC_0%,#F8FBFF_100%)] p-6">
+      <div className="mx-auto max-w-7xl">
+        
+        {/* ── Redesigned Standalone Back Button ── */}
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#E2E8F0] bg-white px-4 py-2 text-sm font-semibold text-[#475569] shadow-sm transition hover:-translate-y-0.5 hover:border-[#CBD5E1] hover:text-[#0F172A] hover:shadow-md active:translate-y-0"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          Back
+        </button>
+
+        {/* ── Premium Hero Banner ── */}
+        <div className="mb-8 rounded-[32px] bg-[linear-gradient(135deg,#F0FDFA_0%,#FFFFFF_40%,#EFF6FF_100%)] p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)] md:p-8">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#0F766E]">Healthcare project</p>
             <h1 className="mt-2 text-4xl font-black tracking-tight text-[#0F172A] md:text-5xl">PatientFlow Navigator</h1>
             <p className="mt-4 max-w-3xl text-[16px] leading-7 text-[#334155]">Track patient journeys, treatment patterns, readmission risk, and cost dynamics. The workflow supports default data, uploads, manual mapping, filters, charts, ML, and insights.</p>
           </div>
+          {statusMessage ? <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">{statusMessage}</div> : null}
+          {error ? <div className="mt-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">{error}</div> : null}
         </div>
 
-        {statusMessage ? <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">{statusMessage}</div> : null}
-        {error ? <div className="mt-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">{error}</div> : null}
-      </div>
+        {/* ── Custom Pill Tabs Container ── */}
+        <div className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-[0_18px_40px_rgba(15,23,42,0.08)] mb-6">
+          <div className="inline-flex overflow-hidden rounded-3xl border border-[#CBD5E1] bg-[#F8FAFC] p-1 shadow-sm">
+            {tabs.map(({ key, label }) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setActiveTab(key)}
+                className={`rounded-3xl px-5 py-3 text-sm font-semibold transition ${
+                  activeTab === key
+                    ? 'bg-white text-[#0F172A] shadow-sm'
+                    : 'text-[#475569] hover:text-[#0F172A]'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
 
-      <Tabs>
-        <TabList className="mb-8 flex flex-wrap gap-2 rounded-3xl border border-slate-200 bg-white p-2 shadow-sm">
-          <Tab className="rounded-2xl px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 data-[selected=true]:bg-[#0F766E] data-[selected=true]:text-white">Overview</Tab>
-          <Tab className="rounded-2xl px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 data-[selected=true]:bg-[#0F766E] data-[selected=true]:text-white">Important Attributes</Tab>
-          <Tab className="rounded-2xl px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 data-[selected=true]:bg-[#0F766E] data-[selected=true]:text-white">Application</Tab>
-        </TabList>
+        {/* ── TAB PANELS ── */}
+        
+        {/* 1. Overview Tab */}
+        {activeTab === 'overview' && (
+          <div className="space-y-8 pt-4">
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+                <div className="max-w-3xl">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Overview</p>
+                  <h2 className="mt-2 text-3xl font-bold text-[#0F172A]">What this lab does</h2>
+                  <p className="mt-4 text-base leading-7 text-[#475569]">Track patient journeys, treatment patterns, readmission risk, and cost dynamics. PatientFlow Navigator lets hospitals move from reactive firefighting to proactive care planning.</p>
+                </div>
+                <div className="rounded-3xl border border-[#CCFBF1] bg-[#ECFDF5] px-5 py-4 text-[#0F766E] shadow-sm shrink-0">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em]">Live analytics theme</p>
+                  <p className="mt-2 text-sm leading-6 text-[#115E59]">Monitor readmission behavior, treatment costs, and disease distributions.</p>
+                </div>
+              </div>
+            </section>
 
-        <TabPanel>
-          <div className="space-y-8 pt-6">
-            <SectionHeading
-              eyebrow="Overview"
-              title="What this lab does"
-              description="Track patient journeys, treatment patterns, readmission risk, and cost dynamics. PatientFlow Navigator lets hospitals move from reactive firefighting to proactive care planning."
-            />
-
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <MetricCard icon={<Users className="h-5 w-5 text-[#0F766E]" />} label="Total Patients" value={kpis ? String(kpis.total_patients) : '—'} accent="bg-[#ECFDF5]" />
-              <MetricCard icon={<Stethoscope className="h-5 w-5 text-[#1D4ED8]" />} label="Avg Age" value={kpis?.avg_age != null ? kpis.avg_age.toFixed(2) : '—'} accent="bg-[#EFF6FF]" />
-              <MetricCard icon={<ClipboardList className="h-5 w-5 text-[#BE123C]" />} label="Avg Length of Stay" value={kpis?.avg_length_of_stay != null ? kpis.avg_length_of_stay.toFixed(2) : '—'} accent="bg-[#FFF1F2]" />
-              <MetricCard icon={<IndianRupee className="h-5 w-5 text-[#A16207]" />} label="Readmission Rate" value={kpis?.readmission_rate_pct != null ? `${kpis.readmission_rate_pct.toFixed(2)}%` : '—'} accent="bg-[#FFFBEB]" />
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+              <MetricCard icon={<Users className="h-6 w-6 text-[#0F766E]" />} label="Total Patients" value={kpis ? String(kpis.total_patients) : '—'} accent="bg-[#ECFDF5]" />
+              <MetricCard icon={<Stethoscope className="h-6 w-6 text-[#1D4ED8]" />} label="Avg Age" value={kpis?.avg_age != null ? kpis.avg_age.toFixed(2) : '—'} accent="bg-[#EFF6FF]" />
+              <MetricCard icon={<ClipboardList className="h-6 w-6 text-[#BE123C]" />} label="Avg Length of Stay" value={kpis?.avg_length_of_stay != null ? kpis.avg_length_of_stay.toFixed(2) : '—'} accent="bg-[#FFF1F2]" />
+              <MetricCard icon={<IndianRupee className="h-6 w-6 text-[#A16207]" />} label="Readmission Rate" value={kpis?.readmission_rate_pct != null ? `${kpis.readmission_rate_pct.toFixed(2)}%` : '—'} accent="bg-[#FFFBEB]" />
             </div>
 
             <div className="grid gap-6 lg:grid-cols-2">
               <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
-                <h3 className="text-xl font-bold text-[#0F172A]">What this lab does</h3>
+                <h3 className="text-xl font-bold text-[#0F172A]">Core Functionality</h3>
                 <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-600">
-                  <li>Profiles patient cohorts by disease, age, risk, and department</li>
-                  <li>Measures length of stay, treatment cost, and readmission patterns</li>
-                  <li>Flags high-risk patients using ML classification</li>
-                  <li>Predicts treatment cost for upcoming admissions</li>
-                  <li>Supports capacity and resource planning for hospitals</li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-[#0F766E]">•</span>
+                    <span>Profiles patient cohorts by disease, age, risk, and department</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-[#0F766E]">•</span>
+                    <span>Measures length of stay, treatment cost, and readmission patterns</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-[#0F766E]">•</span>
+                    <span>Flags high-risk patients using ML classification</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-[#0F766E]">•</span>
+                    <span>Predicts treatment cost for upcoming admissions</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-[#0F766E]">•</span>
+                    <span>Supports capacity and resource planning for hospitals</span>
+                  </li>
                 </ul>
               </div>
 
               <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
-                <h3 className="text-xl font-bold text-[#0F172A]">Business impact</h3>
+                <h3 className="text-xl font-bold text-[#0F172A]">Business Impact</h3>
                 <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-600">
-                  <li>Reduced avoidable readmissions</li>
-                  <li>Optimized bed and staff allocation</li>
-                  <li>Better cost control and patient billing transparency</li>
-                  <li>Improved quality of care and patient outcomes</li>
-                  <li>Strong analytic layer for administrators and clinical leads</li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-[#0F766E]">•</span>
+                    <span>Reduced avoidable readmissions</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-[#0F766E]">•</span>
+                    <span>Optimized bed and staff allocation</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-[#0F766E]">•</span>
+                    <span>Better cost control and patient billing transparency</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-[#0F766E]">•</span>
+                    <span>Improved quality of care and patient outcomes</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-[#0F766E]">•</span>
+                    <span>Strong analytic layer for administrators and clinical leads</span>
+                  </li>
                 </ul>
               </div>
             </div>
           </div>
-        </TabPanel>
+        )}
 
-        <TabPanel>
-          <div className="space-y-6 pt-6">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Important Attributes</p>
-              <h2 className="mt-2 text-3xl font-bold tracking-tight text-[#0F172A]">Required column data dictionary</h2>
-            </div>
-            <div className="overflow-x-auto rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
-              <table className="min-w-full text-left text-sm">
-                <thead className="bg-slate-50 text-[12px] uppercase tracking-[0.08em] text-slate-600">
-                  <tr>
-                    <th className="px-3 py-3">Attribute</th>
-                    <th className="px-3 py-3">Description</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {REQUIRED_FIELDS.map((field) => (
-                    <tr key={field} className="border-t border-slate-200">
-                      <td className="px-3 py-3 font-semibold text-slate-800">{field}</td>
-                      <td className="px-3 py-3 text-slate-600">{REQUIRED_FIELD_DESCRIPTIONS[field]}</td>
-                    </tr>
+        {/* 2. Important Attributes Tab */}
+        {activeTab === 'attributes' && (
+          <div className="space-y-6 pt-4">
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <h2 className="text-3xl font-bold text-[#0F172A]">Required Column Data Dictionary</h2>
+              <p className="mt-3 max-w-3xl text-slate-600">The table below captures the patient journey data needed for loading, filtering, charting, and model predictions.</p>
+              
+              <div className="mt-6 overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-left text-sm">
+                    <thead className="bg-slate-50 border-b border-slate-200">
+                      <tr>
+                        <th className="font-bold text-slate-600 uppercase text-[12px] tracking-[0.08em] py-3.5 px-4">Column</th>
+                        <th className="font-bold text-slate-600 uppercase text-[12px] tracking-[0.08em] py-3.5 px-4">Description</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {REQUIRED_FIELDS.map((field, idx) => (
+                        <tr key={field} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}>
+                          <td className="px-4 py-3.5 font-semibold text-[#0F172A] text-sm">{field}</td>
+                          <td className="px-4 py-3.5 text-slate-600 text-sm">{REQUIRED_FIELD_DESCRIPTIONS[field]}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+
+            {/* Split section with professional fill colors */}
+            <div className="grid gap-6 md:grid-cols-2">
+              <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+                <h3 className="text-2xl font-bold text-[#0F172A]">Independent Variables</h3>
+                <p className="text-sm text-slate-500 mt-1">Variables used as inputs to forecast models and data filter parameters.</p>
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                  {['Age', 'Gender', 'Disease', 'Symptoms', 'Treatment', 'Department', 'Visit_Date', 'Risk_Level', 'Risk_Score', 'Admission_Date', 'Discharge_Date'].map((item) => (
+                    <div key={item} className="rounded-2xl border border-blue-100 bg-[#EFF6FF] text-[#1D4ED8] px-4 py-3.5 text-sm font-bold shadow-sm">{item}</div>
                   ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="grid gap-6 lg:grid-cols-2">
-              <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
-                <h3 className="text-xl font-bold text-[#0F172A]">Independent variables</h3>
-                <p className="mt-3 text-sm leading-6 text-slate-600">Age, Gender, Disease, Symptoms, Treatment, Department, Visit_Date, Risk_Level, Risk_Score, Admission_Date, Discharge_Date, Length_of_Stay</p>
-              </div>
-              <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
-                <h3 className="text-xl font-bold text-[#0F172A]">Dependent variables</h3>
-                <p className="mt-3 text-sm leading-6 text-slate-600">Readmission, Treatment_Cost, Outcome</p>
-              </div>
+                </div>
+              </section>
+
+              <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+                <h3 className="text-2xl font-bold text-[#0F172A]">Dependent Variables</h3>
+                <p className="text-sm text-slate-500 mt-1">Target fields computed or predicted by classifier and regressor model logic.</p>
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                  {['Readmission', 'Treatment_Cost', 'Outcome'].map((item) => (
+                    <div key={item} className="rounded-2xl border border-emerald-100 bg-[#ECFDF5] text-[#0F766E] px-4 py-3.5 text-sm font-bold shadow-sm">{item}</div>
+                  ))}
+                </div>
+              </section>
             </div>
           </div>
-        </TabPanel>
+        )}
 
-        <TabPanel>
-          <div className="space-y-6 pt-6">
+        {/* 3. Application Tab */}
+        {activeTab === 'application' && (
+          <div className="space-y-6 pt-4">
             <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
               <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#0F766E]">Dataset options</p>
               <div className="mt-4 grid gap-3 md:grid-cols-3">
                 <button type="button" onClick={() => setMode('default')} className={`rounded-2xl border px-4 py-3 text-left ${mode === 'default' ? 'border-[#0F766E] bg-[#ECFDF5]' : 'border-slate-200 bg-slate-50'}`}>
                   <p className="font-semibold text-slate-900">Default dataset</p>
-                  <p className="mt-1 text-sm text-slate-600">Loads healthcare_3.csv from the backend.</p>
+                  <p className="mt-1 text-sm text-slate-600">Loads healthcare_3.csv from the backend curating default records.</p>
                 </button>
                 <button type="button" onClick={() => setMode('upload')} className={`rounded-2xl border px-4 py-3 text-left ${mode === 'upload' ? 'border-[#0F766E] bg-[#ECFDF5]' : 'border-slate-200 bg-slate-50'}`}>
                   <p className="font-semibold text-slate-900">Upload CSV</p>
-                  <p className="mt-1 text-sm text-slate-600">Upload a CSV and auto-map it.</p>
+                  <p className="mt-1 text-sm text-slate-600">Upload a CSV file and auto-map to patient fields.</p>
                 </button>
                 <button type="button" onClick={() => setMode('mapping')} className={`rounded-2xl border px-4 py-3 text-left ${mode === 'mapping' ? 'border-[#0F766E] bg-[#ECFDF5]' : 'border-slate-200 bg-slate-50'}`}>
                   <p className="font-semibold text-slate-900">Upload CSV + Column mapping</p>
-                  <p className="mt-1 text-sm text-slate-600">Upload, preview, map columns, then apply mapping.</p>
+                  <p className="mt-1 text-sm text-slate-600">Upload, preview, map fields, and unlock analysis.</p>
                 </button>
               </div>
             </div>
@@ -785,7 +877,7 @@ export function PatientFlowNavigatorProjectPage() {
                           max={dateMax || undefined}
                           value={dateStart}
                           onChange={(event) => setDateStart(event.target.value)}
-                          className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-[#0F766E]"
+                          className="rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm outline-none focus:border-[#0F766E]"
                         />
                         <input
                           type="date"
@@ -793,7 +885,7 @@ export function PatientFlowNavigatorProjectPage() {
                           max={dateMax || undefined}
                           value={dateEnd}
                           onChange={(event) => setDateEnd(event.target.value)}
-                          className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-[#0F766E]"
+                          className="rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm outline-none focus:border-[#0F766E]"
                         />
                         <div className="text-sm text-slate-500">
                           Range: {dateMin || '—'} → {dateMax || '—'}
@@ -822,14 +914,14 @@ export function PatientFlowNavigatorProjectPage() {
                   </div>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-4">
-                  <MetricCard icon={<Users className="h-5 w-5 text-[#0F766E]" />} label="Total Patients" value={String(kpis?.total_patients ?? data.length)} accent="bg-[#ECFDF5]" />
-                  <MetricCard icon={<Stethoscope className="h-5 w-5 text-[#1D4ED8]" />} label="Avg Age" value={kpis?.avg_age != null ? kpis.avg_age.toFixed(2) : '—'} accent="bg-[#EFF6FF]" />
-                  <MetricCard icon={<ClipboardList className="h-5 w-5 text-[#BE123C]" />} label="Avg Length of Stay" value={kpis?.avg_length_of_stay != null ? kpis.avg_length_of_stay.toFixed(2) : '—'} accent="bg-[#FFF1F2]" />
-                  <MetricCard icon={<IndianRupee className="h-5 w-5 text-[#A16207]" />} label="Readmission Rate" value={kpis?.readmission_rate_pct != null ? `${kpis.readmission_rate_pct.toFixed(2)}%` : '—'} accent="bg-[#FFFBEB]" />
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                  <MetricCard icon={<Users className="h-6 w-6 text-[#0F766E]" />} label="Total Patients" value={String(kpis?.total_patients ?? data.length)} accent="bg-[#ECFDF5]" />
+                  <MetricCard icon={<Stethoscope className="h-6 w-6 text-[#1D4ED8]" />} label="Avg Age" value={kpis?.avg_age != null ? kpis.avg_age.toFixed(2) : '—'} accent="bg-[#EFF6FF]" />
+                  <MetricCard icon={<ClipboardList className="h-6 w-6 text-[#BE123C]" />} label="Avg Length of Stay" value={kpis?.avg_length_of_stay != null ? kpis.avg_length_of_stay.toFixed(2) : '—'} accent="bg-[#FFF1F2]" />
+                  <MetricCard icon={<IndianRupee className="h-6 w-6 text-[#A16207]" />} label="Readmission Rate" value={kpis?.readmission_rate_pct != null ? `${kpis.readmission_rate_pct.toFixed(2)}%` : '—'} accent="bg-[#FFFBEB]" />
                 </div>
 
-                <div className="grid gap-6">
+                <div className="grid gap-6 xl:grid-cols-2">
                   <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
                     <h3 className="text-lg font-bold text-slate-900">Patient Count by Disease</h3>
                     <Plot data={[{ type: 'bar', x: diseaseLabels, y: diseaseCounts, marker: { color: '#0EA5E9' } }]} layout={{ title: 'Patient Count by Disease', autosize: true, margin: { t: 40, l: 40, r: 20, b: 110 } }} style={{ width: '100%', height: '480px' }} useResizeHandler />
@@ -952,8 +1044,8 @@ export function PatientFlowNavigatorProjectPage() {
               </div>
             ) : null}
           </div>
-        </TabPanel>
-      </Tabs>
+        )}
+      </div>
 
       {loading ? (
         <div className="fixed bottom-6 right-6 rounded-full bg-[#0F172A] px-4 py-3 text-sm font-semibold text-white shadow-lg">
