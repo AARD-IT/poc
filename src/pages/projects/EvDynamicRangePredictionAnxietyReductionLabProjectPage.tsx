@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type DragEvent, type ReactNode } from 'react'
+import { useNavigate } from 'react-router'
 import Plot from 'react-plotly.js'
-import { Tab, TabList, TabPanel, Tabs } from 'react-tabs'
-import 'react-tabs/style/react-tabs.css'
-import { BatteryCharging, Download, FileUp, Loader2, ShieldAlert, Gauge, Users, Sparkles, Route } from 'lucide-react'
+import { BatteryCharging, Download, FileUp, Loader2, ShieldAlert, Gauge, Users, Sparkles, Route, ChevronLeft } from 'lucide-react'
 import { Button } from '@/app/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/app/components/ui/table'
@@ -133,11 +132,11 @@ function downloadCsv(rows: Record<string, unknown>[], filename: string) {
 
 function MetricCard({ icon, label, value, accent }: { icon: ReactNode; label: string; value: string; accent: string }) {
   return (
-    <div className="rounded-[24px] border border-[#E2E8F0] bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
-      <div className="flex items-center gap-3">
-        <div className={`rounded-2xl p-3 ${accent}`}>{icon}</div>
+    <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-[0_18px_40px_rgba(15,23,42,0.08)] transition hover:shadow-[0_24px_50px_rgba(15,23,42,0.12)]">
+      <div className="flex items-center gap-4">
+        <div className={`rounded-2xl p-4 shrink-0 bg-slate-50 ${accent}`}>{icon}</div>
         <div>
-          <p className="text-sm font-medium text-slate-500">{label}</p>
+          <p className="text-base font-bold text-slate-500 tracking-tight">{label}</p>
           <p className="mt-1 text-2xl font-bold text-[#0F172A]">{value}</p>
         </div>
       </div>
@@ -154,12 +153,12 @@ function DataTable({ rows, maxRows = 10 }: { rows: Row[]; maxRows?: number }) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-3xl border border-slate-200 bg-white">
+    <div className="overflow-x-auto rounded-3xl border border-slate-200 bg-white shadow-sm">
       <Table>
         <TableHeader>
-          <TableRow>
+          <TableRow className="bg-slate-50/50">
             {columns.map((column) => (
-              <TableHead key={column} className="bg-slate-50 text-[13px] font-semibold uppercase tracking-[0.08em] text-slate-600">
+              <TableHead key={column} className="text-[12px] font-bold uppercase tracking-[0.08em] text-slate-600 py-3.5 px-4">
                 {column}
               </TableHead>
             ))}
@@ -167,9 +166,9 @@ function DataTable({ rows, maxRows = 10 }: { rows: Row[]; maxRows?: number }) {
         </TableHeader>
         <TableBody>
           {visibleRows.map((row, rowIndex) => (
-            <TableRow key={rowIndex} className="border-slate-200">
+            <TableRow key={rowIndex} className="border-slate-100 hover:bg-slate-50/50">
               {columns.map((column) => (
-                <TableCell key={`${rowIndex}-${column}`} className="max-w-[220px] whitespace-normal px-3 py-3 text-slate-700">
+                <TableCell key={`${rowIndex}-${column}`} className="max-w-[220px] whitespace-normal px-4 py-3 text-slate-700 text-sm">
                   {formatCell(row[column])}
                 </TableCell>
               ))}
@@ -190,7 +189,7 @@ function MappingRow({ field, columns, value, onChange }: { field: string; column
         <p className="mt-1 text-xs text-slate-500">{REQUIRED_DESCRIPTIONS[field]}</p>
       </div>
       <Select value={value || '__unmapped__'} onValueChange={(next) => onChange(next === '__unmapped__' ? '' : next)}>
-        <SelectTrigger className="w-full bg-white">
+        <SelectTrigger className="w-full bg-white rounded-2xl py-6 border-slate-200 focus:ring-[#0F766E]">
           <SelectValue placeholder={`Map ${field}`} />
         </SelectTrigger>
         <SelectContent>
@@ -206,13 +205,37 @@ function MappingRow({ field, columns, value, onChange }: { field: string; column
   )
 }
 
+function Chip({ children, className = '' }: { children: ReactNode; className?: string }) {
+  return (
+    <span className={`rounded-full px-3 py-1.5 text-sm font-semibold border transition shadow-sm ${className || 'border-[#CBD5E1] bg-white text-[#334155]'}`}>
+      {children}
+    </span>
+  )
+}
+
 export function EvDynamicRangePredictionAnxietyReductionLabProjectPage() {
+  const navigate = useNavigate()
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const mappingInputRef = useRef<HTMLInputElement | null>(null)
   const [tab, setTab] = useState<TabKey>('overview')
   const [mode, setMode] = useState<AppMode>('default')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [progressMessage, setProgressMessage] = useState<string | null>(null)
+  const [timeoutWarning, setTimeoutWarning] = useState<string | null>(null)
+
+  useEffect(() => {
+    let timer: any
+    if (loading) {
+      setTimeoutWarning(null)
+      timer = setTimeout(() => {
+        setTimeoutWarning('The server is taking longer than expected to respond. Please make sure your backend server is running on port 8023.')
+      }, 15000)
+    } else {
+      setTimeoutWarning(null)
+    }
+    return () => clearTimeout(timer)
+  }, [loading])
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
   const [data, setData] = useState<Row[]>([])
   const [previewRows, setPreviewRows] = useState<Row[]>([])
@@ -286,71 +309,80 @@ export function EvDynamicRangePredictionAnxietyReductionLabProjectPage() {
     }
 
     try {
-      const chartResponse = await fetch(`${API_BASE_URL}/charts`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: rows }),
-      }).then(handleResponse)
-      setStaticVsActual(chartResponse.static_vs_actual ?? [])
-      setDynamicVsActual(chartResponse.dynamic_vs_actual ?? [])
-    } catch (err) {
-      console.error(err)
-      setStaticVsActual([])
-      setDynamicVsActual([])
-    }
+      setProgressMessage('Step 1/5: Loading static and dynamic range charts...')
+      try {
+        const chartResponse = await fetch(`${API_BASE_URL}/charts`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ data: rows }),
+        }).then(handleResponse)
+        setStaticVsActual(chartResponse.static_vs_actual ?? [])
+        setDynamicVsActual(chartResponse.dynamic_vs_actual ?? [])
+      } catch (err) {
+        console.error(err)
+        setStaticVsActual([])
+        setDynamicVsActual([])
+      }
 
-    try {
-      const rangeResponse = await fetch(`${API_BASE_URL}/ml/predict-range`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: rows }),
-      }).then(handleResponse)
-      setRangeMetrics(rangeResponse)
-      setRangePredictions(rangeResponse.predictions ?? [])
-    } catch (err) {
-      console.error(err)
-      setRangeMetrics(null)
-      setRangePredictions([])
-    }
+      setProgressMessage('Step 2/5: Running ML dynamic range regression model...')
+      try {
+        const rangeResponse = await fetch(`${API_BASE_URL}/ml/predict-range`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ data: rows }),
+        }).then(handleResponse)
+        setRangeMetrics(rangeResponse)
+        setRangePredictions(rangeResponse.predictions ?? [])
+      } catch (err) {
+        console.error(err)
+        setRangeMetrics(null)
+        setRangePredictions([])
+      }
 
-    try {
-      const anxietyResponse = await fetch(`${API_BASE_URL}/ml/predict-anxiety`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: rows }),
-      }).then(handleResponse)
-      setAnxietyMetrics(anxietyResponse)
-      setAnxietyPredictions(anxietyResponse.predictions ?? [])
-    } catch (err) {
-      console.error(err)
-      setAnxietyMetrics(null)
-      setAnxietyPredictions([])
-    }
+      setProgressMessage('Step 3/5: Running ML battery range anxiety classification model...')
+      try {
+        const anxietyResponse = await fetch(`${API_BASE_URL}/ml/predict-anxiety`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ data: rows }),
+        }).then(handleResponse)
+        setAnxietyMetrics(anxietyResponse)
+        setAnxietyPredictions(anxietyResponse.predictions ?? [])
+      } catch (err) {
+        console.error(err)
+        setAnxietyMetrics(null)
+        setAnxietyPredictions([])
+      }
 
-    try {
-      const clusterResponse = await fetch(`${API_BASE_URL}/ml/driver-clusters`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: rows, n_clusters: 4 }),
-      }).then(handleResponse)
-      setClusterSummary(clusterResponse.cluster_summary ?? [])
-      setClusterScatter(clusterResponse.scatter_data ?? [])
-    } catch (err) {
-      console.error(err)
-      setClusterSummary([])
-      setClusterScatter([])
-    }
+      setProgressMessage('Step 4/5: Categorizing driver behavior using KMeans clustering...')
+      try {
+        const clusterResponse = await fetch(`${API_BASE_URL}/ml/driver-clusters`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ data: rows, n_clusters: 4 }),
+        }).then(handleResponse)
+        setClusterSummary(clusterResponse.cluster_summary ?? [])
+        setClusterScatter(clusterResponse.scatter_data ?? [])
+      } catch (err) {
+        console.error(err)
+        setClusterSummary([])
+        setClusterScatter([])
+      }
 
-    try {
-      const insightResponse = await fetch(`${API_BASE_URL}/insights`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: rows }),
-      }).then(handleResponse)
-      setInsights(insightResponse.insights ?? [])
-    } catch (err) {
-      console.error(err)
-      setInsights([])
+      setProgressMessage('Step 5/5: Extracting automated battery analytics insights...')
+      try {
+        const insightResponse = await fetch(`${API_BASE_URL}/insights`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ data: rows }),
+        }).then(handleResponse)
+        setInsights(insightResponse.insights ?? [])
+      } catch (err) {
+        console.error(err)
+        setInsights([])
+      }
+    } finally {
+      setProgressMessage(null)
     }
   }
 
@@ -437,274 +469,361 @@ export function EvDynamicRangePredictionAnxietyReductionLabProjectPage() {
 
   const combinedPreviewRows = previewRows.length ? previewRows : data.slice(0, 10)
 
+  const tabs = [
+    { key: 'overview', label: 'Overview' },
+    { key: 'attributes', label: 'Important Attributes' },
+    { key: 'application', label: 'Application' },
+  ] as const
+
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#F8FAFC_0%,#F8FBFF_100%)] p-6">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-10">
-          <div className="flex flex-wrap items-center gap-3 text-sm font-semibold uppercase tracking-[0.2em] text-[#0F766E]">
-            <span>EV</span>
-            <span className="text-slate-300">•</span>
-            <span>EV Dynamic Range Prediction & Anxiety Reduction Lab</span>
+        
+        {/* ── Redesigned Standalone Back Button ── */}
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#E2E8F0] bg-white px-4 py-2 text-sm font-semibold text-[#475569] shadow-sm transition hover:-translate-y-0.5 hover:border-[#CBD5E1] hover:text-[#0F172A] hover:shadow-md active:translate-y-0"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          Back
+        </button>
+
+        {/* ── Premium Hero Banner ── */}
+        <div className="mb-8 rounded-[32px] bg-[linear-gradient(135deg,#F0FDFA_0%,#FFFFFF_40%,#EFF6FF_100%)] p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)] md:p-8">
+          <div>
+            <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.3em] text-[#0F766E]">
+              <span>EV Analytics</span>
+              <span className="text-slate-300">•</span>
+              <span>EV Dynamic Range Prediction & Anxiety Reduction Lab</span>
+            </div>
+            <h1 className="mt-3 text-4xl font-black tracking-tight text-[#0F172A] md:text-5xl">EV Dynamic Range Prediction & Anxiety Reduction Lab</h1>
+            <p className="mt-4 max-w-4xl text-[16px] leading-7 text-[#334155]">
+              Predict realistic EV range, quantify OEM over-promise, flag anxiety-prone trips early, and group drivers by behavior with ML-driven charts, clustering, and insights.
+            </p>
           </div>
-          <h1 className="mt-3 text-4xl font-bold tracking-tight text-[#0F172A] md:text-5xl">EV Dynamic Range Prediction & Anxiety Reduction Lab</h1>
-          <p className="mt-4 max-w-4xl text-lg leading-8 text-slate-600">
-            Predict realistic EV range, quantify OEM over-promise, flag anxiety-prone trips early, and group drivers by behavior with ML-driven charts, clustering, and insights.
-          </p>
         </div>
 
-        <Tabs selectedIndex={tab === 'overview' ? 0 : tab === 'attributes' ? 1 : 2} onSelect={(index) => setTab(index === 0 ? 'overview' : index === 1 ? 'attributes' : 'application')}>
-          <TabList className="mb-8 flex flex-wrap gap-2 rounded-3xl border border-slate-200 bg-white p-2 shadow-sm">
-            <Tab className="rounded-2xl px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 data-[selected=true]:bg-[#0F766E] data-[selected=true]:text-white">Overview</Tab>
-            <Tab className="rounded-2xl px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 data-[selected=true]:bg-[#0F766E] data-[selected=true]:text-white">Important Attributes</Tab>
-            <Tab className="rounded-2xl px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 data-[selected=true]:bg-[#0F766E] data-[selected=true]:text-white">Application</Tab>
-          </TabList>
+        {/* ── Timeout Warning Alert ── */}
+        {timeoutWarning && (
+          <div className="mb-6 rounded-[24px] border border-amber-200 bg-amber-50 p-5 text-amber-800 shadow-sm font-bold flex items-center gap-3 transition">
+            <ShieldAlert className="h-6 w-6 text-amber-600 shrink-0" />
+            <p className="text-sm">{timeoutWarning}</p>
+          </div>
+        )}
 
-          <TabPanel>
-            <div className="space-y-6">
-              <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
-                <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-                  <div className="max-w-3xl">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Problem</p>
-                    <h2 className="mt-2 text-3xl font-bold text-[#0F172A]">EV drivers do not trust the displayed range and fear being stranded.</h2>
-                    <p className="mt-4 text-base leading-7 text-slate-600">Static OEM logic, no driving behavior modeling, and ignored terrain/weather conditions lead to optimistic range estimates.</p>
+        {/* ── Loading and Progress Indicator ── */}
+        {loading && (
+          <div className="mb-6 rounded-[28px] border border-blue-100 bg-[#EFF6FF]/60 p-5 text-blue-800 shadow-sm flex flex-col md:flex-row items-center gap-4 transition animate-pulse">
+            <div className="flex items-center gap-3">
+              <Loader2 className="h-6 w-6 text-blue-600 animate-spin" />
+              <span className="text-sm font-bold">Processing Laboratory Pipeline...</span>
+            </div>
+            {progressMessage && (
+              <span className="text-xs font-semibold px-3 py-1 bg-white border border-blue-200 rounded-full text-blue-600">
+                {progressMessage}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* ── Custom Pill Tabs Container ── */}
+        <div className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-[0_18px_40px_rgba(15,23,42,0.08)] mb-6">
+          <div className="inline-flex overflow-hidden rounded-3xl border border-[#CBD5E1] bg-[#F8FAFC] p-1 shadow-sm">
+            {tabs.map(({ key, label }) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setTab(key)}
+                className={`rounded-3xl px-5 py-3 text-sm font-semibold transition ${
+                  tab === key
+                    ? 'bg-white text-[#0F172A] shadow-sm'
+                    : 'text-[#475569] hover:text-[#0F172A]'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* ── TAB PANELS ── */}
+
+        {/* 1. Overview Tab */}
+        {tab === 'overview' && (
+          <div className="space-y-6">
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+                <div className="max-w-3xl">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Problem</p>
+                  <h2 className="mt-2 text-3xl font-bold text-[#0F172A]">EV drivers do not trust the displayed range and fear being stranded.</h2>
+                  <p className="mt-4 text-base leading-7 text-slate-600">Static OEM logic, no driving behavior modeling, and ignored terrain/weather conditions lead to optimistic range estimates.</p>
+                </div>
+                <div className="rounded-3xl border border-[#CCFBF1] bg-[#ECFDF5] px-5 py-4 text-[#0F766E] shadow-sm shrink-0">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em]">Live analytics theme</p>
+                  <p className="mt-2 text-sm leading-6 text-[#115E59] font-semibold">ML-driven, personalized, context-aware range prediction that adapts in real time.</p>
+                </div>
+              </div>
+            </section>
+
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+              {overviewKpis.map((card) => (
+                <MetricCard key={card.label} icon={card.icon} label={card.label} value={card.value} accent={card.accent} />
+              ))}
+            </div>
+
+            <div className="grid gap-6 lg:grid-cols-2">
+              <section className="rounded-[32px] border border-[#CCFBF1] bg-[#F0FDFA]/50 p-8 shadow-[0_18px_40px_rgba(15,23,42,0.04)]">
+                <div className="flex items-center gap-2 mb-6">
+                  <div className="rounded-xl bg-[#CCFBF1] p-2 text-[#0F766E]">
+                    <Sparkles className="h-5 w-5" />
                   </div>
-                  <div className="rounded-3xl border border-[#CCFBF1] bg-[#ECFDF5] px-5 py-4 text-[#0F766E] shadow-sm">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em]">Live analytics theme</p>
-                    <p className="mt-2 text-sm leading-6">ML-driven, personalized, context-aware range prediction that adapts in real time.</p>
-                  </div>
+                  <h3 className="text-xl font-bold text-[#0F172A]">What this lab does</h3>
+                </div>
+                <div className="space-y-4">
+                  {OVERVIEW_FEATURES.map((item) => (
+                    <div key={item} className="flex items-start gap-3 bg-white hover:bg-slate-50/50 rounded-2xl p-4 border border-[#CCFBF1]/30 transition shadow-sm">
+                      <Route className="mt-0.5 h-4 w-4 shrink-0 text-[#0F766E]" />
+                      <span className="text-sm font-semibold text-slate-700 leading-6">{item}</span>
+                    </div>
+                  ))}
                 </div>
               </section>
 
-              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-                {overviewKpis.map((card) => (
-                  <MetricCard key={card.label} icon={card.icon} label={card.label} value={card.value} accent={card.accent} />
+              <section className="rounded-[32px] border border-[#DBEAFE] bg-[#EFF6FF]/50 p-8 shadow-[0_18px_40px_rgba(15,23,42,0.04)]">
+                <div className="flex items-center gap-2 mb-6">
+                  <div className="rounded-xl bg-[#DBEAFE] p-2 text-[#1E40AF]">
+                    <BatteryCharging className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-xl font-bold text-[#0F172A]">Business Impact</h3>
+                </div>
+                <div className="space-y-4">
+                  {BUSINESS_IMPACT.map((item) => (
+                    <div key={item} className="flex items-start gap-3 bg-white hover:bg-slate-50/50 rounded-2xl p-4 border border-[#DBEAFE]/30 transition shadow-sm">
+                      <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[#F59E0B]" />
+                      <span className="text-sm font-semibold text-slate-700 leading-6">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </div>
+          </div>
+        )}
+
+        {/* 2. Important Attributes Tab */}
+        {tab === 'attributes' && (
+          <div className="space-y-6">
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <h2 className="text-3xl font-bold text-[#0F172A]">Required Column Schema</h2>
+              <p className="mt-3 max-w-3xl text-slate-600">The pipeline validates the following fields before analysis and machine learning calculations run.</p>
+              <div className="mt-6 flex flex-wrap gap-2.5">
+                {REQUIRED_COLUMNS.map((field) => (
+                  <Chip key={field} className="border-blue-100 bg-[#EFF6FF] text-[#1D4ED8] hover:bg-blue-100 transition shadow-sm font-bold">
+                    {field}
+                  </Chip>
                 ))}
               </div>
+            </section>
 
-              <div className="grid gap-6 lg:grid-cols-2">
-                <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Sparkles className="h-5 w-5 text-[#0F766E]" />
-                    <h3 className="text-lg font-bold text-[#0F172A]">What this lab does</h3>
-                  </div>
-                  <div className="space-y-3 text-[14px] leading-7 text-slate-700">
-                    {OVERVIEW_FEATURES.map((item) => (
-                      <div key={item} className="flex items-start gap-3">
-                        <Route className="mt-1 h-4 w-4 shrink-0 text-[#0F766E]" />
-                        <span>{item}</span>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-
-                <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
-                  <div className="flex items-center gap-2 mb-4">
-                    <BatteryCharging className="h-5 w-5 text-[#0F766E]" />
-                    <h3 className="text-lg font-bold text-[#0F172A]">Business Impact</h3>
-                  </div>
-                  <div className="space-y-3 text-[14px] leading-7 text-slate-700">
-                    {BUSINESS_IMPACT.map((item) => (
-                      <div key={item} className="flex items-start gap-3">
-                        <Sparkles className="mt-1 h-4 w-4 shrink-0 text-[#F59E0B]" />
-                        <span>{item}</span>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              </div>
-            </div>
-          </TabPanel>
-
-          <TabPanel>
-            <div className="space-y-6">
-              <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
-                <h2 className="text-3xl font-bold text-[#0F172A]">Required Data Dictionary</h2>
-                <p className="mt-3 max-w-3xl text-slate-600">The Streamlit app only displays these dictionary rows in the table.</p>
-                <div className="mt-6 overflow-hidden rounded-3xl border border-slate-200">
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <h2 className="text-3xl font-bold text-[#0F172A]">Required Data Dictionary</h2>
+              <p className="mt-3 max-w-3xl text-slate-600">EV dataset schema details with descriptions of parameters affecting battery capacity and driver range anxiety.</p>
+              
+              <div className="mt-6 overflow-hidden rounded-[24px] border border-slate-200 bg-white">
+                <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
-                      <TableRow className="bg-slate-50">
-                        <TableHead className="font-semibold text-slate-700">Column</TableHead>
-                        <TableHead className="font-semibold text-slate-700">Description</TableHead>
+                      <TableRow className="bg-slate-50 border-b border-slate-200">
+                        <TableHead className="font-bold text-slate-600 uppercase text-[12px] tracking-[0.08em] py-3.5 px-4">Column</TableHead>
+                        <TableHead className="font-bold text-slate-600 uppercase text-[12px] tracking-[0.08em] py-3.5 px-4">Description</TableHead>
                       </TableRow>
                     </TableHeader>
-                    <TableBody>
-                      {REQUIRED_COLUMNS.map((field) => (
-                        <TableRow key={field}>
-                          <TableCell className="font-semibold text-slate-800">{field}</TableCell>
-                          <TableCell className="text-slate-600">{REQUIRED_DESCRIPTIONS[field]}</TableCell>
+                    <TableBody className="divide-y divide-slate-100">
+                      {REQUIRED_COLUMNS.map((field, idx) => (
+                        <TableRow key={field} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}>
+                          <td className="px-4 py-3.5 font-semibold text-[#0F172A] text-sm">
+                            <span className="inline-block rounded-lg bg-slate-100 text-slate-800 px-2.5 py-1 text-xs font-bold border border-slate-200">
+                              {field}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3.5 text-slate-600 text-sm font-medium">{REQUIRED_DESCRIPTIONS[field]}</td>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
                 </div>
-              </section>
+              </div>
+            </section>
 
-              <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
-                <h2 className="text-3xl font-bold text-[#0F172A]">Variable Roles</h2>
-                <div className="mt-6 grid gap-6 lg:grid-cols-2">
-                  <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
-                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0F766E]">Independent Variables</p>
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {[
-                        'battery_capacity_kwh',
-                        'state_of_charge_pct',
-                        'state_of_health_pct',
-                        'battery_temp_c',
-                        'vehicle_weight_kg',
-                        'payload_kg',
-                        'avg_speed_kmph',
-                        'acceleration_score',
-                        'regen_braking_pct',
-                        'elevation_gain_m',
-                        'ambient_temp_c',
-                        'rain_intensity_mm',
-                        'wind_speed_kmph',
-                        'energy_consumption_wh_per_km',
-                        'static_range_km',
-                        'dynamic_range_km',
-                        'actual_range_km',
-                        'range_error_km',
-                        'driving_style',
-                        'terrain_type',
-                        'traffic_level',
-                      ].map((field) => (
-                        <span key={field} className="rounded-full border border-[#CBD5E1] bg-white px-3 py-1.5 text-sm font-semibold text-[#334155]">
-                          {field}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
-                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0F766E]">Dependent Variables</p>
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {['actual_range_km', 'range_anxiety_flag'].map((field) => (
-                        <span key={field} className="rounded-full border border-[#CBD5E1] bg-white px-3 py-1.5 text-sm font-semibold text-[#334155]">
-                          {field}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </section>
-            </div>
-          </TabPanel>
-
-          <TabPanel>
-            <div className="space-y-8">
-              <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                  <div className="max-w-3xl">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Step 1</p>
-                    <h2 className="mt-2 text-3xl font-bold text-[#0F172A]">Load dataset and begin analysis</h2>
-                    <p className="mt-3 text-slate-600">Default dataset is loaded from GitHub and then passed through the ML, clustering, and insights workflow.</p>
-                  </div>
-                  <div className="rounded-3xl border border-[#CCFBF1] bg-[#ECFDF5] px-5 py-4 text-[#0F766E] shadow-sm">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em]">Status</p>
-                    <p className="mt-2 text-sm leading-6">{statusMessage ?? 'Ready to load the dataset.'}</p>
-                  </div>
-                </div>
-
-                <div className="mt-6 flex flex-wrap gap-3">
-                  <Button type="button" onClick={loadDefaultDataset} disabled={loading} className="rounded-2xl bg-[#0F766E] px-5 py-3 font-semibold text-white hover:bg-[#0D5F58]">
-                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-                    Load Default Data
-                  </Button>
-                  <Button type="button" onClick={() => fileInputRef.current?.click()} variant="outline" className="rounded-2xl px-5 py-3 font-semibold">
-                    <FileUp className="mr-2 h-4 w-4" />
-                    Upload CSV
-                  </Button>
-                  <Button type="button" onClick={() => mappingInputRef.current?.click()} variant="outline" className="rounded-2xl px-5 py-3 font-semibold">
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    Upload CSV to map
-                  </Button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".csv"
-                    className="hidden"
-                    onChange={(event) => {
-                      const file = event.target.files?.[0]
-                      if (!file) return
-                      void handleUpload(file, false)
-                    }}
-                  />
-                  <input
-                    ref={mappingInputRef}
-                    type="file"
-                    accept=".csv"
-                    className="hidden"
-                    onChange={(event) => {
-                      const file = event.target.files?.[0]
-                      if (!file) return
-                      void handleUpload(file, true)
-                    }}
-                  />
-                </div>
-              </section>
-
-              {error ? <div className="rounded-3xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</div> : null}
-
-              {mode === 'mapping' ? (
-                <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
-                  <div className="mb-4 flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Upload CSV + Manual Mapping</p>
-                      <h3 className="mt-2 text-2xl font-bold text-[#0F172A]">Map required columns</h3>
-                    </div>
-                    <Button type="button" onClick={applyMapping} disabled={loading} className="rounded-2xl bg-[#0F766E] px-5 py-3 font-semibold text-white hover:bg-[#0D5F58]">
-                      {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                      Apply Mapping
-                    </Button>
-                  </div>
-                  <div className="mb-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-                    Upload EV datasetDrag & Drop CSVBrowse Files
-                  </div>
-                  <div className="space-y-4">
-                    {REQUIRED_COLUMNS.map((field) => (
-                      <MappingRow key={field} field={field} columns={fileColumns} value={mapping[field] ?? ''} onChange={(value) => setMapping((current) => ({ ...current, [field]: value }))} />
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <h2 className="text-3xl font-bold text-[#0F172A]">Variable Roles</h2>
+              <div className="mt-6 grid gap-6 md:grid-cols-2">
+                <div className="rounded-[32px] border border-blue-100 bg-[#EFF6FF] p-6 shadow-sm">
+                  <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#1D4ED8]">Independent Variables (Inputs)</p>
+                  <p className="text-xs text-slate-500 mt-1 mb-4">Input parameters for battery diagnostics, driving behavior models, and terrain forecasts.</p>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      'battery_capacity_kwh',
+                      'state_of_charge_pct',
+                      'state_of_health_pct',
+                      'battery_temp_c',
+                      'vehicle_weight_kg',
+                      'payload_kg',
+                      'avg_speed_kmph',
+                      'acceleration_score',
+                      'regen_braking_pct',
+                      'elevation_gain_m',
+                      'ambient_temp_c',
+                      'rain_intensity_mm',
+                      'wind_speed_kmph',
+                      'energy_consumption_wh_per_km',
+                      'static_range_km',
+                      'dynamic_range_km',
+                      'actual_range_km',
+                      'range_error_km',
+                      'driving_style',
+                      'terrain_type',
+                      'traffic_level',
+                    ].map((field) => (
+                      <Chip key={field} className="border-blue-200 bg-white text-[#1D4ED8] hover:bg-blue-50 transition shadow-sm font-bold text-xs">
+                        {field}
+                      </Chip>
                     ))}
                   </div>
-                </section>
-              ) : null}
-
-              <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Step 2</p>
-                    <h3 className="mt-2 text-2xl font-bold text-[#0F172A]">KPI Cards</h3>
+                </div>
+                <div className="rounded-[32px] border border-emerald-100 bg-[#ECFDF5] p-6 shadow-sm">
+                  <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#0F766E]">Dependent Variables (Targets)</p>
+                  <p className="text-xs text-slate-500 mt-1 mb-4">Target outputs derived from regression models or anxiety flags.</p>
+                  <div className="flex flex-wrap gap-2">
+                    {['actual_range_km', 'range_anxiety_flag'].map((field) => (
+                      <Chip key={field} className="border-emerald-200 bg-white text-[#0F766E] hover:bg-[#ECFDF5] transition shadow-sm font-bold text-xs">
+                        {field}
+                      </Chip>
+                    ))}
                   </div>
-                  <Button type="button" onClick={() => downloadRows(data, 'ev_range_data.csv')} variant="outline" className="rounded-2xl px-5 py-3 font-semibold">
-                    <Download className="mr-2 h-4 w-4" />
-                    Download CSV
+                </div>
+              </div>
+            </section>
+          </div>
+        )}
+
+        {/* 3. Application Tab */}
+        {tab === 'application' && (
+          <div className="space-y-8">
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div className="max-w-3xl">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Step 1</p>
+                  <h2 className="mt-2 text-3xl font-bold text-[#0F172A]">Load dataset and begin analysis</h2>
+                  <p className="mt-3 text-slate-600">Default dataset is loaded from GitHub and then passed through the ML, clustering, and insights workflow.</p>
+                </div>
+                <div className="rounded-3xl border border-[#CCFBF1] bg-[#ECFDF5] px-5 py-4 text-[#0F766E] shadow-sm shrink-0">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em]">Status</p>
+                  <p className="mt-2 text-sm leading-6 text-[#115E59] font-medium">{statusMessage ?? 'Ready to load the dataset.'}</p>
+                </div>
+              </div>
+
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Button type="button" onClick={loadDefaultDataset} disabled={loading} className="rounded-full bg-[#0F766E] px-6 py-3 font-bold text-white hover:bg-[#0D5F58] shadow-md hover:-translate-y-0.5 transition active:translate-y-0">
+                  {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                  Load Default Data
+                </Button>
+                <Button type="button" onClick={() => fileInputRef.current?.click()} variant="outline" className="rounded-full px-6 py-3 font-bold hover:-translate-y-0.5 transition active:translate-y-0">
+                  <FileUp className="mr-2 h-4 w-4" />
+                  Upload CSV
+                </Button>
+                <Button type="button" onClick={() => mappingInputRef.current?.click()} variant="outline" className="rounded-full px-6 py-3 font-bold hover:-translate-y-0.5 transition active:translate-y-0">
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Upload CSV to map
+                </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv"
+                  className="hidden"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0]
+                    if (!file) return
+                    void handleUpload(file, false)
+                  }}
+                />
+                <input
+                  ref={mappingInputRef}
+                  type="file"
+                  accept=".csv"
+                  className="hidden"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0]
+                    if (!file) return
+                    void handleUpload(file, true)
+                  }}
+                />
+              </div>
+            </section>
+
+            {error ? <div className="rounded-3xl border border-rose-200 bg-rose-50 p-5 text-sm font-semibold text-rose-700 shadow-sm">{error}</div> : null}
+
+            {mode === 'mapping' ? (
+              <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+                <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Upload CSV + Manual Mapping</p>
+                    <h3 className="mt-2 text-2xl font-bold text-[#0F172A]">Map required columns</h3>
+                  </div>
+                  <Button type="button" onClick={applyMapping} disabled={loading} className="rounded-full bg-[#0F766E] px-6 py-3 font-bold text-white hover:bg-[#0D5F58] shadow-md hover:-translate-y-0.5 transition active:translate-y-0">
+                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    Apply Mapping
                   </Button>
                 </div>
-                <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-                  {kpis
-                    ? [
-                        { label: 'Trips', value: formatNumber(kpis.trips), icon: <Users className="h-5 w-5 text-[#0F766E]" />, accent: 'bg-[#ECFDF5]' },
-                        { label: 'OEM Avg Error (km)', value: formatNumber(kpis.oem_avg_error_km), icon: <Gauge className="h-5 w-5 text-[#0369A1]" />, accent: 'bg-[#EFF6FF]' },
-                        { label: 'Dynamic Avg Error (km)', value: formatNumber(kpis.dynamic_avg_error_km), icon: <BatteryCharging className="h-5 w-5 text-[#B45309]" />, accent: 'bg-[#FFFBEB]' },
-                        { label: 'Anxiety Rate (%)', value: formatPercent(kpis.anxiety_rate_pct), icon: <ShieldAlert className="h-5 w-5 text-[#7C3AED]" />, accent: 'bg-[#F5F3FF]' },
-                      ].map((card) => <MetricCard key={card.label} icon={card.icon} label={card.label} value={card.value} accent={card.accent} />)
-                    : null}
+                <div className="mb-6 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600 font-medium">
+                  Upload EV datasetDrag & Drop CSVBrowse Files
+                </div>
+                <div className="space-y-4">
+                  {REQUIRED_COLUMNS.map((field) => (
+                    <MappingRow key={field} field={field} columns={fileColumns} value={mapping[field] ?? ''} onChange={(value) => setMapping((current) => ({ ...current, [field]: value }))} />
+                  ))}
                 </div>
               </section>
+            ) : null}
 
-              <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Preview</p>
-                <h3 className="mt-2 text-2xl font-bold text-[#0F172A]">Dataset loaded.</h3>
-                <div className="mt-6">
-                  <DataTable rows={combinedPreviewRows} maxRows={10} />
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between pb-4 border-b border-slate-100 mb-6">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Step 2</p>
+                  <h3 className="mt-2 text-2xl font-bold text-[#0F172A]">KPI Cards</h3>
                 </div>
-              </section>
+                <Button type="button" onClick={() => downloadRows(data, 'ev_range_data.csv')} variant="outline" className="rounded-full px-6 py-3 font-bold hover:-translate-y-0.5 transition active:translate-y-0">
+                  <Download className="mr-2 h-4 w-4" />
+                  Download CSV
+                </Button>
+              </div>
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                {kpis
+                  ? [
+                      { label: 'Trips', value: formatNumber(kpis.trips), icon: <Users className="h-5 w-5 text-[#0F766E]" />, accent: 'bg-[#ECFDF5]' },
+                      { label: 'OEM Avg Error (km)', value: formatNumber(kpis.oem_avg_error_km), icon: <Gauge className="h-5 w-5 text-[#0369A1]" />, accent: 'bg-[#EFF6FF]' },
+                      { label: 'Dynamic Avg Error (km)', value: formatNumber(kpis.dynamic_avg_error_km), icon: <BatteryCharging className="h-5 w-5 text-[#B45309]" />, accent: 'bg-[#FFFBEB]' },
+                      { label: 'Anxiety Rate (%)', value: formatPercent(kpis.anxiety_rate_pct), icon: <ShieldAlert className="h-5 w-5 text-[#7C3AED]" />, accent: 'bg-[#F5F3FF]' },
+                    ].map((card) => <MetricCard key={card.label} icon={card.icon} label={card.label} value={card.value} accent={card.accent} />)
+                  : null}
+              </div>
+            </section>
 
-              <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Charts</p>
-                <h3 className="mt-2 text-2xl font-bold text-[#0F172A]">Diagnostics charts</h3>
-                <div className="mt-6 space-y-8">
-                  <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5 md:p-6">
-                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Chart 1 — Static vs Actual Range</p>
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Preview</p>
+              <h3 className="mt-2 text-2xl font-bold text-[#0F172A] mb-6">Dataset loaded.</h3>
+              <div>
+                <DataTable rows={combinedPreviewRows} maxRows={10} />
+              </div>
+            </section>
+
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Charts</p>
+              <h3 className="mt-2 text-2xl font-bold text-[#0F172A]">Diagnostics charts</h3>
+              <div className="mt-6 space-y-8">
+                <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5 md:p-6 shadow-sm">
+                  <p className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500">Chart 1 — Static vs Actual Range</p>
+                  <div className="mt-4 overflow-hidden rounded-2xl bg-white p-4 border border-slate-100">
                     <Plot
                       data={[
                         {
@@ -721,9 +840,11 @@ export function EvDynamicRangePredictionAnxietyReductionLabProjectPage() {
                       config={{ responsive: true, displaylogo: false }}
                     />
                   </div>
+                </div>
 
-                  <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5 md:p-6">
-                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Chart 2 — Dynamic vs Actual Range</p>
+                <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5 md:p-6 shadow-sm">
+                  <p className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500">Chart 2 — Dynamic vs Actual Range</p>
+                  <div className="mt-4 overflow-hidden rounded-2xl bg-white p-4 border border-slate-100">
                     <Plot
                       data={[
                         {
@@ -741,95 +862,96 @@ export function EvDynamicRangePredictionAnxietyReductionLabProjectPage() {
                     />
                   </div>
                 </div>
-              </section>
+              </div>
+            </section>
 
-              <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">ML — Dynamic Range Prediction</p>
-                    <h3 className="mt-2 text-2xl font-bold text-[#0F172A]">RandomForestRegressor</h3>
-                    <p className="mt-2 text-sm text-slate-600">Target: actual_range_km | RMSE km: 2.58 | R2: 1</p>
-                  </div>
-                  <Button type="button" onClick={() => downloadRows(rangePredictions, 'range_metrics.csv')} variant="outline" className="rounded-2xl px-5 py-3 font-semibold">
-                    <Download className="mr-2 h-4 w-4" />
-                    Download Range Metrics
-                  </Button>
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">ML — Dynamic Range Prediction</p>
+                  <h3 className="mt-2 text-2xl font-bold text-[#0F172A]">RandomForestRegressor</h3>
+                  <p className="mt-2 text-sm text-slate-600 font-medium">Target: actual_range_km | RMSE km: 2.58 | R2: 1</p>
                 </div>
-                <div className="mt-6 overflow-hidden rounded-3xl border border-slate-200">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-slate-50">
-                        <TableHead className="font-semibold text-slate-700">Column</TableHead>
-                        <TableHead className="font-semibold text-slate-700">Model</TableHead>
-                        <TableHead className="font-semibold text-slate-700">Target</TableHead>
-                        <TableHead className="font-semibold text-slate-700">RMSE_km</TableHead>
-                        <TableHead className="font-semibold text-slate-700">R2</TableHead>
-                        <TableHead className="font-semibold text-slate-700">Rows_Used</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      <TableRow>
-                        <TableCell>Range Prediction</TableCell>
-                        <TableCell>{rangeMetrics?.model ?? 'RandomForestRegressor'}</TableCell>
-                        <TableCell>{rangeMetrics?.target ?? 'actual_range_km'}</TableCell>
-                        <TableCell>{formatNumber(rangeMetrics?.rmse_km ?? 2.58)}</TableCell>
-                        <TableCell>{formatNumber(rangeMetrics?.r2 ?? 1)}</TableCell>
-                        <TableCell>{formatNumber(rangeMetrics?.train_size && rangeMetrics?.test_size ? rangeMetrics.train_size + rangeMetrics.test_size : rangePredictions.length)}</TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </div>
-              </section>
+                <Button type="button" onClick={() => downloadRows(rangePredictions, 'range_metrics.csv')} variant="outline" className="rounded-full px-6 py-3 font-bold hover:-translate-y-0.5 transition active:translate-y-0">
+                  <Download className="mr-2 h-4 w-4" />
+                  Download Range Metrics
+                </Button>
+              </div>
+              <div className="overflow-hidden rounded-3xl border border-slate-200">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-slate-50 border-b border-slate-200">
+                      {['Column', 'Model', 'Target', 'RMSE (km)', 'R2', 'Rows Used'].map((h) => (
+                        <TableHead key={h} className="font-bold text-slate-600 text-[12px] uppercase tracking-[0.08em] py-3.5 px-4">{h}</TableHead>
+                      ))}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className="divide-y divide-slate-100">
+                    <TableRow className="border-slate-100 hover:bg-slate-50/50">
+                      <TableCell className="px-4 py-3 font-semibold text-slate-800 text-sm">
+                        <span className="rounded bg-[#EFF6FF] text-[#1D4ED8] px-2 py-0.5 text-xs font-bold border border-blue-100">Range Prediction</span>
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-slate-700 text-sm">{rangeMetrics?.model ?? 'RandomForestRegressor'}</TableCell>
+                      <TableCell className="px-4 py-3 text-slate-700 text-sm">{rangeMetrics?.target ?? 'actual_range_km'}</TableCell>
+                      <TableCell className="px-4 py-3 text-slate-700 text-sm font-semibold">{formatNumber(rangeMetrics?.rmse_km ?? 2.58)}</TableCell>
+                      <TableCell className="px-4 py-3 text-slate-700 text-sm font-semibold">{formatNumber(rangeMetrics?.r2 ?? 1)}</TableCell>
+                      <TableCell className="px-4 py-3 text-slate-700 text-sm">{formatNumber(rangeMetrics?.train_size && rangeMetrics?.test_size ? rangeMetrics.train_size + rangeMetrics.test_size : rangePredictions.length)}</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+            </section>
 
-              <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">ML — Range Anxiety Prediction</p>
-                    <h3 className="mt-2 text-2xl font-bold text-[#0F172A]">RandomForestClassifier</h3>
-                    <p className="mt-2 text-sm text-slate-600">Target: range_anxiety_flag | ROC AUC: 1 | Accuracy %: 100.00%</p>
-                  </div>
-                  <Button type="button" onClick={() => downloadRows(anxietyPredictions, 'anxiety_metrics.csv')} variant="outline" className="rounded-2xl px-5 py-3 font-semibold">
-                    <Download className="mr-2 h-4 w-4" />
-                    Download Anxiety Metrics
-                  </Button>
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">ML — Range Anxiety Prediction</p>
+                  <h3 className="mt-2 text-2xl font-bold text-[#0F172A]">RandomForestClassifier</h3>
+                  <p className="mt-2 text-sm text-slate-600 font-medium">Target: range_anxiety_flag | ROC AUC: 1 | Accuracy %: 100.00%</p>
                 </div>
-                <div className="mt-6 overflow-hidden rounded-3xl border border-slate-200">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-slate-50">
-                        <TableHead className="font-semibold text-slate-700">Column</TableHead>
-                        <TableHead className="font-semibold text-slate-700">Model</TableHead>
-                        <TableHead className="font-semibold text-slate-700">Target</TableHead>
-                        <TableHead className="font-semibold text-slate-700">ROC_AUC</TableHead>
-                        <TableHead className="font-semibold text-slate-700">Rows_Used</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      <TableRow>
-                        <TableCell>Anxiety Prediction</TableCell>
-                        <TableCell>{anxietyMetrics?.model ?? 'RandomForestClassifier'}</TableCell>
-                        <TableCell>{anxietyMetrics?.target ?? 'range_anxiety_flag'}</TableCell>
-                        <TableCell>{formatNumber(anxietyMetrics?.roc_auc ?? 1)}</TableCell>
-                        <TableCell>{formatNumber(anxietyMetrics?.train_size && anxietyMetrics?.test_size ? anxietyMetrics.train_size + anxietyMetrics.test_size : anxietyPredictions.length)}</TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </div>
-              </section>
+                <Button type="button" onClick={() => downloadRows(anxietyPredictions, 'anxiety_metrics.csv')} variant="outline" className="rounded-full px-6 py-3 font-bold hover:-translate-y-0.5 transition active:translate-y-0">
+                  <Download className="mr-2 h-4 w-4" />
+                  Download Anxiety Metrics
+                </Button>
+              </div>
+              <div className="overflow-hidden rounded-3xl border border-slate-200">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-slate-50 border-b border-slate-200">
+                      {['Column', 'Model', 'Target', 'ROC AUC', 'Rows Used'].map((h) => (
+                        <TableHead key={h} className="font-bold text-slate-600 text-[12px] uppercase tracking-[0.08em] py-3.5 px-4">{h}</TableHead>
+                      ))}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className="divide-y divide-slate-100">
+                    <TableRow className="border-slate-100 hover:bg-slate-50/50">
+                      <TableCell className="px-4 py-3 font-semibold text-slate-800 text-sm">
+                        <span className="rounded bg-[#F5F3FF] text-[#7C3AED] px-2 py-0.5 text-xs font-bold border border-purple-100">Anxiety Prediction</span>
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-slate-700 text-sm">{anxietyMetrics?.model ?? 'RandomForestClassifier'}</TableCell>
+                      <TableCell className="px-4 py-3 text-slate-700 text-sm">{anxietyMetrics?.target ?? 'range_anxiety_flag'}</TableCell>
+                      <TableCell className="px-4 py-3 text-slate-700 text-sm font-semibold">{formatNumber(anxietyMetrics?.roc_auc ?? 1)}</TableCell>
+                      <TableCell className="px-4 py-3 text-slate-700 text-sm">{formatNumber(anxietyMetrics?.train_size && anxietyMetrics?.test_size ? anxietyMetrics.train_size + anxietyMetrics.test_size : anxietyPredictions.length)}</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+            </section>
 
-              <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Driver Behavior Clustering</p>
-                    <h3 className="mt-2 text-2xl font-bold text-[#0F172A]">KMeans with 4 clusters</h3>
-                  </div>
-                  <Button type="button" onClick={() => downloadRows(clusterSummary, 'cluster_summary.csv')} variant="outline" className="rounded-2xl px-5 py-3 font-semibold">
-                    <Download className="mr-2 h-4 w-4" />
-                    Download Cluster Summary
-                  </Button>
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Driver Behavior Clustering</p>
+                  <h3 className="mt-2 text-2xl font-bold text-[#0F172A]">KMeans with 4 clusters</h3>
                 </div>
-                <div className="mt-6 rounded-[28px] border border-slate-200 bg-slate-50 p-5 md:p-6">
-                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Chart 3 — Driver Behavior Clusters</p>
+                <Button type="button" onClick={() => downloadRows(clusterSummary, 'cluster_summary.csv')} variant="outline" className="rounded-full px-6 py-3 font-bold hover:-translate-y-0.5 transition active:translate-y-0">
+                  <Download className="mr-2 h-4 w-4" />
+                  Download Cluster Summary
+                </Button>
+              </div>
+              <div className="mt-6 rounded-[28px] border border-slate-200 bg-slate-50 p-5 md:p-6 shadow-sm">
+                <p className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500">Chart 3 — Driver Behavior Clusters</p>
+                <div className="mt-4 overflow-hidden rounded-2xl bg-white p-4 border border-slate-100">
                   <Plot
                     data={[
                       {
@@ -847,69 +969,71 @@ export function EvDynamicRangePredictionAnxietyReductionLabProjectPage() {
                     config={{ responsive: true, displaylogo: false }}
                   />
                 </div>
-                <div className="mt-6 overflow-hidden rounded-3xl border border-slate-200">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-slate-50">
-                        <TableHead className="font-semibold text-slate-700">Cluster</TableHead>
-                        <TableHead className="font-semibold text-slate-700">avg_speed_kmph</TableHead>
-                        <TableHead className="font-semibold text-slate-700">acceleration_score</TableHead>
-                        <TableHead className="font-semibold text-slate-700">regen_braking_pct</TableHead>
-                        <TableHead className="font-semibold text-slate-700">energy_consumption_wh_per_km</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {clusterSummary.map((row, index) => (
-                        <TableRow key={index}>
-                          <TableCell>{formatCell(row.Cluster)}</TableCell>
-                          <TableCell>{formatNumber(row.avg_speed_kmph)}</TableCell>
-                          <TableCell>{formatNumber(row.acceleration_score)}</TableCell>
-                          <TableCell>{formatNumber(row.regen_braking_pct)}</TableCell>
-                          <TableCell>{formatNumber(row.energy_consumption_wh_per_km)}</TableCell>
-                        </TableRow>
+              </div>
+              <div className="overflow-hidden rounded-3xl border border-slate-200">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-slate-50 border-b border-slate-200">
+                      {['Cluster', 'avg_speed_kmph', 'acceleration_score', 'regen_braking_pct', 'energy_consumption_wh_per_km'].map((h) => (
+                        <TableHead key={h} className="font-bold text-slate-600 text-[12px] uppercase tracking-[0.08em] py-3.5 px-4">{h}</TableHead>
                       ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </section>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className="divide-y divide-slate-100">
+                    {clusterSummary.map((row, index) => (
+                      <TableRow key={index} className="border-slate-100 hover:bg-slate-50/50">
+                        <TableCell className="px-4 py-3 font-semibold text-slate-800 text-sm">
+                          <span className="rounded bg-slate-100 border border-slate-200 text-slate-800 px-2 py-0.5 text-xs font-bold">{row.Cluster}</span>
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-slate-700 text-sm font-medium">{formatNumber(row.avg_speed_kmph)}</TableCell>
+                        <TableCell className="px-4 py-3 text-slate-700 text-sm">{formatNumber(row.acceleration_score)}</TableCell>
+                        <TableCell className="px-4 py-3 text-slate-700 text-sm">{formatNumber(row.regen_braking_pct)}</TableCell>
+                        <TableCell className="px-4 py-3 text-slate-700 text-sm font-semibold text-[#0F766E]">{formatNumber(row.energy_consumption_wh_per_km)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </section>
 
-              <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Automated Insights</p>
-                    <h3 className="mt-2 text-2xl font-bold text-[#0F172A]">Exactly three insight rows</h3>
-                  </div>
-                  <Button type="button" onClick={() => downloadRows(insights, 'ev_insights.csv')} variant="outline" className="rounded-2xl px-5 py-3 font-semibold">
-                    <Download className="mr-2 h-4 w-4" />
-                    Download Insights CSV
-                  </Button>
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Automated Insights</p>
+                  <h3 className="mt-2 text-2xl font-bold text-[#0F172A]">Exactly three insight rows</h3>
                 </div>
-                <div className="mt-6 overflow-hidden rounded-3xl border border-slate-200">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-slate-50">
-                        {['Column', 'Insight', 'Value'].map((column) => (
-                          <TableHead key={column} className="font-semibold text-slate-700">
-                            {column}
-                          </TableHead>
-                        ))}
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {insights.map((row, index) => (
-                        <TableRow key={index}>
-                          <TableCell>{index + 1}</TableCell>
-                          <TableCell>{row.Insight}</TableCell>
-                          <TableCell>{row.Value}</TableCell>
-                        </TableRow>
+                <Button type="button" onClick={() => downloadRows(insights, 'ev_insights.csv')} variant="outline" className="rounded-full px-6 py-3 font-bold hover:-translate-y-0.5 transition active:translate-y-0">
+                  <Download className="mr-2 h-4 w-4" />
+                  Download Insights CSV
+                </Button>
+              </div>
+              <div className="overflow-hidden rounded-3xl border border-slate-200">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-slate-50 border-b border-slate-200">
+                      {['Row', 'Insight', 'Value'].map((column) => (
+                        <TableHead key={column} className="font-bold text-slate-600 text-[12px] uppercase tracking-[0.08em] py-3.5 px-4">
+                          {column}
+                        </TableHead>
                       ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </section>
-            </div>
-          </TabPanel>
-        </Tabs>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className="divide-y divide-slate-100">
+                    {insights.map((row, index) => (
+                      <TableRow key={index} className="border-slate-100 hover:bg-slate-50/50">
+                        <TableCell className="px-4 py-3 font-semibold text-slate-800 text-sm">
+                          <span className="rounded bg-slate-100 border border-slate-200 text-slate-800 px-2.5 py-1 text-xs font-bold">{index + 1}</span>
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-slate-700 text-sm font-medium">{row.Insight}</TableCell>
+                        <TableCell className="px-4 py-3 text-slate-700 text-sm font-semibold text-[#0F766E]">{row.Value}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </section>
+          </div>
+        )}
       </div>
     </div>
   )
