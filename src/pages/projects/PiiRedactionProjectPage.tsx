@@ -1,7 +1,8 @@
-﻿import { type ChangeEvent, useMemo, useState } from 'react'
+import { type ChangeEvent, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 import {
   ArrowRight,
+  ChevronLeft,
   CloudUpload,
   FileText,
   ShieldCheck,
@@ -37,46 +38,50 @@ const overviewImpact = [
 
 function OverviewTab() {
   return (
-    <div>
-      <div className="grid grid-cols-1 gap-6">
-        <div className="aa-card p-6">
-          <p className="text-[11px] font-bold text-[#0284C7] uppercase tracking-[0.18em] mb-3">
-            Purpose
-          </p>
-          <p className="text-[15px] text-[#334155] leading-relaxed">{overviewPurpose}</p>
-        </div>
+    <div className="space-y-6">
+      <section className="rounded-[32px] border border-[#CCFBF1] bg-[#F0FDFA]/50 p-8 shadow-sm">
+        <p className="text-[11px] font-bold text-[#0F766E] uppercase tracking-[0.24em] mb-3">
+          Purpose & Mission
+        </p>
+        <p className="text-base text-[#334155] leading-relaxed font-semibold">{overviewPurpose}</p>
+      </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="aa-card p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Sparkles className="w-5 h-5 text-[#0284C7]" />
-              <h3 className="text-lg font-bold text-[#0F172A]">Capabilities</h3>
-            </div>
-            <ul className="space-y-3 text-[14px] text-[#334155] leading-relaxed">
-              {overviewCapabilities.map((item, index) => (
-                <li key={index} className="flex items-start gap-2">
-                  <ArrowRight className="w-4 h-4 text-[#0F766E] shrink-0 mt-1" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <section className="rounded-[32px] border border-[#CCFBF1] bg-[#F0FDFA]/50 p-8 shadow-sm">
+          <div className="flex items-center gap-2 mb-6">
+            <Sparkles className="w-5 h-5 text-[#0F766E]" />
+            <h3 className="text-lg font-black text-[#0F172A]">Core Capabilities</h3>
           </div>
+          <ul className="space-y-3">
+            {overviewCapabilities.map((item, index) => (
+              <li
+                key={index}
+                className="flex items-start gap-3 bg-white rounded-2xl border border-[#CCFBF1]/30 p-4 transition duration-150 hover:bg-slate-50/50 shadow-sm"
+              >
+                <ArrowRight className="w-4 h-4 text-[#0F766E] shrink-0 mt-0.5" />
+                <span className="text-sm font-semibold text-[#334155]">{item}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
 
-          <div className="aa-card p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <ShieldCheck className="w-5 h-5 text-[#0F766E]" />
-              <h3 className="text-lg font-bold text-[#0F172A]">Business Impact</h3>
-            </div>
-            <ul className="space-y-3 text-[14px] text-[#334155] leading-relaxed">
-              {overviewImpact.map((item, index) => (
-                <li key={index} className="flex items-start gap-2">
-                  <ArrowRight className="w-4 h-4 text-[#0284C7] shrink-0 mt-1" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
+        <section className="rounded-[32px] border border-[#DBEAFE] bg-[#EFF6FF]/50 p-8 shadow-sm">
+          <div className="flex items-center gap-2 mb-6">
+            <ShieldCheck className="w-5 h-5 text-[#1D4ED8]" />
+            <h3 className="text-lg font-black text-[#0F172A]">Business Impact</h3>
           </div>
-        </div>
+          <ul className="space-y-3">
+            {overviewImpact.map((item, index) => (
+              <li
+                key={index}
+                className="flex items-start gap-3 bg-white rounded-2xl border border-[#DBEAFE]/30 p-4 transition duration-150 hover:bg-[#F0F7FF] shadow-sm"
+              >
+                <ArrowRight className="w-4 h-4 text-[#1D4ED8] shrink-0 mt-0.5" />
+                <span className="text-sm font-semibold text-[#334155]">{item}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
       </div>
     </div>
   )
@@ -149,73 +154,85 @@ function ApplicationTab() {
 
   return (
     <div className="space-y-6">
-      <div className="aa-card p-6">
-        <p className="text-sm font-semibold text-[#475569] mb-3">Select Input Mode:</p>
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <label className="inline-flex items-center gap-3 rounded-2xl border border-[#CBD5E1] px-4 py-3 w-full sm:w-auto cursor-pointer transition hover:border-[#94A3B8]">
-            <input
-              type="radio"
-              name="pii-input-mode"
-              value="upload"
-              className="accent-[#0F766E]"
-              checked={mode === 'upload'}
-              onChange={() => setMode('upload')}
-            />
-            <span className="text-sm font-semibold text-[#1E293B]">Upload Your Documents</span>
-          </label>
-          <label className="inline-flex items-center gap-3 rounded-2xl border border-[#CBD5E1] px-4 py-3 w-full sm:w-auto cursor-pointer transition hover:border-[#94A3B8]">
-            <input
-              type="radio"
-              name="pii-input-mode"
-              value="demo"
-              className="accent-[#0F766E]"
-              checked={mode === 'demo'}
-              onChange={() => setMode('demo')}
-            />
-            <span className="text-sm font-semibold text-[#1E293B]">Run Demo (Uses Internal Samples)</span>
-          </label>
+      {/* ── Mode Selection Card ── */}
+      <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+        <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-[#0F766E] mb-2">Mode Selection</p>
+        <h3 className="text-2xl font-black text-[#0F172A] mb-6">Select processing mode</h3>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {(['upload', 'demo'] as const).map((inputMode) => {
+            const title = inputMode === 'upload' ? 'Upload Documents' : 'Run Live Demo'
+            const desc = inputMode === 'upload' ? 'Upload your own custom files for redaction' : 'Evaluate with sample documents pre-loaded in the system'
+            const isActive = mode === inputMode
+            return (
+              <button
+                key={inputMode}
+                type="button"
+                onClick={() => setMode(inputMode)}
+                className={`rounded-2xl border p-5 text-left transition duration-200 hover:-translate-y-0.5 ${
+                  isActive
+                    ? 'border-[#0F766E] bg-[#ECFDF5]/30 text-[#0F766E] shadow-sm font-bold'
+                    : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <input
+                    type="radio"
+                    checked={isActive}
+                    readOnly
+                    className="accent-[#0F766E] h-4 w-4"
+                  />
+                  <span className="font-black text-sm text-[#0F172A]">{title}</span>
+                </div>
+                <p className="text-xs text-slate-500 font-semibold mt-2">{desc}</p>
+              </button>
+            )
+          })}
         </div>
-      </div>
+      </section>
 
+      {/* ── Mode-specific Sandbox ── */}
       {mode === 'upload' ? (
-        <div className="aa-card p-6 bg-[#F8FAFC]">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)] space-y-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-4">
             <div>
-              <p className="font-semibold text-[#0F172A]">Upload single files or select a batch of files (PDF, Image, MS Office, TXT):</p>
-              <p className="text-sm text-[#64748B] mt-1">Limit 200MB per file • PDF, JPG, JPEG, PNG, GIF, TIFF, DOCX, XLSX, XLS, TXT, TIF</p>
+              <h4 className="text-lg font-black text-[#0F172A]">Document Upload</h4>
+              <p className="text-xs font-semibold text-slate-400 mt-1">PDF, JPG, JPEG, PNG, GIF, TIFF, DOCX, XLSX, TXT</p>
             </div>
-            <label className="aa-button aa-button-secondary px-4 py-3 cursor-pointer hover:border-[#94A3B8]">
-              Browse files
+            <label className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 text-slate-700 bg-white px-5 py-2.5 text-xs font-bold hover:bg-slate-50 hover:-translate-y-0.5 shadow-sm transition cursor-pointer active:translate-y-0 duration-150">
+              Browse Files
               <input type="file" multiple className="hidden" onChange={handleFileChange} />
             </label>
           </div>
 
-          <div className="mt-6 rounded-2xl border border-dashed border-[#CBD5E1] bg-white p-8 text-center text-[#64748B]">
-            <CloudUpload className="mx-auto mb-4 h-10 w-10 text-[#0F766E]" />
-            <p className="font-semibold text-[#1E293B]">Drag and drop files here</p>
-            <p className="text-sm mt-2">Upload or browse to add documents for redaction.</p>
-          </div>
+          <label className="flex cursor-pointer flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-[#CBD5E1] bg-[#F8FAFC]/30 p-8 text-center text-[#64748B] transition hover:border-[#0F766E] hover:shadow-sm">
+            <CloudUpload className="h-10 w-10 text-[#0F766E]" />
+            <div>
+              <p className="font-bold text-[#1E293B]">Drag and drop files here</p>
+              <p className="text-xs text-slate-400 mt-1">Limit 200MB per file • Upload up to 6 files</p>
+            </div>
+            <input type="file" multiple className="hidden" onChange={handleFileChange} />
+          </label>
 
           {fileCount > 0 && (
-            <div className="mt-6 rounded-2xl border border-[#CBD5E1] bg-white p-4">
-              <div className="flex items-center justify-between mb-3">
-                <span className="font-semibold text-[#0F172A]">Selected files ({fileCount})</span>
-                <span className="text-sm text-[#64748B]">{(fileSize / 1024 / 1024).toFixed(1)} MB total</span>
+            <div className="rounded-2xl border border-slate-100 bg-[#F8FAFC]/50 p-5 space-y-3">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
+                <span>Selected files ({fileCount})</span>
+                <span>{(fileSize / 1024 / 1024).toFixed(2)} MB total</span>
               </div>
-              <div className="space-y-3">
+              <div className="grid gap-3 sm:grid-cols-2">
                 {files.map((file, index) => (
-                  <div key={`${file.name}-${index}`} className="flex items-center justify-between rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <FileText className="w-5 h-5 text-[#0F766E]" />
-                      <div>
-                        <p className="font-semibold text-[#0F172A]">{file.name}</p>
-                        <p className="text-sm text-[#64748B]">{(file.size / 1024).toFixed(1)} KB</p>
+                  <div key={`${file.name}-${index}`} className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <FileText className="w-5 h-5 text-[#0F766E] shrink-0" />
+                      <div className="min-w-0">
+                        <p className="font-bold text-xs text-[#0F172A] truncate">{file.name}</p>
+                        <p className="text-[10px] font-semibold text-slate-400">{(file.size / 1024).toFixed(1)} KB</p>
                       </div>
                     </div>
                     <button
                       type="button"
                       onClick={() => removeFile(index)}
-                      className="rounded-full p-2 text-[#7C8187] hover:bg-[#E2E8F0]"
+                      className="rounded-full p-1.5 text-slate-400 hover:bg-slate-50 hover:text-red-500 transition shrink-0"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -225,117 +242,144 @@ function ApplicationTab() {
             </div>
           )}
 
-          <div className="mt-6 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-center gap-4 pt-2">
             <button
               type="button"
               onClick={handleStart}
               disabled={fileCount === 0 || isProcessing}
-              className="aa-button aa-button-primary px-6 py-3 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-[#0F766E] px-6 py-3.5 text-sm font-bold text-white hover:bg-[#0D5F58] hover:-translate-y-0.5 shadow-md transition active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed duration-150"
             >
               {isProcessing ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" /> Processing...
                 </>
               ) : (
-                'Start Redaction'
+                <>
+                  <ShieldCheck className="w-4 h-4" /> Start Redaction
+                </>
               )}
             </button>
-            <p className="text-sm text-[#475569]">Please upload documents to start processing.</p>
+            <p className="text-xs font-semibold text-slate-400">Please upload documents to start processing.</p>
           </div>
-        </div>
+        </section>
       ) : (
-        <div className="aa-card p-6 bg-[#F8FAFC]">
-          <p className="text-[16px] font-medium text-[#475569] mb-5">
-            Run a demo using internal sample documents for quick evaluation.
-          </p>
+        <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)] space-y-6">
+          <div>
+            <h4 className="text-lg font-black text-[#0F172A]">Demo Sandbox</h4>
+            <p className="text-xs font-semibold text-slate-400 mt-1">Run a live redaction dry-run using built-in system sample documents.</p>
+          </div>
+          <div className="rounded-2xl border border-slate-100 bg-[#F8FAFC]/50 p-5">
+            <p className="text-sm font-medium text-slate-500">
+              Demo mode simulates document analysis on scanned and text inputs to highlight names, numbers, email identifiers, and sensitive content.
+            </p>
+          </div>
+
           <button
             type="button"
             onClick={handleRunDemo}
             disabled={isProcessing}
-            className="aa-button aa-button-primary px-6 py-3 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-[#0F766E] px-6 py-3.5 text-sm font-bold text-white hover:bg-[#0D5F58] hover:-translate-y-0.5 shadow-md transition active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed duration-150"
           >
             {isProcessing ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" /> Running Demo...
               </>
             ) : (
-              'Run Demo on Internal Samples'
+              <>
+                <Sparkles className="w-4 h-4" /> Run Demo on Samples
+              </>
             )}
           </button>
           {isRunningDemo && (
-            <p className="mt-4 rounded-2xl border border-[#D1FAE5] bg-[#ECFDF5] p-4 text-sm text-[#166534]">
+            <div className="rounded-2xl border border-[#D1FAE5] bg-[#ECFDF5] p-4 text-xs font-semibold text-[#166534]">
               Demo run started. The internal sample documents are being analysed for PII redaction.
-            </p>
+            </div>
           )}
-        </div>
+        </section>
       )}
 
+      {/* ── Error Notification ── */}
       {errorMessage && (
-        <div className="rounded-2xl border border-[#FECACA] bg-[#FEF2F2] p-4 text-sm text-[#991B1B]">
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-xs font-semibold text-rose-800">
           {errorMessage}
         </div>
       )}
 
+      {/* ── Process Summary Card ── */}
       {summary && (
-        <div className="aa-card border-[#A7F3D0] bg-[#ECFDF5] p-4 text-sm text-[#166534]">
-          <div className="font-semibold mb-1">Processing summary</div>
-          <div className="flex flex-wrap gap-4">
-            <span>Total files: {summary.total_files}</span>
-            <span>Successful: {summary.successful}</span>
-            <span>Failed: {summary.failed}</span>
+        <div className="rounded-[24px] border border-emerald-200 bg-emerald-50/50 p-6 text-sm text-[#166534] shadow-sm">
+          <p className="font-black uppercase tracking-wider text-xs text-[#166534] mb-3">Redaction Summary</p>
+          <div className="flex flex-wrap gap-6 text-sm font-semibold">
+            <span className="flex items-center gap-2"><FileText className="w-4 h-4" /> Total files: {summary.total_files}</span>
+            <span className="text-[#166534]">✓ Successful: {summary.successful}</span>
+            <span className="text-rose-600">✗ Failed: {summary.failed}</span>
           </div>
         </div>
       )}
 
+      {/* ── Redaction Results ── */}
       {results.length > 0 && (
-        <div className="space-y-3">
-          <div className="text-lg font-bold text-[#0F172A] flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-[#0F766E]" /> Processing Results
+        <div className="space-y-4">
+          <div className="text-xl font-black text-[#0F172A] flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-[#0F766E]" />
+            <span>Processing Results</span>
           </div>
-          {results.map((result, index) => (
-            <div key={`${result.file_name}-${index}`} className="aa-card overflow-hidden">
-              <button
-                type="button"
-                onClick={() => setExpandedIndex((prev) => (prev === index ? null : index))}
-                className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left"
-              >
-                <div>
-                  <div className="text-sm font-semibold text-[#0F172A]">Analyzing {result.file_name}</div>
-                  <div className="text-sm text-[#64748B]">{result.error ? 'Failed' : 'Completed'}</div>
-                </div>
-                <span className="text-[#0F766E] font-semibold">{expandedIndex === index ? 'Hide' : 'View'}</span>
-              </button>
-              {expandedIndex === index && (
-                <div className="border-t border-[#E2E8F0] bg-[#F8FAFC] p-5 space-y-4">
-                  {result.error ? (
-                    <div className="rounded-2xl border border-[#FECACA] bg-[#FEF2F2] p-4 text-sm text-[#991B1B]">
-                      {result.error}
+          <div className="space-y-4">
+            {results.map((result, index) => {
+              const isExpanded = expandedIndex === index
+              return (
+                <div key={`${result.file_name}-${index}`} className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm transition hover:shadow-md duration-200">
+                  <button
+                    type="button"
+                    onClick={() => setExpandedIndex(isExpanded ? null : index)}
+                    className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left transition bg-slate-50/20 hover:bg-slate-50/50"
+                  >
+                    <div className="min-w-0">
+                      <div className="text-sm font-black text-[#0F172A] truncate">Analyzing {result.file_name}</div>
+                      <div className="mt-1">
+                        <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider ${result.error ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                          {result.error ? 'Failed' : 'Completed'}
+                        </span>
+                      </div>
                     </div>
-                  ) : (
-                    <>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm text-[#475569]">
-                        <div>
-                          <div className="font-semibold text-[#0F172A]">Detected PII</div>
-                          <div>{result.detected_pii?.join(', ') || 'None'}</div>
+                    <span className="text-xs font-bold text-[#0F766E] hover:underline shrink-0">{isExpanded ? 'Hide Details' : 'View Details'}</span>
+                  </button>
+                  {isExpanded && (
+                    <div className="border-t border-slate-100 bg-[#F8FAFC]/50 p-6 space-y-5">
+                      {result.error ? (
+                        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs font-semibold text-rose-800">
+                          {result.error}
                         </div>
-                        <div>
-                          <div className="font-semibold text-[#0F172A]">PII Count</div>
-                          <div>{result.pii_count ?? 0}</div>
-                        </div>
-                        <div>
-                          <div className="font-semibold text-[#0F172A]">PII Types</div>
-                          <div>{result.pii_types?.join(', ') || 'None'}</div>
-                        </div>
-                      </div>
-                      <div className="aa-surface-muted p-4 whitespace-pre-wrap text-sm text-[#334155]">
-                        {result.redacted_text || 'No redacted text available.'}
-                      </div>
-                    </>
+                      ) : (
+                        <>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div className="bg-white border border-slate-100 p-4 rounded-xl shadow-sm">
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Detected PII</p>
+                              <p className="mt-1 text-xs font-semibold text-[#0F172A]">{result.detected_pii?.join(', ') || 'None'}</p>
+                            </div>
+                            <div className="bg-white border border-slate-100 p-4 rounded-xl shadow-sm">
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">PII Count</p>
+                              <p className="mt-1 text-xs font-semibold text-[#0F172A]">{result.pii_count ?? 0} entities</p>
+                            </div>
+                            <div className="bg-white border border-slate-100 p-4 rounded-xl shadow-sm">
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">PII Types</p>
+                              <p className="mt-1 text-xs font-semibold text-[#0F172A]">{result.pii_types?.join(', ') || 'None'}</p>
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Redacted Document Output</p>
+                            <div className="rounded-xl border border-slate-200 bg-white p-5 font-mono text-xs text-slate-700 shadow-sm leading-relaxed overflow-x-auto whitespace-pre-wrap max-h-96">
+                              {result.redacted_text || 'No redacted text available.'}
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   )}
                 </div>
-              )}
-            </div>
-          ))}
+              )
+            })}
+          </div>
         </div>
       )}
     </div>
@@ -348,52 +392,60 @@ export function PiiRedactionProjectPage() {
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#F8FAFC_0%,#F8FBFF_100%)] p-6 max-w-6xl mx-auto">
+      {/* ── Standalone Back Button ── */}
       <button
         type="button"
         onClick={() => navigate(-1)}
-        className="mb-6 text-[14px] font-bold text-[#0284C7] hover:underline"
+        className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#E2E8F0] bg-white px-4 py-2 text-sm font-semibold text-[#475569] shadow-sm transition hover:-translate-y-0.5 hover:border-[#CBD5E1] hover:text-[#0F172A] hover:shadow-md active:translate-y-0"
       >
-        ← Back
+        <ChevronLeft className="w-4 h-4" />
+        Back
       </button>
 
-      <div className="mb-10">
-        <div className="flex flex-col gap-4">
-          <div className="aa-card inline-flex items-center gap-3 px-4 py-3">
-            <span className="text-4xl">🤖</span>
-            <h1 className="text-[2.25rem] font-bold text-[#0F172A] leading-tight">
-              Automated PII Redaction Solution (Gen AI)
+      {/* ── Premium Hero Banner ── */}
+      <header className="relative mb-8 overflow-hidden rounded-[32px] border border-[#E2E8F0] bg-[linear-gradient(135deg,#F0FDFA_0%,#FFFFFF_40%,#EFF6FF_100%)] p-8 shadow-[0_24px_60px_rgba(15,23,42,0.08)] md:p-10">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 rounded-xl bg-[#0F766E]/10 px-3 py-1 text-xs font-bold text-[#0F766E]">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Enterprise Gen AI Security</span>
+            </div>
+            <h1 className="text-3xl font-black tracking-tight text-[#0F172A] sm:text-4xl md:text-5xl leading-none">
+              Automated PII Redaction
             </h1>
+            <p className="text-sm font-semibold text-[#334155] max-w-xl leading-relaxed">
+              Detect and redact Personally Identifiable Information from documents using advanced vision models and secure AI processing.
+            </p>
           </div>
-          <p className="text-[#64748B] text-[15px] max-w-3xl">
-            Redact Personal Identifiable Information from Documents using Generative AI
-          </p>
+          <div className="flex shrink-0 items-center gap-3 self-start md:self-auto">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm border border-slate-100">
+              <span className="text-3xl">🤖</span>
+            </div>
+          </div>
         </div>
-      </div>
+      </header>
 
-      <div className="mb-8 border-b border-[#E2E8F0]">
-        <div className="flex flex-wrap gap-3">
-          <button
-            type="button"
-            onClick={() => setActiveTab('overview')}
-            className={`aa-button px-5 py-3 text-[15px] ${
-              activeTab === 'overview'
-                ? 'aa-button-primary'
-                : 'aa-button-secondary'
-            }`}
-          >
-            Overview
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('application')}
-            className={`aa-button px-5 py-3 text-[15px] ${
-              activeTab === 'application'
-                ? 'aa-button-primary'
-                : 'aa-button-secondary'
-            }`}
-          >
-            Application
-          </button>
+      {/* ── Tab Navigation Redesign ── */}
+      <div className="mb-8 rounded-[28px] border border-slate-200 bg-white p-4 shadow-[0_18px_40px_rgba(15,23,42,0.08)] mb-6">
+        <div className="inline-flex overflow-hidden rounded-3xl border border-[#CBD5E1] bg-[#F8FAFC] p-1 shadow-sm">
+          {(['overview', 'application'] as const).map((tabId) => {
+            const label = tabId === 'overview' ? 'Overview' : 'Interactive Lab'
+            const isActive = activeTab === tabId
+            return (
+              <button
+                key={tabId}
+                type="button"
+                onClick={() => setActiveTab(tabId)}
+                className={`rounded-3xl px-5 py-3 text-sm font-semibold transition ${
+                  isActive
+                    ? 'bg-white text-[#0F172A] shadow-sm font-bold'
+                    : 'text-[#475569] hover:text-[#0F172A]'
+                }`}
+              >
+                {label}
+              </button>
+            )
+          })}
         </div>
       </div>
 
