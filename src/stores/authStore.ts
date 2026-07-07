@@ -41,10 +41,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     set({ initialized: true })
 
-    supabase.auth.onAuthStateChange(async (_event, nextSession) => {
+    supabase.auth.onAuthStateChange((_event, nextSession) => {
       set({ session: nextSession })
       if (nextSession?.user) {
-        await fetchAndSetProfile(supabase, nextSession.user.id, set)
+        void fetchAndSetProfile(supabase, nextSession.user.id, set)
       } else {
         set({ profile: null, profileLoading: false, profileError: null })
       }
@@ -55,7 +55,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const supabase = tryGetSupabase()
     const uid = get().session?.user?.id
     if (!supabase || !uid) return
-    await fetchAndSetProfile(supabase, uid, set)
+    await fetchAndSetProfile(supabase, uid, set, true)
   },
 
   signOut: async () => {
@@ -68,10 +68,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 async function fetchAndSetProfile(
   supabase: NonNullable<ReturnType<typeof tryGetSupabase>>,
   userId: string,
-  set: (partial: Partial<AuthState>) => void
+  set: (partial: Partial<AuthState>) => void,
+  forceRefresh = false
 ) {
   const currentProfile = useAuthStore.getState().profile
   const hasExistingProfile = currentProfile?.id === userId
+
+  if (hasExistingProfile && !forceRefresh) {
+    return
+  }
 
   set({ profileLoading: true, profileError: null })
 

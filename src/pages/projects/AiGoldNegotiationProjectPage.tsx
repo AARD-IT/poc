@@ -1,6 +1,6 @@
 import { useState, type ChangeEvent } from 'react'
 import { useNavigate } from 'react-router'
-import { ArrowRight, CloudUpload, FileText, Zap, ShieldCheck } from 'lucide-react'
+import { ArrowRight, CloudUpload, FileText, Zap, ShieldCheck, ChevronLeft } from 'lucide-react'
 
 const capabilities = [
   'Automatically parse buyer RFQs from TXT, DOCX, and PDF files using AI document extraction.',
@@ -208,51 +208,55 @@ export function AiGoldNegotiationProjectPage() {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<'overview' | 'application'>('overview')
 
-  return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="mb-6">
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-2 text-sm font-semibold text-[#475569] hover:text-[#0F172A]"
-        >
-          ← Back
-        </button>
-      </div>
-      <div className="mb-8 aa-card p-8">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-3xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#F59E0B] mb-4">AI Gold Negotiation Orchestrator</p>
-            <h1 className="text-4xl font-bold text-[#0F172A] mb-4">Enterprise RFQ-to-Quote pricing and negotiation automation for gold buyers.</h1>
-            <p className="text-[15px] text-[#475569] leading-relaxed">
-              A complete workflow for reading buyer RFQs, matching gold products, pricing using live MCX data, generating branded quote PDFs, drafting buyer emails, and managing multi-round negotiations with acceptance, counteroffer, or reject logic.
-            </p>
-          </div>
+  const tabs = [
+    { key: 'overview', label: 'Overview' },
+    { key: 'application', label: 'Application' },
+  ] as const
 
-          <div className="flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={() => setActiveTab('overview')}
-              className={`rounded-full px-5 py-3 text-sm font-semibold transition ${
-                activeTab === 'overview'
-                  ? 'bg-[#0F766E] text-white'
-                  : 'bg-[#F1F5F9] text-[#475569] hover:bg-[#E2E8F0]'
-              }`}
-            >
-              Overview
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('application')}
-              className={`rounded-full px-5 py-3 text-sm font-semibold transition ${
-                activeTab === 'application'
-                  ? 'bg-[#0F766E] text-white'
-                  : 'bg-[#F1F5F9] text-[#475569] hover:bg-[#E2E8F0]'
-              }`}
-            >
-              Application
-            </button>
+  return (
+    <div className="mx-auto max-w-7xl p-6">
+      {/* ── Standalone Back Button ── */}
+      <button
+        type="button"
+        onClick={() => navigate(-1)}
+        className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#E2E8F0] bg-white px-4 py-2 text-sm font-semibold text-[#475569] shadow-sm transition hover:-translate-y-0.5 hover:border-[#CBD5E1] hover:text-[#0F172A] hover:shadow-md active:translate-y-0"
+      >
+        <ChevronLeft className="w-4 h-4" />
+        Back
+      </button>
+
+      {/* ── Premium Hero Banner ── */}
+      <div className="mb-8 rounded-[32px] bg-[linear-gradient(135deg,#F0FDFA_0%,#FFFFFF_40%,#EFF6FF_100%)] p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)] md:p-8">
+        <div>
+          <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.3em] text-[#0F766E]">
+            <span>Gold Intelligence</span>
+            <span className="text-slate-300">•</span>
+            <span>AI Gold Negotiation Orchestrator</span>
           </div>
+          <h1 className="mt-3 text-4xl font-black tracking-tight text-[#0F172A] md:text-5xl">Enterprise RFQ-to-Quote pricing and negotiation automation for gold buyers.</h1>
+          <p className="mt-4 max-w-4xl text-[16px] leading-7 text-[#334155]">
+            A complete workflow for reading buyer RFQs, matching gold products, pricing using live MCX data, generating branded quote PDFs, drafting buyer emails, and managing multi-round negotiations with acceptance, counteroffer, or reject logic.
+          </p>
+        </div>
+      </div>
+
+      {/* ── Custom Pill Tabs Container ── */}
+      <div className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-[0_18px_40px_rgba(15,23,42,0.08)] mb-6">
+        <div className="inline-flex overflow-hidden rounded-3xl border border-[#CBD5E1] bg-[#F8FAFC] p-1 shadow-sm">
+          {tabs.map(({ key, label }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setActiveTab(key)}
+              className={`rounded-3xl px-5 py-3 text-sm font-semibold transition ${
+                activeTab === key
+                  ? 'bg-white text-[#0F172A] shadow-sm'
+                  : 'text-[#475569] hover:text-[#0F172A]'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
       </div>
 

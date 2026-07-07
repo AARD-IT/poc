@@ -12,9 +12,31 @@ export interface SearchFiltersContextValue {
 const SearchFiltersContext = createContext<SearchFiltersContextValue | null>(null)
 
 export function SearchFiltersProvider({ children }: { children: ReactNode }) {
-  const [headerQuery, setHeaderQuery] = useState('')
-  const [resultsQuery, setResultsQuery] = useState('')
-  const [selectedFilters, setSelectedFilters] = useState<Set<string>>(new Set())
+  const [headerQuery, setHeaderQueryState] = useState(() => {
+    return sessionStorage.getItem('aa_headerQuery') || ''
+  })
+  const [resultsQuery, setResultsQueryState] = useState(() => {
+    return sessionStorage.getItem('aa_resultsQuery') || ''
+  })
+  const [selectedFilters, setSelectedFiltersState] = useState<Set<string>>(() => {
+    const saved = sessionStorage.getItem('aa_selectedFilters')
+    return saved ? new Set(JSON.parse(saved)) : new Set()
+  })
+
+  const setHeaderQuery = (q: string) => {
+    sessionStorage.setItem('aa_headerQuery', q)
+    setHeaderQueryState(q)
+  }
+
+  const setResultsQuery = (q: string) => {
+    sessionStorage.setItem('aa_resultsQuery', q)
+    setResultsQueryState(q)
+  }
+
+  const setSelectedFilters = (next: Set<string>) => {
+    sessionStorage.setItem('aa_selectedFilters', JSON.stringify(Array.from(next)))
+    setSelectedFiltersState(next)
+  }
 
   const value = useMemo(
     () => ({

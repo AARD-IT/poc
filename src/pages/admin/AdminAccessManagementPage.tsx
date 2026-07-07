@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import {
   deriveAllowedIndustries,
   fetchAccessForUser,
@@ -25,6 +25,41 @@ export function AdminAccessManagementPage() {
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [userSearch, setUserSearch] = useState('')
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const wrapperRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
+  const filteredUsers = useMemo(() => {
+    const term = userSearch.toLowerCase().trim()
+    const list = term
+      ? users.filter(
+          (u) =>
+            u.name.toLowerCase().includes(term) ||
+            u.email.toLowerCase().includes(term) ||
+            (u.company?.toLowerCase().includes(term) ?? false)
+        )
+      : users
+
+    if (userId && !list.some((u) => u.id === userId)) {
+      const selected = users.find((u) => u.id === userId)
+      if (selected) {
+        return [selected, ...list]
+      }
+    }
+    return list
+  }, [users, userSearch, userId])
 
   const loadMeta = useCallback(async () => {
     setLoading(true)
@@ -215,22 +250,72 @@ export function AdminAccessManagementPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <section className="lg:col-span-1 rounded-3xl border border-[#E2E8F0] bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.08)] h-fit">
             <h2 className="font-bold text-[#1E293B] mb-3">User</h2>
-            <select
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-              className="w-full px-3 py-2.5 border-[1.5px] border-[#CBD5E1] rounded-lg text-[15px] font-medium bg-white"
-            >
-              <option value="">Select approved client…</option>
-              {users.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name} ({u.email})
-                </option>
-              ))}
-            </select>
-            {selectedUser && (
-              <p className="mt-4 text-[13px] font-medium text-[#475569] leading-relaxed">
-                Role: <span className="font-bold text-[#1E293B]">{selectedUser.role}</span>
-              </p>
+            
+            <div className="relative" ref={wrapperRef}>
+              <input
+                type="search"
+                placeholder="Search by name, email, or company..."
+                value={userSearch}
+                onChange={(e) => {
+                  setUserSearch(e.target.value)
+                  setShowSuggestions(true)
+                }}
+                onFocus={() => setShowSuggestions(true)}
+                className="w-full px-3 py-2 border-[1.5px] border-[#E2E8F0] bg-[#F8FAFC] rounded-lg text-[14px] font-medium focus:bg-white focus:border-[#0F766E] focus:outline-none"
+              />
+
+              {showSuggestions && filteredUsers.length > 0 && (
+                <div className="absolute left-0 right-0 z-50 mt-1 max-h-60 overflow-y-auto rounded-lg border border-[#E2E8F0] bg-white shadow-lg py-1">
+                  {filteredUsers.map((u) => (
+                    <button
+                      type="button"
+                      key={u.id}
+                      onClick={() => {
+                        setUserId(u.id)
+                        setUserSearch('')
+                        setShowSuggestions(false)
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-[#F1F5F9] transition-colors border-b last:border-b-0 border-[#F1F5F9]"
+                    >
+                      <p className="font-bold text-sm text-[#1E293B]">{u.name}</p>
+                      <p className="text-xs text-[#64748B] mt-0.5">{u.email}</p>
+                    </button>
+                  ))}
+                </div>
+              )}
+              
+              {showSuggestions && userSearch && filteredUsers.length === 0 && (
+                <div className="absolute left-0 right-0 z-50 mt-1 rounded-lg border border-[#E2E8F0] bg-white shadow-lg p-4 text-center text-sm text-[#64748B]">
+                  No matching users found
+                </div>
+              )}
+            </div>
+
+            {selectedUser ? (
+              <div className="mt-4 p-4 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] shadow-sm">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[#0F766E]">Selected Client</p>
+                <p className="font-bold text-[#1E293B] mt-1.5 text-base">{selectedUser.name}</p>
+                <p className="text-sm font-medium text-[#475569] mt-0.5">{selectedUser.email}</p>
+                {selectedUser.company && (
+                  <p className="text-xs text-[#64748B] mt-1">Company: {selectedUser.company}</p>
+                )}
+                <div className="mt-3 pt-3 border-t border-[#E2E8F0] flex items-center justify-between">
+                  <p className="text-[13px] font-semibold text-[#475569]">
+                    Role: <span className="font-bold text-[#1E293B]">{selectedUser.role}</span>
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setUserId('')}
+                    className="text-xs text-[#B91C1C] hover:underline font-bold"
+                  >
+                    Clear selection
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-4 p-4 rounded-xl border border-dashed border-[#CBD5E1] text-center text-sm text-[#64748B]">
+                No user selected. Search and choose a user from the suggestion list.
+              </div>
             )}
             <div className="mt-6 flex flex-col gap-2">
               <button
