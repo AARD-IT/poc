@@ -5,6 +5,7 @@ import {
   Calendar,
   CheckCircle2,
   ChevronDown,
+  ChevronLeft,
   Download,
   FileText,
   FilePlus,
@@ -695,54 +696,55 @@ export function OfferLetterProjectPage() {
     setExpandedHistory((current) => (current === id ? null : id))
   }
 
-  return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#F8FAFC_0%,#F8FBFF_100%)]">
-      <div className="max-w-6xl mx-auto px-8 py-10">
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          className="mb-6 text-[13px] font-semibold text-[#0284C7] hover:underline flex items-center gap-1"
-        >
-          ← Back
-        </button>
+  const tabs: { key: OfferTab; label: string }[] = [
+    { key: 'pre-offer', label: 'Pre-Offer Letter' },
+    { key: 'offer-letter', label: 'Offer Letter' },
+    { key: 'internship-certificate', label: 'Internship Certificate' },
+    { key: 'history', label: 'History' },
+  ]
 
-        <div className="mb-7">
-          <div className="aa-card inline-flex items-center gap-3 px-4 py-3 mb-3">
-            <span className="text-4xl leading-none">📝</span>
-            <h1 className="text-[2.25rem] font-bold text-[#0F172A] leading-tight">
-              Offer Letter Generator
-            </h1>
-          </div>
-          <p className="text-[#64748B] text-[15px] max-w-3xl">
+  return (
+    <div className="mx-auto max-w-7xl p-6">
+      {/* ── Back button ── */}
+      <button
+        type="button"
+        onClick={() => navigate(-1)}
+        className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#E2E8F0] bg-white px-4 py-2 text-sm font-semibold text-[#475569] shadow-sm transition hover:-translate-y-0.5 hover:border-[#CBD5E1] hover:text-[#0F172A] hover:shadow-md active:translate-y-0"
+      >
+        <ChevronLeft className="w-4 h-4" />
+        Back
+      </button>
+
+      {/* ── Hero banner ── */}
+      <div className="mb-8 rounded-[32px] bg-[linear-gradient(135deg,#F0FDFA_0%,#FFFFFF_40%,#EFF6FF_100%)] p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)] md:p-8">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#0F766E]">HR Automation project</p>
+          <h1 className="mt-2 text-4xl font-black tracking-tight text-[#0F172A] md:text-5xl">Offer Letter Generator</h1>
+          <p className="mt-4 max-w-3xl text-[16px] leading-7 text-[#334155]">
             Convert HR workflows into polished offer letters, internship certificates, and downloadable employee communications — all within the Analytics Avenue ecosystem.
           </p>
         </div>
+      </div>
 
-        <div className="mb-10 border-b border-[#E2E8F0]">
-          <div className="flex flex-wrap gap-2">
-            {(
-              [
-                { id: 'pre-offer', label: 'Pre-Offer Letter' },
-                { id: 'offer-letter', label: 'Offer Letter' },
-                { id: 'internship-certificate', label: 'Internship Certificate' },
-                { id: 'history', label: 'History' },
-              ] as const
-            ).map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveTab(tab.id)}
-                className={`aa-button px-4 py-3 text-[15px] ${
-                  activeTab === tab.id
-                    ? 'aa-button-primary'
-                    : 'aa-button-secondary'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+      {/* ── Tab container (Real Estate Intelligence Suite style) ── */}
+      <div className="aa-card p-4 bg-white mb-6">
+        <div className="inline-flex overflow-hidden rounded-3xl border border-[#CBD5E1] bg-[#F8FAFC] p-1 shadow-sm">
+          {tabs.map(({ key, label }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setActiveTab(key)}
+              className={`rounded-3xl px-5 py-3 text-sm font-semibold transition ${
+                activeTab === key
+                  ? 'bg-white text-[#0F172A] shadow-sm'
+                  : 'text-[#475569] hover:text-[#0F172A]'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
+      </div>
 
         {activeTab === 'pre-offer' && (
           <div className="grid grid-cols-1 xl:grid-cols-[1.3fr_0.9fr] gap-8">
@@ -1950,7 +1952,6 @@ export function OfferLetterProjectPage() {
             </div>
           </div>
         )}
-      </div>
     </div>
   )
 }
