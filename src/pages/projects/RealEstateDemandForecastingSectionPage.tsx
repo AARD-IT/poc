@@ -1,6 +1,24 @@
-import { ChangeEvent, useEffect, useMemo, useState } from 'react'
+import { ChangeEvent, useEffect, useMemo, useState, ReactNode } from 'react'
+import { useNavigate } from 'react-router'
 import Plot from 'react-plotly.js'
-import { CloudUpload, Download, MapPin, ShieldCheck, Sparkles } from 'lucide-react'
+import {
+  CloudUpload,
+  Download,
+  MapPin,
+  ShieldCheck,
+  Sparkles,
+  ChevronLeft,
+  TrendingUp,
+  Building2,
+  Award,
+  CheckCircle2,
+  FileSpreadsheet,
+  Calendar,
+  LineChart,
+  DollarSign,
+  IndianRupee,
+} from 'lucide-react'
+
 import {
   loadDefaultDataset,
   uploadCsv,
@@ -93,6 +111,97 @@ const impactStatements = [
 
 const overviewKpis = ['Avg Monthly Sales', 'Demand Growth', 'Top Cities', 'Price Sensitivity']
 
+function MetricCard({ icon, label, value, accent }: { icon: ReactNode; label: string; value: string; accent: string }) {
+  return (
+    <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-[0_18px_40px_rgba(15,23,42,0.08)] transition hover:shadow-[0_24px_50px_rgba(15,23,42,0.12)] hover:-translate-y-0.5 duration-200">
+      <div className="flex items-center gap-4">
+        <div className={`rounded-2xl p-4 shrink-0 ${accent}`}>{icon}</div>
+        <div>
+          <p className="text-base font-bold text-slate-500 tracking-tight">{label}</p>
+          <p className="mt-1 text-2xl font-bold text-[#0F172A]">{value}</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function Chip({ children, className = '' }: { children: ReactNode; className?: string }) {
+  return (
+    <span className={`rounded-full px-3 py-1.5 text-sm font-semibold border transition shadow-sm ${className || 'border-[#CBD5E1] bg-white text-[#334155]'}`}>
+      {children}
+    </span>
+  )
+}
+
+function SelectableFilter({
+  label,
+  values,
+  selected,
+  onToggle,
+  placeholder,
+}: {
+  label: string
+  values: string[]
+  selected: string[]
+  onToggle: (value: string) => void
+  placeholder?: string
+}) {
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md hover:border-[#0F766E]/30">
+      <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-3">
+        <p className="text-sm font-bold uppercase tracking-[0.12em] text-[#0F766E]">{label}</p>
+        <span className="rounded-full bg-[#ECFDF5] px-2 py-0.5 text-xs font-semibold text-[#0F766E]">
+          {selected.length} selected
+        </span>
+      </div>
+      <div className="mb-3 min-h-[56px] rounded-2xl border border-slate-100 bg-[#F8FAFC] px-3.5 py-2.5 flex items-center">
+        {selected.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5">
+            {selected.map((option) => (
+              <span
+                key={option}
+                className="inline-flex items-center gap-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] px-2.5 py-1 text-xs font-bold text-[#0F766E]"
+              >
+                {option}
+                <button
+                  type="button"
+                  onClick={() => onToggle(option)}
+                  className="hover:text-red-500 font-bold ml-0.5"
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        ) : (
+          <div className="text-xs text-slate-400 font-medium">
+            {placeholder || `Filter by ${label.toLowerCase()}...`}
+          </div>
+        )}
+      </div>
+      <div className="grid max-h-48 gap-1.5 overflow-y-auto pr-1">
+        {values.map((option) => {
+          const isSelected = selected.includes(option)
+          return (
+            <button
+              key={option}
+              type="button"
+              onClick={() => onToggle(option)}
+              className={`w-full rounded-xl px-3 py-2 text-left text-xs font-semibold transition ${
+                isSelected
+                  ? 'bg-[#0F766E] text-white shadow-sm font-bold'
+                  : 'bg-[#F8FAFC] text-slate-700 hover:bg-slate-100 border border-slate-100'
+              }`}
+            >
+              {option}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 function downloadTextCsv(filename: string, headers: string[], rows: Array<Array<string | number>>) {
   const csvRows = [headers.join(','), ...rows.map((row) => row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(','))]
   const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' })
@@ -107,6 +216,7 @@ function downloadTextCsv(filename: string, headers: string[], rows: Array<Array<
 }
 
 export function RealEstateDemandForecastingSectionPage() {
+  const navigate = useNavigate()
   const [tab, setTab] = useState<Tab>('overview')
   const [appMode, setAppMode] = useState<AppMode>('default')
   const [data, setData] = useState<Record<string, any>[]>([])
@@ -366,33 +476,52 @@ export function RealEstateDemandForecastingSectionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#F8FAFC_0%,#F8FBFF_100%)] p-6 max-w-7xl mx-auto space-y-6">
-      <div className="space-y-4">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div className="min-h-screen bg-[linear-gradient(180deg,#F8FAFC_0%,#F8FBFF_100%)] p-6">
+      <div className="mx-auto max-w-7xl">
+        
+        {/* ── Standalone Back Button ── */}
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#E2E8F0] bg-white px-4 py-2 text-sm font-semibold text-[#475569] shadow-sm transition hover:-translate-y-0.5 hover:border-[#CBD5E1] hover:text-[#0F172A] hover:shadow-md active:translate-y-0"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          Back
+        </button>
+
+        {/* ── Premium Hero Banner ── */}
+        <div className="mb-8 rounded-[32px] bg-[linear-gradient(135deg,#F0FDFA_0%,#FFFFFF_40%,#EFF6FF_100%)] p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)] md:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div>
-            <h1 className="text-3xl font-bold text-[#0F172A]">Real Estate Demand Forecasting Lab</h1>
-            <p className="mt-3 max-w-3xl text-sm leading-7 text-[#475569]">
+            <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.3em] text-[#0F766E]">
+              <span>Real Estate</span>
+              <span className="text-slate-300">•</span>
+              <span>Real Estate Demand Forecasting Lab</span>
+            </div>
+            <h1 className="mt-3 text-4xl font-black tracking-tight text-[#0F172A] md:text-5xl">Real Estate Demand Forecasting Lab</h1>
+            <p className="mt-4 max-w-2xl text-[16px] leading-7 text-[#334155]">
               Load listing data, refine city and property type filters, and generate demand forecasts with a real estate analytics backend.
             </p>
           </div>
-          <div className="aa-card p-4">
-            <div className="text-xs uppercase tracking-[0.24em] text-[#475569]">Status</div>
-            <div className="mt-3 text-2xl font-bold text-[#0F172A]">{loading ? 'Refreshing' : 'Ready'}</div>
-            <div className="mt-1 text-sm text-[#64748B]">{selectedFiltersLabel}</div>
+
+          <div className="rounded-3xl border border-[#CCFBF1] bg-[#ECFDF5] px-6 py-5 text-[#0F766E] shadow-sm shrink-0 min-w-[220px]">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0F766E]">Status</p>
+            <p className="mt-2 text-2xl font-black text-[#115E59] tracking-tight">{loading ? 'Refreshing...' : 'Ready'}</p>
+            <p className="mt-1 text-xs text-[#0F766E]/80 font-semibold">{selectedFiltersLabel}</p>
           </div>
         </div>
 
-        <div className="aa-card p-4">
+        {/* ── Custom Pill Tabs Container ── */}
+        <div className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-[0_18px_40px_rgba(15,23,42,0.08)] mb-6">
           <div className="inline-flex overflow-hidden rounded-3xl border border-[#CBD5E1] bg-[#F8FAFC] p-1 shadow-sm">
             {(['overview', 'attributes', 'application'] as Tab[]).map((currentTab) => (
               <button
                 key={currentTab}
                 type="button"
                 onClick={() => setTab(currentTab)}
-                className={`aa-button px-5 py-3 text-sm ${
+                className={`rounded-3xl px-5 py-3 text-sm font-semibold transition ${
                   tab === currentTab
-                    ? 'aa-button-primary'
-                    : 'aa-button-secondary'
+                    ? 'bg-white text-[#0F172A] shadow-sm'
+                    : 'text-[#475569] hover:text-[#0F172A]'
                 }`}
               >
                 {currentTab === 'overview' ? 'Overview' : currentTab === 'attributes' ? 'Important Attributes' : 'Application'}
@@ -401,113 +530,176 @@ export function RealEstateDemandForecastingSectionPage() {
           </div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {summaryCards.map((card) => (
-            <div key={card.label} className="aa-card p-6">
-              <div className="text-sm font-semibold text-[#475569]">{card.label}</div>
-              <div className="mt-4 text-3xl font-bold text-[#0F172A]">{card.value}</div>
-            </div>
-          ))}
+        {/* ── KPI Summary Cards Grid ── */}
+        <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4 mb-6">
+          <MetricCard
+            icon={<FileSpreadsheet className="h-6 w-6 text-[#0F766E]" />}
+            label="Loaded rows"
+            value={datasetRows.toLocaleString()}
+            accent="bg-[#ECFDF5]"
+          />
+          <MetricCard
+            icon={<MapPin className="h-6 w-6 text-[#1D4ED8]" />}
+            label="Cities"
+            value={datasetCities.toString()}
+            accent="bg-[#EFF6FF]"
+          />
+          <MetricCard
+            icon={<Building2 className="h-6 w-6 text-[#8B5CF6]" />}
+            label="Property types"
+            value={datasetTypes.toString()}
+            accent="bg-[#F5F3FF]"
+          />
+          <MetricCard
+            icon={<Calendar className="h-6 w-6 text-[#D97706]" />}
+            label="Forecast horizon"
+            value={`${forecastMonths} months`}
+            accent="bg-[#FFFBEB]"
+          />
         </div>
       </div>
 
-      {tab === 'overview' ? (
+      {tab === 'overview' && (
         <div className="grid gap-6 xl:grid-cols-[1.3fr_0.9fr]">
-          <div className="aa-card p-6">
-            <h2 className="text-2xl font-bold text-[#0F172A] mb-4">Overview</h2>
-            <p className="text-sm text-[#475569] leading-relaxed mb-6">
+          <section className="rounded-[32px] border border-[#CCFBF1] bg-[#F0FDFA]/50 p-8 shadow-[0_18px_40px_rgba(15,23,42,0.04)]">
+            <div className="flex items-center gap-2 mb-6">
+              <div className="rounded-xl bg-[#CCFBF1] p-2 text-[#0F766E]">
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <h2 className="text-2xl font-black text-[#0F172A]">Overview</h2>
+            </div>
+            <p className="text-base text-[#475569] leading-relaxed mb-6">
               A complete forecasting engine for real estate demand analysis. Tracks market cycles, price trends, inventory behavior, and predicts demand for the upcoming months.
             </p>
             <div className="space-y-4">
               {overviewFeatures.map((item) => (
-                <div key={item} className="aa-surface-muted p-4 text-sm text-[#334155]">
-                  {item}
+                <div
+                  key={item}
+                  className="flex items-start gap-3 bg-white hover:bg-slate-50/50 rounded-2xl p-4 border border-[#CCFBF1]/30 transition shadow-sm duration-200"
+                >
+                  <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[#0F766E]" />
+                  <span className="text-sm font-semibold text-slate-700 leading-6">{item}</span>
                 </div>
               ))}
             </div>
-          </div>
+          </section>
 
           <div className="space-y-6">
-            <div className="aa-card p-6">
-              <h2 className="text-2xl font-bold text-[#0F172A] mb-4">Business Impact</h2>
-              <div className="space-y-3">
+            <section className="rounded-[32px] border border-[#DBEAFE] bg-[#EFF6FF]/50 p-8 shadow-[0_18px_40px_rgba(15,23,42,0.04)]">
+              <div className="flex items-center gap-2 mb-6">
+                <div className="rounded-xl bg-[#DBEAFE] p-2 text-[#1E40AF]">
+                  <Building2 className="h-5 w-5" />
+                </div>
+                <h2 className="text-2xl font-black text-[#0F172A]">Business Impact</h2>
+              </div>
+              <div className="space-y-4">
                 {impactStatements.map((item) => (
-                  <div key={item} className="rounded-3xl border border-[#CBD5E1] bg-[#F8FAFC] p-4 text-sm text-[#334155]">
-                    {item}
+                  <div
+                    key={item}
+                    className="flex items-start gap-3 bg-white hover:bg-slate-50/50 rounded-2xl p-4 border border-[#DBEAFE]/30 transition shadow-sm duration-200"
+                  >
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#1E40AF]" />
+                    <span className="text-sm font-semibold text-slate-700 leading-6">{item}</span>
                   </div>
                 ))}
               </div>
-            </div>
+            </section>
 
-            <div className="aa-card p-6">
-              <h2 className="text-2xl font-bold text-[#0F172A] mb-4">High-Level KPIs</h2>
-              <div className="grid gap-3 sm:grid-cols-2">
+            <section className="rounded-[32px] border border-[#FEF3C7] bg-[#FFFBEB]/50 p-8 shadow-[0_18px_40px_rgba(15,23,42,0.04)]">
+              <div className="flex items-center gap-2 mb-6">
+                <div className="rounded-xl bg-[#FEF3C7] p-2 text-[#D97706]">
+                  <TrendingUp className="h-5 w-5" />
+                </div>
+                <h2 className="text-2xl font-black text-[#0F172A]">High-Level KPIs</h2>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
                 {overviewKpis.map((item) => (
-                  <div key={item} className="rounded-3xl border border-[#CBD5E1] bg-[#F8FAFC] p-4 text-sm text-[#334155]">
-                    {item}
+                  <div
+                    key={item}
+                    className="flex items-start gap-3 bg-white hover:bg-slate-50/50 rounded-2xl p-4 border border-[#FEF3C7]/30 transition shadow-sm duration-200"
+                  >
+                    <Award className="mt-0.5 h-4 w-4 shrink-0 text-[#D97706]" />
+                    <span className="text-sm font-semibold text-slate-700 leading-6">{item}</span>
                   </div>
                 ))}
               </div>
-            </div>
+            </section>
           </div>
         </div>
-      ) : tab === 'attributes' ? (
+      )}
+
+      {tab === 'attributes' && (
         <div className="grid gap-6 xl:grid-cols-[1.3fr_0.9fr]">
-          <div className="aa-card p-6">
-            <h2 className="text-2xl font-bold text-[#0F172A] mb-4">Required Column Dictionary</h2>
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-left text-sm text-[#334155]">
-                <thead className="bg-[#F8FAFC] text-xs uppercase tracking-[0.12em] text-[#475569]">
-                  <tr>
-                    <th className="px-3 py-3 border-b border-[#E2E8F0]">Column</th>
-                    <th className="px-3 py-3 border-b border-[#E2E8F0]">Description</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    ['City', 'City of the property listing.'],
-                    ['Listing_Date', 'Date when property was listed.'],
-                    ['Property_Type', 'Type of property (Villa, Plot, Apartment, etc).'],
-                    ['Price', 'Listed property price.'],
-                  ].map(([column, description]) => (
-                    <tr key={column} className="even:bg-[#F8FAFC]">
-                      <td className="px-3 py-3 border-b border-[#E2E8F0] font-semibold text-[#0F172A]">{column}</td>
-                      <td className="px-3 py-3 border-b border-[#E2E8F0] text-[#475569]">{description}</td>
+          <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+            <h2 className="text-3xl font-black text-[#0F172A]">Required Column Dictionary</h2>
+            <p className="mt-3 max-w-3xl text-slate-600">The backend validates this schema before analytics and predictions run.</p>
+            
+            <div className="mt-6 overflow-hidden rounded-[24px] border border-slate-200 bg-white">
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-left text-sm text-[#334155]">
+                  <thead className="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                      <th className="font-bold text-slate-600 uppercase text-[12px] tracking-[0.08em] py-3.5 px-4">Column</th>
+                      <th className="font-bold text-slate-600 uppercase text-[12px] tracking-[0.08em] py-3.5 px-4">Description</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="aa-card p-6">
-              <h2 className="text-2xl font-bold text-[#0F172A] mb-4">Independent Variables</h2>
-              {['City', 'Listing_Date', 'Property_Type', 'Price'].map((item) => (
-                <div key={item} className="rounded-3xl border border-[#CBD5E1] bg-[#F8FAFC] p-4 text-sm text-[#334155]">
-                  {item}
-                </div>
-              ))}
-            </div>
-
-            <div className="aa-card p-6">
-              <h2 className="text-2xl font-bold text-[#0F172A] mb-4">Dependent Variables</h2>
-              {['Demand', 'Trend', 'Forecast'].map((item) => (
-                <div key={item} className="rounded-3xl border border-[#CBD5E1] bg-[#F8FAFC] p-4 text-sm text-[#334155]">
-                  {item}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          <div className="aa-card p-6">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <p className="text-sm uppercase tracking-[0.24em] text-[#475569]">Step 1 � Load Dataset</p>
-                <h2 className="text-2xl font-bold text-[#0F172A] mt-2">Dataset option</h2>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {[
+                      ['City', 'City of the property listing.'],
+                      ['Listing_Date', 'Date when property was listed.'],
+                      ['Property_Type', 'Type of property (Villa, Plot, Apartment, etc).'],
+                      ['Price', 'Listed property price.'],
+                    ].map(([column, description], idx) => (
+                      <tr key={column} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}>
+                        <td className="px-4 py-3.5 font-semibold text-[#0F172A] text-sm">
+                          <span className="inline-block rounded-lg bg-slate-100 text-slate-800 px-2.5 py-1 text-xs font-bold border border-slate-200">
+                            {column}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5 text-slate-600 text-sm font-medium">{description}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
+            </div>
+          </section>
+
+          <div className="space-y-6">
+            <section className="rounded-[32px] border border-blue-100 bg-[#EFF6FF] p-6 shadow-sm">
+              <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#1D4ED8]">Independent Variables</p>
+              <p className="text-xs text-slate-500 mt-1 mb-4">Input attributes used for analytics, filters, and forecasting models.</p>
+              <div className="flex flex-wrap gap-2">
+                {['City', 'Listing_Date', 'Property_Type', 'Price'].map((field) => (
+                  <Chip key={field} className="border-blue-200 bg-white text-[#1D4ED8] hover:bg-blue-50 transition shadow-sm font-bold">
+                    {field}
+                  </Chip>
+                ))}
+              </div>
+            </section>
+
+            <section className="rounded-[32px] border border-emerald-100 bg-[#ECFDF5] p-6 shadow-sm">
+              <p className="text-sm font-bold uppercase tracking-[0.18em] text-[#0F766E]">Dependent Variables</p>
+              <p className="text-xs text-slate-500 mt-1 mb-4">Target variables and predictions calculated by the analytical engine.</p>
+              <div className="flex flex-wrap gap-2">
+                {['Demand', 'Trend', 'Forecast'].map((field) => (
+                  <Chip key={field} className="border-emerald-200 bg-white text-[#0F766E] hover:bg-[#ECFDF5] transition shadow-sm font-bold">
+                    {field}
+                  </Chip>
+                ))}
+              </div>
+            </section>
+        </div>
+      </div>
+    )}
+
+      {tab === 'application' && (
+        <div className="space-y-6">
+          {/* Step 1: Load Dataset Options */}
+          <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Step 1 • Load Dataset</p>
+              <h2 className="text-2xl font-black text-[#0F172A] mt-2">Dataset options</h2>
             </div>
 
             <div className="mt-6 grid gap-4 lg:grid-cols-3">
@@ -520,69 +712,71 @@ export function RealEstateDemandForecastingSectionPage() {
                   key={option.value}
                   type="button"
                   onClick={() => setAppMode(option.value)}
-                  className={`rounded-3xl border p-4 text-left transition ${
-                    appMode === option.value ? 'border-[#0F766E] bg-[#ECFDF5]' : 'border-[#CBD5E1] bg-[#F8FAFC]'
+                  className={`rounded-2xl border p-4 text-left transition duration-200 hover:-translate-y-0.5 ${
+                    appMode === option.value
+                      ? 'border-[#0F766E] bg-[#ECFDF5]/50 shadow-sm font-bold border-2'
+                      : 'border-[#E2E8F0] bg-white text-slate-700 hover:bg-slate-50'
                   }`}
                 >
                   <div className="text-sm font-semibold text-[#0F172A]">{option.label}</div>
                 </button>
               ))}
             </div>
-          </div>
+          </section>
 
           {appMode === 'default' && (
-            <div className="aa-card p-6">
-              <h2 className="text-2xl font-bold text-[#0F172A] mb-4">Default dataset</h2>
-              <p className="text-sm text-[#475569] mb-6">
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <h2 className="text-2xl font-black text-[#0F172A] mb-4">Default dataset</h2>
+              <p className="text-sm text-[#475569] mb-6 leading-relaxed">
                 Load the standard dataset from the backend and visualize results in the application panels below.
               </p>
               <button
                 type="button"
                 onClick={loadDefaultDatasetFromApi}
-                className="aa-button aa-button-primary px-4 py-3"
+                className="rounded-full bg-[#0F766E] px-6 py-3 font-bold text-white hover:bg-[#0D5F58] shadow-md hover:-translate-y-0.5 transition active:translate-y-0 disabled:opacity-50 inline-flex items-center gap-2"
               >
                 <Download className="w-4 h-4" />
                 Load default dataset
               </button>
-            </div>
+            </section>
           )}
 
           {appMode === 'upload' && (
-            <div className="aa-card p-6">
-              <h2 className="text-2xl font-bold text-[#0F172A] mb-4">Upload CSV</h2>
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <h2 className="text-2xl font-black text-[#0F172A] mb-4">Upload CSV</h2>
               <button
                 type="button"
                 onClick={downloadSampleCsv}
-                className="aa-button aa-button-primary px-4 py-3"
+                className="rounded-full px-6 py-3 font-bold border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 shadow-sm hover:-translate-y-0.5 transition active:translate-y-0 inline-flex items-center gap-2 mb-6"
               >
                 <Download className="w-4 h-4" />
                 Download sample CSV
               </button>
-              <div className="mt-6 rounded-3xl border border-dashed border-[#94A3B8] bg-[#F8FAFC] p-6">
+              <div className="mt-2 rounded-3xl border-dashed border-2 border-slate-300 bg-slate-50/50 p-8 hover:bg-slate-50 transition duration-200">
                 <label className="block cursor-pointer">
-                  <div className="flex items-center justify-between rounded-3xl border border-[#E2E8F0] bg-white px-5 py-4 text-sm text-[#475569]">
+                  <div className="flex items-center justify-between rounded-2xl border border-[#E2E8F0] bg-white px-5 py-4 text-sm text-[#475569]">
                     <span>{fileUploadLabel}</span>
                     <span className="rounded-full bg-[#EFF6FF] px-3 py-1 text-xs font-semibold text-[#0F766E]">CSV</span>
                   </div>
                   <input type="file" accept=".csv" className="hidden" onChange={uploadCSV} />
                 </label>
-                <p className="mt-4 text-sm text-[#94A3B8]">Drag and drop file here � Limit 200MB per file � CSV</p>
+                <p className="mt-4 text-xs text-[#94A3B8] font-semibold text-center">Drag and drop file here • Limit 200MB per file • CSV</p>
               </div>
-            </div>
+            </section>
           )}
 
           {appMode === 'mapping' && (
-            <div className="aa-card p-6">
-              <h2 className="text-2xl font-bold text-[#0F172A] mb-4">Upload CSV + Column mapping</h2>
-              <div className="rounded-3xl border border-dashed border-[#94A3B8] bg-[#F8FAFC] p-6">
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <h2 className="text-2xl font-black text-[#0F172A] mb-4">Upload CSV + Column mapping</h2>
+              <div className="rounded-3xl border-dashed border-2 border-slate-300 bg-slate-50/50 p-8 hover:bg-slate-50 transition duration-200">
                 <label className="block cursor-pointer">
-                  <div className="flex items-center justify-between rounded-3xl border border-[#E2E8F0] bg-white px-5 py-4 text-sm text-[#475569]">
+                  <div className="flex items-center justify-between rounded-2xl border border-[#E2E8F0] bg-white px-5 py-4 text-sm text-[#475569]">
                     <span>{mappingFile ? mappingFile.name : 'No file chosen'}</span>
                     <span className="rounded-full bg-[#EFF6FF] px-3 py-1 text-xs font-semibold text-[#0F766E]">CSV</span>
                   </div>
                   <input type="file" accept=".csv" className="hidden" onChange={handleMappingFile} />
                 </label>
-                <p className="mt-4 text-sm text-[#94A3B8]">Drag and drop file here � Limit 200MB per file � CSV</p>
+                <p className="mt-4 text-xs text-[#94A3B8] font-semibold text-center">Drag and drop file here • Limit 200MB per file • CSV</p>
               </div>
               {availableCsvColumns.length > 0 && (
                 <div className="mt-6 space-y-4">
@@ -593,7 +787,7 @@ export function RealEstateDemandForecastingSectionPage() {
                     { label: 'Price', key: 'price' },
                   ].map((item) => (
                     <div key={item.key} className="space-y-2">
-                      <label className="text-sm font-semibold text-[#0F172A]">Map ? {item.label}</label>
+                      <label className="text-sm font-bold text-[#0F172A]">Map: {item.label}</label>
                       <select
                         value={mappingColumns[item.key as keyof typeof mappingColumns]}
                         onChange={(event) =>
@@ -602,7 +796,7 @@ export function RealEstateDemandForecastingSectionPage() {
                             [item.key]: event.target.value,
                           }))
                         }
-                        className="w-full rounded-3xl border border-[#CBD5E1] bg-[#F8FAFC] p-3 text-sm text-[#0F172A] outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#D8F5E7]"
+                        className="w-full rounded-2xl border border-slate-200 bg-white p-3.5 text-sm text-slate-800 outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#D8F5E7] transition"
                       >
                         <option value="">-- Select --</option>
                         {availableCsvColumns.map((column) => (
@@ -611,276 +805,249 @@ export function RealEstateDemandForecastingSectionPage() {
                       </select>
                     </div>
                   ))}
-                  {mappingError && <div className="rounded-3xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{mappingError}</div>}
+                  {mappingError && <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{mappingError}</div>}
                   <button
                     type="button"
                     onClick={applyMapping}
-                    className="aa-button aa-button-primary px-4 py-3"
+                    className="rounded-full bg-[#0F766E] px-6 py-3 font-bold text-white hover:bg-[#0D5F58] shadow-md hover:-translate-y-0.5 transition active:translate-y-0 disabled:opacity-50 inline-flex items-center gap-2"
                   >
                     <MapPin className="w-4 h-4" />
                     Apply mapping
                   </button>
                 </div>
               )}
-            </div>
+            </section>
           )}
 
-          <div className="aa-card p-6">
-            <div className="flex items-center justify-between gap-4 mb-5">
+          {/* Step 2: Filters */}
+          <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <div>
-                <p className="text-xs uppercase tracking-[0.24em] text-[#475569]">Step 2 � Filters</p>
-                <h2 className="text-2xl font-bold text-[#0F172A]">Filters</h2>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Step 2 • Filters</p>
+                <h2 className="text-2xl font-black text-[#0F172A] mt-2">Filters</h2>
               </div>
               <button
                 type="button"
                 onClick={downloadFilteredDataset}
-                className="aa-button aa-button-primary px-4 py-3"
+                className="rounded-full px-6 py-3 font-bold border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 shadow-sm hover:-translate-y-0.5 transition active:translate-y-0 inline-flex items-center gap-2"
               >
                 <Download className="w-4 h-4" />
                 Download filtered dataset
               </button>
             </div>
-            <div className="grid gap-4 lg:grid-cols-3">
-              <div className="rounded-3xl border border-[#CBD5E1] bg-[#F8FAFC] p-4">
-                <label className="text-sm font-semibold text-[#0F172A] mb-3 block">City</label>
-                <div className="mb-4 min-h-[56px] rounded-3xl border border-[#E2E8F0] bg-white px-4 py-3">
-                  {selectedCities.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
-                      {selectedCities.map((city) => (
-                        <button
-                          type="button"
-                          key={city}
-                          onClick={() => setSelectedCities((current) => current.filter((value) => value !== city))}
-                          className="inline-flex items-center gap-2 rounded-full bg-[#FEE2E2] px-3 py-1 text-sm font-semibold text-[#B91C1C]"
-                        >
-                          {city}
-                          <span aria-hidden="true">×</span>
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-sm text-[#64748B]">Choose one or more cities</div>
-                  )}
-                </div>
-                <div className="grid gap-2 max-h-56 overflow-y-auto">
-                  {cities.map((city) => (
-                    <button
-                      type="button"
-                      key={city}
-                      onClick={() => setSelectedCities((current) =>
-                        current.includes(city) ? current.filter((value) => value !== city) : [...current, city]
-                      )}
-                      className={`w-full rounded-2xl px-3 py-2 text-left text-sm transition ${
-                        selectedCities.includes(city)
-                          ? 'bg-[#0F766E] text-white'
-                          : 'bg-white text-[#0F172A] hover:bg-[#E2E8F0]'
-                      }`}
-                    >
-                      {city}
-                    </button>
-                  ))}
-                </div>
-              </div>
+            
+            <div className="grid gap-6 lg:grid-cols-3">
+              <SelectableFilter
+                label="City"
+                values={cities}
+                selected={selectedCities}
+                onToggle={(city) =>
+                  setSelectedCities((current) =>
+                    current.includes(city) ? current.filter((value) => value !== city) : [...current, city]
+                  )
+                }
+                placeholder="Choose one or more cities"
+              />
 
-              <div className="rounded-3xl border border-[#CBD5E1] bg-[#F8FAFC] p-4">
-                <label className="text-sm font-semibold text-[#0F172A] mb-3 block">Property Type</label>
-                <div className="mb-4 min-h-[56px] rounded-3xl border border-[#E2E8F0] bg-white px-4 py-3">
-                  {selectedTypes.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
-                      {selectedTypes.map((type) => (
-                        <button
-                          type="button"
-                          key={type}
-                          onClick={() => setSelectedTypes((current) => current.filter((value) => value !== type))}
-                          className="inline-flex items-center gap-2 rounded-full bg-[#FEE2E2] px-3 py-1 text-sm font-semibold text-[#B91C1C]"
-                        >
-                          {type}
-                          <span aria-hidden="true">×</span>
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-sm text-[#64748B]">Choose one or more property types</div>
-                  )}
-                </div>
-                <div className="grid gap-2 max-h-56 overflow-y-auto">
-                  {types.map((type) => (
-                    <button
-                      type="button"
-                      key={type}
-                      onClick={() => setSelectedTypes((current) =>
-                        current.includes(type) ? current.filter((value) => value !== type) : [...current, type]
-                      )}
-                      className={`w-full rounded-2xl px-3 py-2 text-left text-sm transition ${
-                        selectedTypes.includes(type)
-                          ? 'bg-[#0F766E] text-white'
-                          : 'bg-white text-[#0F172A] hover:bg-[#E2E8F0]'
-                      }`}
-                    >
-                      {type}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <SelectableFilter
+                label="Property Type"
+                values={types}
+                selected={selectedTypes}
+                onToggle={(type) =>
+                  setSelectedTypes((current) =>
+                    current.includes(type) ? current.filter((value) => value !== type) : [...current, type]
+                  )
+                }
+                placeholder="Choose one or more property types"
+              />
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="text-sm font-semibold text-[#0F172A] mb-2 block">Date range</label>
-                  <input
-                    type="date"
-                    value={dateStart}
-                    min={minDate}
-                    max={maxDate}
-                    onChange={(e) => setDateStart(e.target.value)}
-                    className="w-full rounded-3xl border border-[#CBD5E1] bg-[#F8FAFC] p-3 text-sm text-[#0F172A] outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#D8F5E7]"
-                  />
+              <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md hover:border-[#0F766E]/30">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-3">
+                  <p className="text-sm font-bold uppercase tracking-[0.12em] text-[#0F766E]">Date Range</p>
+                  <span className="rounded-full bg-[#ECFDF5] px-2 py-0.5 text-xs font-semibold text-[#0F766E]">Active</span>
                 </div>
-                <div>
-                  <label className="text-sm font-semibold text-[#0F172A] mb-2 block">to</label>
-                  <input
-                    type="date"
-                    value={dateEnd}
-                    min={minDate}
-                    max={maxDate}
-                    onChange={(e) => setDateEnd(e.target.value)}
-                    className="w-full rounded-3xl border border-[#CBD5E1] bg-[#F8FAFC] p-3 text-sm text-[#0F172A] outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#D8F5E7]"
-                  />
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-xs font-bold uppercase text-slate-500 mb-1 block">Start Date</label>
+                    <input
+                      type="date"
+                      value={dateStart}
+                      min={minDate}
+                      max={maxDate}
+                      onChange={(e) => setDateStart(e.target.value)}
+                      className="w-full rounded-2xl border border-slate-200 bg-white p-3 text-xs font-semibold text-slate-700 outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#D8F5E7] transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold uppercase text-slate-500 mb-1 block">End Date</label>
+                    <input
+                      type="date"
+                      value={dateEnd}
+                      min={minDate}
+                      max={maxDate}
+                      onChange={(e) => setDateEnd(e.target.value)}
+                      className="w-full rounded-2xl border border-slate-200 bg-white p-3 text-xs font-semibold text-slate-700 outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#D8F5E7] transition"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-            <div className="mt-5">
+            
+            <div className="mt-6">
               <button
                 type="button"
                 onClick={applyFilterSelection}
-                className="aa-button aa-button-primary px-4 py-3"
+                className="rounded-full bg-[#0F766E] px-6 py-3 font-bold text-white hover:bg-[#0D5F58] shadow-md hover:-translate-y-0.5 transition active:translate-y-0 disabled:opacity-50 inline-flex items-center gap-2"
               >
                 <MapPin className="w-4 h-4" />
                 Apply filters
               </button>
             </div>
-          </div>
+          </section>
 
-          <div className="aa-card p-6">
-            <div className="flex items-center justify-between gap-4 mb-5">
+          <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <div>
-                <p className="text-xs uppercase tracking-[0.24em] text-[#475569]">Data preview</p>
-                <h2 className="text-xl font-bold text-[#0F172A]">Loaded rows</h2>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Data preview</p>
+                <h2 className="text-2xl font-black text-[#0F172A] mt-2">Loaded rows</h2>
               </div>
-              <span className="rounded-full bg-[#EFF6FF] px-4 py-2 text-sm font-semibold text-[#1D4ED8]">{datasetRows.toLocaleString()} rows</span>
+              <span className="rounded-full bg-[#EFF6FF] px-4 py-2 text-sm font-semibold text-[#1D4ED8] self-start sm:self-center">
+                {datasetRows.toLocaleString()} rows
+              </span>
             </div>
-            <div className="overflow-x-auto rounded-3xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
-              <table className="min-w-full text-left text-sm text-[#334155]">
-                <thead className="bg-white text-xs uppercase tracking-[0.12em] text-[#475569]">
-                  <tr>
-                    {DEFAULT_TABLE_COLUMNS.map((column) => (
-                      <th key={column} className="px-3 py-3 border-b border-[#E2E8F0]">{column}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {previewRows.length ? (
-                    previewRows.map((row, index) => (
-                      <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-[#F8FAFC]'}>
-                        {DEFAULT_TABLE_COLUMNS.map((column) => (
-                          <td key={column} className="px-3 py-3 text-[#475569]">{row[column] ?? '-'}</td>
-                        ))}
-                      </tr>
-                    ))
-                  ) : (
+            
+            <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white">
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-left text-sm text-[#334155]">
+                  <thead className="bg-slate-50 border-b border-slate-200">
                     <tr>
-                      <td className="px-3 py-3 text-[#475569]" colSpan={DEFAULT_TABLE_COLUMNS.length}>No rows available</td>
+                      {DEFAULT_TABLE_COLUMNS.map((column) => (
+                        <th key={column} className="font-bold text-slate-600 uppercase text-[12px] tracking-[0.08em] py-3.5 px-4">
+                          {column}
+                        </th>
+                      ))}
                     </tr>
-                  )}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {previewRows.length ? (
+                      previewRows.map((row, index) => (
+                        <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}>
+                          {DEFAULT_TABLE_COLUMNS.map((column) => (
+                            <td key={column} className="px-4 py-3.5 text-slate-600 text-sm font-medium whitespace-nowrap">
+                              {row[column] ?? '-'}
+                            </td>
+                          ))}
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td className="px-4 py-3.5 text-slate-500 text-sm font-medium" colSpan={DEFAULT_TABLE_COLUMNS.length}>
+                          No rows available
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+          </section>
 
           <div className="grid gap-6 xl:grid-cols-[1.3fr_0.9fr]">
-            <div className="aa-card p-6">
-              <div className="flex items-center justify-between gap-4 mb-5">
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <div className="flex items-center justify-between gap-4 mb-6">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.24em] text-[#475569]">Metrics</p>
-                  <h2 className="text-xl font-bold text-[#0F172A]">Filtered dataset KPIs</h2>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Metrics</p>
+                  <h2 className="text-2xl font-black text-[#0F172A] mt-2">Filtered dataset KPIs</h2>
                 </div>
               </div>
-              <div className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
                 {[
-                  { label: 'Total Listings', value: `${kpis.total_listings.toLocaleString()}` },
-                  { label: 'Avg Monthly Sales', value: `${kpis.avg_monthly_sales}` },
-                  { label: 'Top City', value: kpis.top_city },
-                  { label: 'Avg Price', value: `? ${kpis.avg_price.toLocaleString()}` },
+                  { label: 'Total Listings', value: `${kpis.total_listings.toLocaleString()}`, color: 'bg-emerald-50 text-emerald-700 border-emerald-100', icon: <FileSpreadsheet className="h-4 w-4" /> },
+                  { label: 'Avg Monthly Sales', value: `${kpis.avg_monthly_sales}`, color: 'bg-blue-50 text-blue-700 border-blue-100', icon: <LineChart className="h-4 w-4" /> },
+                  { label: 'Top City', value: kpis.top_city, color: 'bg-purple-50 text-purple-700 border-purple-100', icon: <MapPin className="h-4 w-4" /> },
+                  { label: 'Avg Price', value: `₹ ${kpis.avg_price.toLocaleString()}`, color: 'bg-amber-50 text-amber-700 border-amber-100', icon: <IndianRupee className="h-4 w-4 font-black" /> },
                 ].map((item) => (
-                  <div key={item.label} className="rounded-3xl border border-[#CBD5E1] bg-[#F8FAFC] p-4 text-sm text-[#334155]">
-                    <div className="font-semibold text-[#0F172A]">{item.label}</div>
-                    <div className="mt-1">{item.value}</div>
+                  <div key={item.label} className="rounded-2xl border border-slate-100 bg-[#F8FAFC]/50 p-5 transition hover:shadow-sm duration-200">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className={`p-2 rounded-xl ${item.color.split(' ')[0]} ${item.color.split(' ')[1]}`}>
+                        {item.icon}
+                      </div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-500">{item.label}</span>
+                    </div>
+                    <div className="text-2xl font-black text-[#0F172A] tracking-tight">{item.value}</div>
                   </div>
                 ))}
               </div>
-            </div>
+            </section>
 
-            <div className="aa-card p-6 overflow-auto">
-              <div className="flex items-center justify-between gap-4 mb-5">
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <div className="flex items-center justify-between gap-4 mb-6">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.24em] text-[#475569]">Forecast summary</p>
-                  <h2 className="text-xl font-bold text-[#0F172A]">Forecast horizon</h2>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Forecast summary</p>
+                  <h2 className="text-2xl font-black text-[#0F172A] mt-2">Forecast horizon</h2>
                 </div>
-                <span className="rounded-full bg-[#ECFDF5] px-4 py-2 text-sm font-semibold text-[#166534]">{forecastMonths} months</span>
+                <span className="rounded-full bg-[#ECFDF5] px-4 py-2 text-sm font-bold text-[#166534]">{forecastMonths} months</span>
               </div>
               <div className="space-y-4">
-                <div className="rounded-3xl border border-[#CBD5E1] bg-[#F8FAFC] p-4 text-sm text-[#475569]">
-                  Forecasts are recalculated from the current filtered dataset.
+                <div className="flex items-start gap-3 bg-[#F8FAFC]/50 hover:bg-slate-50 rounded-2xl p-4 border border-slate-100 transition shadow-sm">
+                  <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[#0F766E]" />
+                  <span className="text-sm font-semibold text-slate-700 leading-6">Forecasts are recalculated dynamically from the current filtered dataset.</span>
                 </div>
-                <div className="rounded-3xl border border-[#CBD5E1] bg-[#F8FAFC] p-4 text-sm text-[#475569]">
-                  Filter by city, property type, and date range to update the demand prediction.
+                <div className="flex items-start gap-3 bg-[#F8FAFC]/50 hover:bg-slate-50 rounded-2xl p-4 border border-slate-100 transition shadow-sm">
+                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#1D4ED8]" />
+                  <span className="text-sm font-semibold text-slate-700 leading-6">Filter by city, property type, and date range to update the demand prediction.</span>
                 </div>
               </div>
-            </div>
+            </section>
           </div>
 
-          <div className="aa-card p-6">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between mb-6">
               <div>
-                <h2 className="text-2xl font-bold text-[#0F172A]">Monthly Demand Trend</h2>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Analytics</p>
+                <h2 className="text-2xl font-black text-[#0F172A] mt-2">Monthly Demand Trend</h2>
                 <p className="text-sm text-[#475569]">Trend of listing demand over time.</p>
               </div>
             </div>
             <div className="mt-5">
               {forecastError ? (
-                <div className="rounded-3xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
                   {forecastError}
                 </div>
               ) : trend.length ? (
-                <Plot
-                  data={[
-                    {
-                      x: trend.map((t) => t.Month),
-                      y: trend.map((t) => t.Demand),
-                      type: 'scatter',
-                      mode: 'lines+markers',
-                      marker: { color: BLUE },
-                    },
-                  ]}
-                  layout={{ autosize: true, height: 420, paper_bgcolor: 'white', plot_bgcolor: 'white' }}
-                  style={{ width: '100%' }}
-                />
+                <div className="overflow-hidden rounded-3xl border border-slate-100 p-4 bg-[#F8FAFC]/50">
+                  <Plot
+                    data={[
+                      {
+                        x: trend.map((t) => t.Month),
+                        y: trend.map((t) => t.Demand),
+                        type: 'scatter',
+                        mode: 'lines+markers',
+                        marker: { color: BLUE },
+                      },
+                    ]}
+                    layout={{ autosize: true, height: 420, paper_bgcolor: 'white', plot_bgcolor: 'white' }}
+                    style={{ width: '100%' }}
+                  />
+                </div>
               ) : (
-                <div className="rounded-3xl border border-[#CBD5E1] bg-[#F8FAFC] p-6 text-sm text-[#475569]">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">
                   Monthly demand trend is unavailable for the current dataset. Adjust filters or load a larger dataset.
                 </div>
               )}
             </div>
-          </div>
+          </section>
 
           <div className="grid gap-6">
-            <div className="aa-card p-6">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
                 <div>
-                  <h2 className="text-2xl font-bold text-[#0F172A]">Demand by Property Type</h2>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Analytics</p>
+                  <h2 className="text-2xl font-black text-[#0F172A] mt-2">Demand by Property Type</h2>
                   <p className="text-sm text-[#475569]">Demand share by property category.</p>
                 </div>
               </div>
-              <div className="mt-5">
+              <div className="mt-5 overflow-hidden rounded-3xl border border-slate-100 p-4 bg-[#F8FAFC]/50">
                 <Plot
                   data={[
                     {
@@ -894,106 +1061,114 @@ export function RealEstateDemandForecastingSectionPage() {
                   style={{ width: '100%' }}
                 />
               </div>
-            </div>
+            </section>
 
-            <div className="aa-card p-6 overflow-auto">
-              <div className="flex items-center justify-between gap-4 mb-5">
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)] overflow-hidden">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                 <div>
-                  <h2 className="text-2xl font-bold text-[#0F172A]">Automated insights</h2>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Insights</p>
+                  <h2 className="text-2xl font-black text-[#0F172A] mt-2">Automated insights</h2>
                   <p className="text-sm text-[#475569]">Property-level pricing summary by market segment.</p>
                 </div>
                 <button
                   type="button"
                   onClick={downloadInsights}
-                  className="aa-button aa-button-primary px-4 py-3"
+                  className="rounded-full bg-[#0F766E] px-6 py-3 font-bold text-white hover:bg-[#0D5F58] shadow-md hover:-translate-y-0.5 transition active:translate-y-0 disabled:opacity-50 inline-flex items-center gap-2 self-start sm:self-center"
                 >
                   <Download className="w-4 h-4" />
                   Download insights
                 </button>
               </div>
-              <div className="overflow-x-auto">
-                {insightsError ? (
-                  <div className="rounded-3xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                    {insightsError}
-                  </div>
-                ) : insights.length ? (
-                  <table className="min-w-full text-left text-sm text-[#334155]">
-                    <thead className="bg-[#F8FAFC] text-xs uppercase tracking-[0.12em] text-[#475569]">
-                      <tr>
-                        <th className="px-3 py-3 border-b border-[#E2E8F0]">City</th>
-                        <th className="px-3 py-3 border-b border-[#E2E8F0]">Property Type</th>
-                        <th className="px-3 py-3 border-b border-[#E2E8F0]">Avg Price</th>
-                        <th className="px-3 py-3 border-b border-[#E2E8F0]">Max Price</th>
-                        <th className="px-3 py-3 border-b border-[#E2E8F0]">Min Price</th>
-                        <th className="px-3 py-3 border-b border-[#E2E8F0]">Count</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {insights.map((item, index) => (
-                        <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-[#F8FAFC]'}>
-                          <td className="px-3 py-3 text-[#475569]">{item.City}</td>
-                          <td className="px-3 py-3 text-[#475569]">{item.Property_Type}</td>
-                          <td className="px-3 py-3 text-[#475569]">{Math.round(item.Avg_Price)}</td>
-                          <td className="px-3 py-3 text-[#475569]">{Math.round(item.Max_Price)}</td>
-                          <td className="px-3 py-3 text-[#475569]">{Math.round(item.Min_Price)}</td>
-                          <td className="px-3 py-3 text-[#475569]">{item.Count ?? '-'}</td>
+              
+              <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white">
+                <div className="overflow-x-auto">
+                  {insightsError ? (
+                    <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 m-4">
+                      {insightsError}
+                    </div>
+                  ) : insights.length ? (
+                    <table className="min-w-full text-left text-sm text-[#334155]">
+                      <thead className="bg-slate-50 border-b border-slate-200">
+                        <tr>
+                          <th className="font-bold text-slate-600 uppercase text-[12px] tracking-[0.08em] py-3.5 px-4">City</th>
+                          <th className="font-bold text-slate-600 uppercase text-[12px] tracking-[0.08em] py-3.5 px-4">Property Type</th>
+                          <th className="font-bold text-slate-600 uppercase text-[12px] tracking-[0.08em] py-3.5 px-4">Avg Price</th>
+                          <th className="font-bold text-slate-600 uppercase text-[12px] tracking-[0.08em] py-3.5 px-4">Max Price</th>
+                          <th className="font-bold text-slate-600 uppercase text-[12px] tracking-[0.08em] py-3.5 px-4">Min Price</th>
+                          <th className="font-bold text-slate-600 uppercase text-[12px] tracking-[0.08em] py-3.5 px-4">Count</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                ) : (
-                  <div className="rounded-3xl border border-[#CBD5E1] bg-[#F8FAFC] p-6 text-sm text-[#475569]">
-                    Automated insights are unavailable for the current dataset. Select a dataset or adjust filters.
-                  </div>
-                )}
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {insights.map((item, index) => (
+                          <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}>
+                            <td className="px-4 py-3.5 text-slate-700 text-sm font-semibold">{item.City}</td>
+                            <td className="px-4 py-3.5 text-slate-600 text-sm font-medium">{item.Property_Type}</td>
+                            <td className="px-4 py-3.5 text-slate-600 text-sm font-medium">₹ {Math.round(item.Avg_Price).toLocaleString()}</td>
+                            <td className="px-4 py-3.5 text-slate-600 text-sm font-medium">₹ {Math.round(item.Max_Price).toLocaleString()}</td>
+                            <td className="px-4 py-3.5 text-slate-600 text-sm font-medium">₹ {Math.round(item.Min_Price).toLocaleString()}</td>
+                            <td className="px-4 py-3.5 text-slate-600 text-sm font-medium">{item.Count ?? '-'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  ) : (
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-sm text-slate-500 m-4">
+                      Automated insights are unavailable for the current dataset. Select a dataset or adjust filters.
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            </section>
           </div>
 
-          <div className="aa-card p-6">
-            <div className="flex items-center justify-between gap-4 mb-5">
+          <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <div>
-                <h2 className="text-2xl font-bold text-[#0F172A]">6-Month Demand Forecast</h2>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Forecasting</p>
+                <h2 className="text-2xl font-black text-[#0F172A] mt-2">6-Month Demand Forecast</h2>
                 <p className="text-sm text-[#475569]">Forecasted demand for the next six months.</p>
               </div>
               <button
                 type="button"
                 onClick={downloadForecast}
-                className="aa-button aa-button-primary px-4 py-3"
+                className="rounded-full bg-[#0F766E] px-6 py-3 font-bold text-white hover:bg-[#0D5F58] shadow-md hover:-translate-y-0.5 transition active:translate-y-0 disabled:opacity-50 inline-flex items-center gap-2 self-start sm:self-center"
               >
                 <Download className="w-4 h-4" />
                 Download forecast
               </button>
             </div>
-            <div className="overflow-x-auto rounded-3xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
-              {forecastError ? (
-                <div className="rounded-3xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                  {forecastError}
-                </div>
-              ) : forecast.length ? (
-                <table className="min-w-full text-left text-sm text-[#334155]">
-                  <thead className="bg-white text-xs uppercase tracking-[0.12em] text-[#475569]">
-                    <tr>
-                      <th className="px-3 py-3 border-b border-[#E2E8F0]">Month</th>
-                      <th className="px-3 py-3 border-b border-[#E2E8F0]">Forecast</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {forecast.map((item, index) => (
-                      <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-[#F8FAFC]'}>
-                        <td className="px-3 py-3 text-[#475569]">{item.Month}</td>
-                        <td className="px-3 py-3 text-[#475569]">{item.Forecast}</td>
+            
+            <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white">
+              <div className="overflow-x-auto">
+                {forecastError ? (
+                  <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 m-4">
+                    {forecastError}
+                  </div>
+                ) : forecast.length ? (
+                  <table className="min-w-full text-left text-sm text-[#334155]">
+                    <thead className="bg-slate-50 border-b border-slate-200">
+                      <tr>
+                        <th className="font-bold text-slate-600 uppercase text-[12px] tracking-[0.08em] py-3.5 px-4">Month</th>
+                        <th className="font-bold text-slate-600 uppercase text-[12px] tracking-[0.08em] py-3.5 px-4">Forecast</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : (
-                <div className="rounded-3xl border border-[#CBD5E1] bg-[#F8FAFC] p-6 text-sm text-[#475569]">
-                  6-month forecast is unavailable for the current dataset. Adjust filters or load a larger dataset.
-                </div>
-              )}
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {forecast.map((item, index) => (
+                        <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}>
+                          <td className="px-4 py-3.5 text-slate-700 text-sm font-semibold">{item.Month}</td>
+                          <td className="px-4 py-3.5 text-slate-600 text-sm font-semibold">{item.Forecast}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-sm text-slate-500 m-4">
+                    6-month forecast is unavailable for the current dataset. Adjust filters or load a larger dataset.
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          </section>
         </div>
       )}
     </div>
