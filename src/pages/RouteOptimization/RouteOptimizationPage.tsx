@@ -1,9 +1,33 @@
-import { useEffect, useMemo, useState, type ChangeEvent } from 'react'
-import { format } from 'date-fns'
-import { CloudUpload, Download, Filter, Loader2, MapPin, Upload } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useNavigate } from 'react-router'
+import Plot from 'react-plotly.js'
+import {
+  Download,
+  FileText,
+  UploadCloud,
+  X,
+  ChevronLeft,
+  Loader2,
+  Sparkles,
+  SquareStack,
+  Clock,
+  Settings,
+  TrendingUp,
+  Cpu,
+  Package,
+  AlertCircle,
+  Percent,
+  CalendarRange,
+  BarChart3,
+  Lightbulb,
+  PlaySquare,
+  MapPin,
+} from 'lucide-react'
+import { Button } from '@/app/components/ui/button'
+import { Table as UiTable, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/app/components/ui/table'
+
 import {
   applyColumnMapping,
-  downloadFilteredCsv,
   filterData,
   getChartData,
   getClusters,
@@ -18,6 +42,7 @@ import {
   runRandomForest,
   uploadCsv,
 } from '@/services/routeOptimizationApi'
+
 import type {
   RouteOptimizationAnomalyResponse,
   RouteOptimizationChartResponse,
@@ -31,15 +56,6 @@ import type {
   RouteOptimizationPlaybooksResponse,
   RouteOptimizationRow,
 } from '@/types/routeOptimization'
-import DistanceHistogram from './components/charts/DistanceHistogram'
-import EfficiencyBoxPlot from './components/charts/EfficiencyBoxPlot'
-import DelayScatter from './components/charts/DelayScatter'
-import FuelViolin from './components/charts/FuelViolin'
-import EfficiencyLine from './components/charts/EfficiencyLine'
-import ClusterScatter from './components/charts/ClusterScatter'
-import CorrelationHeatmap from './components/charts/CorrelationHeatmap'
-
-type TabKey = 'overview' | 'dictionary' | 'application' | 'playbooks'
 
 const REQUIRED_COLUMNS = [
   { column: 'Timestamp', type: 'Datetime', description: 'Trip start timestamp' },
@@ -112,11 +128,6 @@ const PREVIEW_COLUMNS = [
   'Efficiency_Score',
 ]
 
-const DEFAULT_FIELD_MAP: Record<string, string> = MAPPING_FIELDS.reduce((acc, field) => {
-  acc[field] = field
-  return acc
-}, {} as Record<string, string>)
-
 const PLAYBOOKS = [
   {
     title: 'Top Routes to Reassign',
@@ -140,18 +151,131 @@ const PLAYBOOKS = [
   },
 ]
 
-function createRequiredColumnsCsv() {
-  const rows = REQUIRED_COLUMNS.map((row) => [row.column, row.type, row.description])
-  const csv = ['Column,Type,Description', ...rows.map((row) => row.map((value) => `"${value.replace(/"/g, '""')}"`).join(','))].join('\n')
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = 'route_optimization_required_columns.csv'
-  document.body.appendChild(link)
-  link.click()
-  link.remove()
-  URL.revokeObjectURL(url)
+const commonLayout = {
+  template: 'plotly' as const,
+  paper_bgcolor: '#ffffff',
+  plot_bgcolor: '#ffffff',
+  margin: { l: 60, r: 20, t: 40, b: 60 },
+  font: {
+    family: 'Inter, sans-serif',
+    size: 11,
+    color: '#2e2e2e',
+  },
+  legend: {
+    orientation: 'v' as const,
+    x: 1.02,
+    y: 1,
+  },
+}
+
+type TabKey = 'overview' | 'dictionary' | 'application' | 'playbooks'
+
+function Chip({ children, className = '' }: { children: ReactNode; className?: string }) {
+  return (
+    <span className={`rounded-full px-3 py-1.5 text-sm font-semibold border transition shadow-sm ${className || 'border-[#CBD5E1] bg-white text-[#334155]'}`}>
+      {children}
+    </span>
+  )
+}
+
+function MetricCard({ icon, label, value, accent }: { icon: ReactNode; label: string; value: string; accent: string }) {
+  return (
+    <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-[0_18px_40px_rgba(15,23,42,0.08)] transition hover:shadow-[0_24px_50px_rgba(15,23,42,0.12)]">
+      <div className="flex items-center gap-4">
+        <div className={`rounded-2xl p-4 shrink-0 bg-slate-50 ${accent}`}>{icon}</div>
+        <div>
+          <p className="text-sm font-bold text-slate-500 tracking-tight uppercase">{label}</p>
+          <p className="mt-1 text-2xl font-black text-[#0F172A]">{value}</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function SelectableFilter({ label, values, selected, onToggle }: { label: string; values: string[]; selected: string[]; onToggle: (value: string) => void }) {
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md hover:border-[#0F766E]/30">
+      <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-3">
+        <p className="text-sm font-bold uppercase tracking-[0.12em] text-[#0F766E]">{label}</p>
+        <span className="rounded-full bg-[#ECFDF5] px-2 py-0.5 text-xs font-semibold text-[#0F766E]">{selected.length} selected</span>
+      </div>
+      <div className="mb-3 min-h-[56px] rounded-2xl border border-slate-100 bg-[#F8FAFC] px-3.5 py-2.5 flex items-center">
+        {selected.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5">
+            {selected.map((option) => (
+              <span key={option} className="inline-flex items-center gap-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] px-2.5 py-1 text-xs font-bold text-[#0F766E]">
+                {option}
+                <button type="button" onClick={() => onToggle(option)} className="hover:text-red-500 font-bold ml-0.5">×</button>
+              </span>
+            ))}
+          </div>
+        ) : (
+          <div className="text-xs text-slate-400 font-medium">Filter by {label.toLowerCase().replace(/_/g, ' ')}...</div>
+        )}
+      </div>
+      <div className="grid max-h-48 gap-1.5 overflow-y-auto pr-1">
+        {values.map((option) => {
+          const isSelected = selected.includes(option)
+          return (
+            <button
+              key={option}
+              type="button"
+              onClick={() => onToggle(option)}
+              className={`w-full rounded-xl px-3 py-2 text-left text-xs font-semibold transition ${
+                isSelected
+                  ? 'bg-[#0F766E] text-white shadow-sm font-bold'
+                  : 'bg-[#F8FAFC] text-slate-700 hover:bg-slate-100 border border-slate-100'
+              }`}
+            >
+              {option}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function MappingRow({ field, columns, value, onChange }: { field: string; columns: string[]; value: string; onChange: (value: string) => void }) {
+  return (
+    <div className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:grid-cols-[220px_1fr] md:items-center">
+      <div>
+        <p className="text-sm font-semibold text-slate-800">{field}</p>
+      </div>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0F766E]/40"
+      >
+        <option value="">-- Skip --</option>
+        {columns.map((column) => (
+          <option key={column} value={column}>
+            {column}
+          </option>
+        ))}
+      </select>
+    </div>
+  )
+}
+
+function formatCell(value: unknown) {
+  if (value === null || value === undefined) return '—'
+  if (typeof value === 'number') return Number.isInteger(value) ? value.toString() : value.toFixed(4)
+  return String(value)
+}
+
+function formatMetric(value: number | null | undefined, decimals = 2) {
+  if (value == null || Number.isNaN(value)) return '—'
+  return Number(value).toFixed(decimals)
+}
+
+async function handleResponse(response: Response) {
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => null)
+    const message = errorData?.detail || errorData?.message || response.statusText || 'Request failed'
+    throw new Error(message)
+  }
+  return response.json()
 }
 
 function downloadRowsAsCsv(filename: string, rows: RouteOptimizationRow[]) {
@@ -177,7 +301,7 @@ function downloadRowsAsCsv(filename: string, rows: RouteOptimizationRow[]) {
   URL.revokeObjectURL(url)
 }
 
-function downloadSampleCsv() {
+function downloadSampleCsv(previewRows: RouteOptimizationRow[]) {
   const sample = [
     ['Timestamp', 'Vehicle_ID', 'Vehicle_Type', 'Route_ID', 'Start_City', 'End_City', 'Route_Distance_km', 'Traffic_Level', 'Weather_Condition', 'Predicted_Travel_Hours', 'Actual_Travel_Hours', 'Predicted_Fuel_Liters', 'Actual_Fuel_Liters', 'Vehicle_Capacity_kg', 'Load_Weight_kg', 'Delay_Hours', 'Efficiency_Score'],
     ['2026-06-01 08:00', 'V001', 'Truck', 'R001', 'Mumbai', 'Pune', '148', 'Medium', 'Clear', '4.8', '5.1', '35.4', '36.2', '1200', '900', '0.4', '0.92'],
@@ -195,834 +319,41 @@ function downloadSampleCsv() {
   URL.revokeObjectURL(url)
 }
 
-function formatMetric(value: number | null | undefined, decimals = 2) {
-  if (value == null || Number.isNaN(value)) return '--'
-  return Number(value).toFixed(decimals)
-}
-
-function getPreviewColumns(rows: RouteOptimizationRow[]) {
-  return Array.from(
-    rows.reduce((set, row) => {
-      Object.keys(row).slice(0, 10).forEach((key) => set.add(key))
-      return set
-    }, new Set<string>()),
-  ).slice(0, 10)
-}
-
-function Table({
-  title,
-  rows,
-  columns,
-  emptyText = 'No data available.',
-}: {
-  title: string
-  rows: RouteOptimizationRow[]
-  columns?: string[]
-  emptyText?: string
-}) {
-  const visibleColumns = columns ?? getPreviewColumns(rows)
-
+function renderTable(rows: RouteOptimizationRow[], columns: string[], title: string) {
+  if (!rows.length) {
+    return <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">No rows to display.</div>
+  }
   return (
-    <div className="rounded-[24px] border border-[#E2E8F0] bg-white shadow-sm">
-      <div className="border-b border-[#E2E8F0] px-5 py-4">
-        <h3 className="text-lg font-semibold text-[#0F172A]">{title}</h3>
-      </div>
+    <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white">
       <div className="overflow-x-auto">
-        <table className="min-w-full text-left text-[13px]">
-          <thead className="bg-[#F8FAFC] text-[#475569]">
-            <tr>
-              {visibleColumns.map((column) => (
-                <th key={column} className="whitespace-nowrap px-4 py-3 font-semibold">
-                  {column}
-                </th>
+        <UiTable>
+          <TableHeader>
+            <TableRow className="bg-slate-50 border-b border-slate-200">
+              {columns.map((col) => (
+                <TableHead key={col} className="font-bold text-slate-600 text-[12px] uppercase tracking-[0.08em] py-3.5 px-4 whitespace-nowrap">{col}</TableHead>
               ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 ? (
-              <tr>
-                <td className="px-4 py-4 text-[#64748B]" colSpan={visibleColumns.length}>
-                  {emptyText}
-                </td>
-              </tr>
-            ) : (
-              rows.slice(0, 10).map((row, index) => (
-                <tr key={index} className="border-t border-[#E2E8F0]">
-                  {visibleColumns.map((column) => (
-                    <td key={column} className="max-w-[240px] px-4 py-3 align-top text-[#0F172A]">
-                      {row[column] == null ? '--' : String(row[column])}
-                    </td>
-                  ))}
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  )
-}
-
-function SummaryCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-[22px] border border-[#D6EAF8] bg-[linear-gradient(180deg,#FFFFFF_0%,#F8FBFF_100%)] px-4 py-4 shadow-sm">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#0F766E]">{label}</p>
-      <p className="mt-2 text-2xl font-bold text-[#0F172A]">{value}</p>
-    </div>
-  )
-}
-
-function SectionTitle({ title, subtitle }: { title: string; subtitle?: string }) {
-  return (
-    <div className="mb-4">
-      <h3 className="text-2xl font-bold text-[#0F172A]">{title}</h3>
-      {subtitle ? <p className="mt-2 text-[15px] leading-7 text-[#475569]">{subtitle}</p> : null}
-    </div>
-  )
-}
-
-function LoadingOverlay() {
-  return (
-    <div className="inline-flex items-center gap-2 rounded-full border border-[#CCFBF1] bg-[#ECFDF5] px-3 py-1 text-[12px] font-semibold uppercase tracking-[0.18em] text-[#0F766E]">
-      <Loader2 className="h-4 w-4 animate-spin" />
-      Loading
-    </div>
-  )
-}
-
-function Header() {
-  return (
-    <section className="rounded-[28px] border border-[#E2E8F0] bg-[linear-gradient(135deg,#FFFFFF_0%,#F7FBFF_100%)] px-6 py-6 shadow-[0_18px_40px_rgba(15,23,42,0.08)] md:px-8 md:py-7">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:gap-5">
-        <div className="flex h-14 w-14 items-center justify-center rounded-[18px] bg-[#0F766E] text-lg font-black text-white shadow-lg">
-          AA
-        </div>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-[#0F172A] md:text-4xl">Route Optimization &amp; Logistics Efficiency</h1>
-          <p className="mt-2 max-w-3xl text-[16px] leading-7 text-[#475569]">Reduce miles, cut fuel, speed deliveries with data-driven routing.</p>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-function OverviewTab({ kpis }: { kpis: RouteOptimizationFilterResponse['kpis'] | null }) {
-  const overviewKpis = [
-    { label: 'Total Routes Tracked', value: formatMetric(kpis?.total_routes, 0) },
-    { label: 'Avg Efficiency Score', value: formatMetric(kpis?.avg_efficiency, 3) },
-    { label: 'Avg Delay (hrs)', value: formatMetric(kpis?.avg_delay_hours, 2) },
-    { label: 'Avg Fuel / Route (L)', value: formatMetric(kpis?.avg_fuel_liters, 2) },
-    { label: 'On-Time %', value: `${formatMetric(kpis?.ontime_percent, 1)}%` },
-  ]
-
-  return (
-    <div className="space-y-6">
-      <SectionTitle title="Overview" />
-
-      <div className="rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#0F766E]">Purpose</p>
-        <p className="mt-3 max-w-4xl text-[16px] leading-8 text-[#334155]">
-          Cut route costs and delivery time by optimizing routes,
-          predicting delays &amp; fuel usage,
-          and prioritising high-impact fleet actions.
-        </p>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm">
-          <h3 className="text-lg font-bold text-[#0F172A]">Capabilities Card</h3>
-          <ul className="mt-4 space-y-3 text-[15px] leading-7 text-[#334155]">
-            <li>Route efficiency scoring and anomaly detection</li>
-            <li>Predictive travel time and fuel consumption models</li>
-            <li>Clustering of routes/vehicles for capacity planning</li>
-            <li>Multi-filter exploration (vehicle / route / traffic / weather)</li>
-            <li>Exportable prioritized actions for operations teams</li>
-          </ul>
-        </div>
-
-        <div className="rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm">
-          <h3 className="text-lg font-bold text-[#0F172A]">Business Impact Card</h3>
-          <ul className="mt-4 space-y-3 text-[15px] leading-7 text-[#334155]">
-            <li>Lower fuel &amp; operational cost per km</li>
-            <li>Faster deliveries &amp; higher on-time %</li>
-            <li>Reduced CO₂ per shipment</li>
-            <li>Better fleet utilisation &amp; scheduling</li>
-            <li>Data-driven procurement of vehicles &amp; drivers</li>
-          </ul>
-        </div>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-        {overviewKpis.map((item) => (
-          <SummaryCard key={item.label} label={item.label} value={item.value} />
-        ))}
-      </div>
-
-      <div className="rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm">
-        <h3 className="text-lg font-bold text-[#0F172A]">Who Should Use &amp; How</h3>
-        <div className="mt-4 grid gap-6 lg:grid-cols-2">
-          <div>
-            <p className="text-[13px] font-semibold uppercase tracking-[0.2em] text-[#0F766E]">Who:</p>
-            <p className="mt-2 text-[15px] leading-7 text-[#334155]">Fleet managers, logistics planners, operations heads, sustainability teams.</p>
-          </div>
-          <div>
-            <p className="text-[13px] font-semibold uppercase tracking-[0.2em] text-[#0F766E]">How:</p>
-            <ol className="mt-2 space-y-2 text-[15px] leading-7 text-[#334155]">
-              <li>1. Load dataset (default/upload)</li>
-              <li>2. Filter by vehicle / route / period</li>
-              <li>3. Review top-delay &amp; low-efficiency routes</li>
-              <li>4. Export cost simulations, ML predictions &amp; playbooks to drive execution</li>
-            </ol>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function DataDictionaryTab({ onDownloadRequiredColumns }: { onDownloadRequiredColumns: () => void }) {
-  return (
-    <div className="space-y-6">
-      <SectionTitle
-        title="Data Dictionary"
-        subtitle="Below is the complete schema used for Route Optimization. Required columns must exist in your file or be mapped manually."
-      />
-
-      <div className="rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm">
-        <Table
-          title="Required columns table"
-          rows={REQUIRED_COLUMNS as unknown as RouteOptimizationRow[]}
-          columns={['column', 'type', 'description']}
-        />
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm">
-          <h3 className="text-lg font-bold text-[#0F172A]">Independent Variables Card</h3>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {INDEPENDENT_VARIABLES.map((item) => (
-              <span key={item} className="rounded-full border border-[#C7E5F6] bg-[#EFF8FD] px-3 py-1.5 text-[14px] font-semibold text-[#075985]">
-                {item}
-              </span>
+            </TableRow>
+          </TableHeader>
+          <TableBody className="divide-y divide-slate-100">
+            {rows.slice(0, 10).map((row, index) => (
+              <TableRow key={index} className="border-slate-100 hover:bg-slate-50/50">
+                {columns.map((col) => (
+                  <TableCell key={`${index}-${col}`} className="px-4 py-3.5 text-slate-700 text-sm max-w-[180px] truncate">{formatCell(row[col])}</TableCell>
+                ))}
+              </TableRow>
             ))}
-          </div>
-        </div>
-
-        <div className="rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm">
-          <h3 className="text-lg font-bold text-[#0F172A]">Dependent Variables Card</h3>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {DEPENDENT_VARIABLES.map((item) => (
-              <span key={item} className="rounded-full border border-[#CCFBF1] bg-[#F0FDFA] px-3 py-1.5 text-[14px] font-semibold text-[#0F766E]">
-                {item}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="flex justify-start">
-        <button
-          type="button"
-          onClick={onDownloadRequiredColumns}
-          className="inline-flex items-center gap-2 rounded-full bg-[#0F766E] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#0D5F58]"
-        >
-          <Download className="h-4 w-4" />
-          Download Required Columns CSV
-        </button>
-      </div>
-    </div>
-  )
-}
-
-function ApplicationTab({
-  mode,
-  setMode,
-  previewRows,
-  data,
-  filteredRows,
-  loadStatus,
-  loading,
-  error,
-  vehicles,
-  vehicleTypes,
-  routes,
-  selectedVehicles,
-  selectedVehicleTypes,
-  selectedRoutes,
-  setSelectedVehicles,
-  setSelectedVehicleTypes,
-  setSelectedRoutes,
-  dateStart,
-  dateEnd,
-  setDateStart,
-  setDateEnd,
-  onDefaultData,
-  onUploadCsv,
-  onUploadMapping,
-  uploadFile,
-  setUploadFile,
-  mappingFile,
-  setMappingFile,
-  mappingColumns,
-  setMappingColumns,
-  availableColumns,
-  setAvailableColumns,
-  onApplyMapping,
-  kpis,
-  charts,
-  clusters,
-  costSimulation,
-  randomForest,
-  gradientBoosting,
-  knn,
-  anomalyDetection,
-  insights,
-  onDownloadFiltered,
-  onDownloadCost,
-  onDownloadInsights,
-  onDownloadMl,
-}: {
-  mode: RouteOptimizationMode
-  setMode: (mode: RouteOptimizationMode) => void
-  previewRows: RouteOptimizationRow[]
-  data: RouteOptimizationRow[]
-  filteredRows: RouteOptimizationRow[]
-  loadStatus: string
-  loading: boolean
-  error: string | null
-  vehicles: string[]
-  vehicleTypes: string[]
-  routes: string[]
-  selectedVehicles: string[]
-  selectedVehicleTypes: string[]
-  selectedRoutes: string[]
-  setSelectedVehicles: (values: string[]) => void
-  setSelectedVehicleTypes: (values: string[]) => void
-  setSelectedRoutes: (values: string[]) => void
-  dateStart: string
-  dateEnd: string
-  setDateStart: (value: string) => void
-  setDateEnd: (value: string) => void
-  onDefaultData: () => void
-  onUploadCsv: (file: File) => Promise<void>
-  onUploadMapping: (file: File) => Promise<void>
-  uploadFile: File | null
-  setUploadFile: (file: File | null) => void
-  mappingFile: File | null
-  setMappingFile: (file: File | null) => void
-  mappingColumns: Record<string, string>
-  setMappingColumns: (columns: Record<string, string>) => void
-  availableColumns: string[]
-  setAvailableColumns: (columns: string[]) => void
-  onApplyMapping: () => Promise<void>
-  kpis: RouteOptimizationFilterResponse['kpis'] | null
-  charts: RouteOptimizationChartResponse | null
-  clusters: RouteOptimizationClusterResponse | null
-  costSimulation: RouteOptimizationCostSimulationResponse | null
-  randomForest: RouteOptimizationMlResponse | null
-  gradientBoosting: RouteOptimizationMlResponse | null
-  knn: RouteOptimizationMlResponse | null
-  anomalyDetection: RouteOptimizationAnomalyResponse | null
-  insights: RouteOptimizationInsightsResponse | null
-  onDownloadFiltered: () => void
-  onDownloadCost: () => void
-  onDownloadInsights: () => void
-  onDownloadMl: (label: string, rows: RouteOptimizationRow[]) => void
-}) {
-  const filteredPreview = filteredRows.slice(0, 10)
-
-  return (
-    <div className="space-y-6">
-      <SectionTitle title="Application" />
-
-      <div className="rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm">
-        <SectionTitle title="STEP 1 — LOAD DATASET" />
-        <div className="grid gap-3 md:grid-cols-3">
-          {(['default', 'upload', 'mapping'] as RouteOptimizationMode[]).map((item) => (
-            <label
-              key={item}
-              className={`flex cursor-pointer items-center gap-3 rounded-[18px] border px-4 py-4 transition ${
-                mode === item ? 'border-[#0F766E] bg-[#ECFDF5]' : 'border-[#E2E8F0] bg-[#F8FAFC] hover:border-[#CBD5E1]'
-              }`}
-            >
-              <input
-                type="radio"
-                name="dataset-mode"
-                checked={mode === item}
-                onChange={() => {
-                  setMode(item)
-                  if (item === 'default') onDefaultData()
-                }}
-                className="h-4 w-4 accent-[#0F766E]"
-              />
-              <span className="text-[15px] font-semibold text-[#0F172A]">
-                {item === 'default' ? 'Default Data' : item === 'upload' ? 'Upload CSV' : 'Upload + Map Columns'}
-              </span>
-            </label>
-          ))}
-        </div>
-
-        <div className="mt-6 space-y-6">
-          {mode === 'upload' ? (
-            <div className="rounded-[22px] border border-[#E2E8F0] bg-[#F8FAFC] p-5">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm font-semibold text-[#0F172A]">Upload CSV Flow</p>
-                  <p className="mt-1 text-[13px] text-[#475569]">Download Sample CSV for reference or upload your dataset.</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={downloadRowsAsCsv.bind(null, 'route_optimization_sample.csv', previewRows.slice(0, 2))}
-                  className="inline-flex items-center gap-2 rounded-full border border-[#CBD5E1] bg-white px-4 py-2 text-sm font-semibold text-[#0F172A]"
-                >
-                  <Download className="h-4 w-4" />
-                  Download Sample CSV
-                </button>
-              </div>
-
-              <label className="mt-4 flex min-h-[120px] cursor-pointer flex-col items-center justify-center rounded-[22px] border border-dashed border-[#CBD5E1] bg-white px-4 py-6 text-center">
-                <CloudUpload className="h-7 w-7 text-[#0F766E]" />
-                <span className="mt-3 text-[15px] font-semibold text-[#0F172A]">Upload your dataset</span>
-                <span className="mt-1 text-[13px] text-[#64748B]">Drag and drop file here • Limit 200MB per file • CSV</span>
-                <input
-                  type="file"
-                  accept=".csv"
-                  className="hidden"
-                  onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                    const file = event.target.files?.[0] ?? null
-                    setUploadFile(file)
-                    if (file) void onUploadCsv(file)
-                  }}
-                />
-              </label>
-              <p className="mt-3 text-[14px] font-semibold text-[#0F172A]">Dataset uploaded.</p>
-            </div>
-          ) : null}
-
-          {mode === 'default' ? (
-            <div className="rounded-[22px] border border-[#E2E8F0] bg-[#F8FAFC] p-5">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm font-semibold text-[#0F172A]">Default Data Flow</p>
-                  <p className="mt-1 text-[13px] text-[#475569]">When user clicks Default Data.</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={onDefaultData}
-                  className="inline-flex items-center gap-2 rounded-full bg-[#0F766E] px-4 py-2 text-sm font-semibold text-white"
-                >
-                  <MapPin className="h-4 w-4" />
-                  Default Data
-                </button>
-              </div>
-              <p className="mt-4 text-[14px] text-[#475569]">GET /load-default</p>
-              <p className="mt-3 text-[14px] font-semibold text-[#0F172A]">{loadStatus}</p>
-              <div className="mt-4 overflow-hidden rounded-[22px] border border-[#E2E8F0]">
-                <Table title="Dataset preview table" rows={previewRows.slice(0, 10)} columns={PREVIEW_COLUMNS} />
-              </div>
-            </div>
-          ) : null}
-
-          {mode === 'mapping' ? (
-            <div className="rounded-[22px] border border-[#E2E8F0] bg-[#F8FAFC] p-5">
-              <p className="text-sm font-semibold text-[#0F172A]">Upload + Map Columns</p>
-              <p className="mt-1 text-[13px] text-[#475569]">Upload a CSV and map the expected route-optimization fields.</p>
-              <label className="mt-4 flex min-h-[120px] cursor-pointer flex-col items-center justify-center rounded-[22px] border border-dashed border-[#CBD5E1] bg-white px-4 py-6 text-center">
-                <Upload className="h-5 w-5 text-[#0F766E]" />
-                <span className="mt-3 text-[15px] font-semibold text-[#0F172A]">{mappingFile ? mappingFile.name : 'Upload CSV'}</span>
-                <span className="mt-1 text-[13px] text-[#64748B]">Drag and drop file here • Limit 200MB per file • CSV</span>
-                <input
-                  type="file"
-                  accept=".csv"
-                  className="hidden"
-                  onChange={async (event: ChangeEvent<HTMLInputElement>) => {
-                    const file = event.target.files?.[0] ?? null
-                    setMappingFile(file)
-                    if (!file) return
-                    const response = await getCsvColumns(file)
-                    setAvailableColumns(response.columns || [])
-                    setMappingColumns(
-                      MAPPING_FIELDS.reduce((acc, field) => {
-                        acc[field] = response.columns?.includes(field) ? field : ''
-                        return acc
-                      }, {} as Record<string, string>),
-                    )
-                  }}
-                />
-              </label>
-              {availableColumns.length ? (
-                <div className="mt-5 grid gap-3 lg:grid-cols-2">
-                  {MAPPING_FIELDS.map((field) => (
-                    <label key={field} className="rounded-[18px] border border-[#E2E8F0] bg-white p-4 text-sm font-semibold text-[#0F172A]">
-                      <span className="mb-2 block">{field}</span>
-                      <select
-                        value={mappingColumns[field] || ''}
-                        onChange={(event) => setMappingColumns({ ...mappingColumns, [field]: event.target.value })}
-                        className="w-full rounded-xl border border-[#CBD5E1] bg-white px-3 py-2 text-sm text-[#0F172A]"
-                      >
-                        <option value="">-- Skip --</option>
-                        {availableColumns.map((column) => (
-                          <option key={column} value={column}>{column}</option>
-                        ))}
-                      </select>
-                    </label>
-                  ))}
-                </div>
-              ) : null}
-              <div className="mt-5 flex flex-wrap gap-3">
-                <button
-                  type="button"
-                  onClick={onApplyMapping}
-                  className="inline-flex items-center gap-2 rounded-full bg-[#0F766E] px-5 py-3 text-sm font-semibold text-white"
-                >
-                  Apply Mapping
-                </button>
-              </div>
-            </div>
-          ) : null}
-        </div>
-
-      </div>
-
-      <div className="rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm">
-        <SectionTitle title="STEP 2 — FILTERS & PREVIEW" />
-        <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
-          <MultiSelect label="Vehicle_ID" options={vehicles} values={selectedVehicles} onChange={setSelectedVehicles} />
-          <MultiSelect label="Vehicle_Type" options={vehicleTypes} values={selectedVehicleTypes} onChange={setSelectedVehicleTypes} />
-          <MultiSelect label="Route_ID" options={routes} values={selectedRoutes} onChange={setSelectedRoutes} />
-          <div className="rounded-[18px] border border-[#E2E8F0] bg-[#F8FAFC] p-4">
-            <p className="text-[13px] font-semibold uppercase tracking-[0.16em] text-[#0F766E]">Date Range</p>
-            <div className="mt-3 grid gap-3">
-              <input
-                type="date"
-                value={dateStart}
-                onChange={(event) => setDateStart(event.target.value)}
-                className="rounded-xl border border-[#CBD5E1] bg-white px-3 py-2 text-sm text-[#0F172A]"
-              />
-              <input
-                type="date"
-                value={dateEnd}
-                onChange={(event) => setDateEnd(event.target.value)}
-                className="rounded-xl border border-[#CBD5E1] bg-white px-3 py-2 text-sm text-[#0F172A]"
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-6 flex items-center justify-between gap-4">
-          <h3 className="text-lg font-bold text-[#0F172A]">Filtered Data Preview (first 10 rows)</h3>
-          <button
-            type="button"
-            onClick={onDownloadFiltered}
-            className="inline-flex items-center gap-2 rounded-full border border-[#CBD5E1] bg-[#F8FAFC] px-5 py-3 text-sm font-semibold text-[#0F172A]"
-          >
-            <Download className="h-4 w-4" />
-            Download filtered preview
-          </button>
-        </div>
-
-        <div className="mt-4 overflow-hidden rounded-[22px] border border-[#E2E8F0]">
-          <Table title="" rows={filteredPreview} columns={PREVIEW_COLUMNS} />
-        </div>
-      </div>
-
-      <div className="rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm">
-        <h3 className="text-lg font-bold text-[#0F172A]">KPIs (Dynamic)</h3>
-        <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-          <SummaryCard label="Routes in selection" value={formatMetric(kpis?.total_routes, 0)} />
-          <SummaryCard label="Avg Efficiency Score" value={formatMetric(kpis?.avg_efficiency, 3)} />
-          <SummaryCard label="Avg Delay (hrs)" value={formatMetric(kpis?.avg_delay_hours, 2)} />
-          <SummaryCard label="Avg Fuel / Route (L)" value={formatMetric(kpis?.avg_fuel_liters, 2)} />
-          <SummaryCard label="On-Time Deliveries" value={`${formatMetric(kpis?.ontime_percent, 1)}%`} />
-        </div>
-      </div>
-
-      <div className="space-y-6 rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm">
-        <SectionTitle title="EXPLORATORY DATA ANALYSIS" subtitle="Use Plotly React." />
-        <DistanceHistogram data={charts?.route_distance_histogram ?? []} />
-        <EfficiencyBoxPlot data={charts?.efficiency_by_vehicle_type ?? []} />
-        <DelayScatter data={charts?.delay_vs_distance ?? []} />
-        <FuelViolin data={charts?.fuel_per_km ?? []} />
-        <EfficiencyLine data={charts?.daily_efficiency_trend ?? []} />
-        <ClusterScatter data={clusters?.clusters ?? []} />
-        <CorrelationHeatmap data={charts?.correlation_matrix ?? null} />
-      </div>
-
-      <div className="rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm">
-        <SectionTitle title="ROUTE LEVEL COST SIMULATION" />
-        <div className="flex items-center justify-between gap-4">
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            <SummaryCard label="Fuel Cost" value={formatMetric(costSimulation?.total_fuel_cost, 2)} />
-            <SummaryCard label="Distance Cost" value={formatMetric(costSimulation?.total_distance_cost, 2)} />
-            <SummaryCard label="Delay Penalty" value={formatMetric(costSimulation?.total_delay_penalty, 2)} />
-            <SummaryCard label="Grand Total" value={formatMetric(costSimulation?.grand_total_cost, 2)} />
-          </div>
-          <button
-            type="button"
-            onClick={onDownloadCost}
-            className="inline-flex items-center gap-2 rounded-full border border-[#CBD5E1] bg-[#F8FAFC] px-5 py-3 text-sm font-semibold text-[#0F172A]"
-          >
-            <Download className="h-4 w-4" />
-            Download Cost Simulation
-          </button>
-        </div>
-        <div className="mt-5 overflow-hidden rounded-[22px] border border-[#E2E8F0]">
-          <Table
-            title="Route-Level Cost Simulation"
-            rows={costSimulation?.simulation ?? []}
-            columns={['Route_ID', 'Vehicle_ID', 'Fuel_Cost_INR', 'Distance_Cost_INR', 'Delay_Penalty_INR', 'Total_Route_Cost_INR']}
-          />
-        </div>
-      </div>
-
-      <div className="space-y-6 rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm">
-        <SectionTitle
-          title="MACHINE LEARNING — MODELS & PREDICTIONS"
-          subtitle="Models run only when sufficient rows and required columns exist (recommended: ≥ 80 rows)"
-        />
-        <ModelCard
-          title="RandomForest — Predict Actual Travel Hours"
-          metrics={randomForest}
-          rows={randomForest?.predictions ?? []}
-          downloadLabel="Download RandomForest predictions"
-          onDownload={() => onDownloadMl('random_forest_predictions.csv', randomForest?.predictions ?? [])}
-        />
-        <ModelCard
-          title="GradientBoosting — Predict Actual Fuel Liters"
-          metrics={gradientBoosting}
-          rows={gradientBoosting?.predictions ?? []}
-          downloadLabel="Download GradientBoosting predictions"
-          onDownload={() => onDownloadMl('gradient_boosting_predictions.csv', gradientBoosting?.predictions ?? [])}
-        />
-        <ModelCard
-          title="KNN Regressor — Predict Delay Hours"
-          metrics={knn}
-          rows={knn?.predictions ?? []}
-          downloadLabel="Download KNN predictions"
-          onDownload={() => onDownloadMl('knn_predictions.csv', knn?.predictions ?? [])}
-        />
-        <AnomalyCard
-          title="Anomaly Detection — IsolationForest"
-          metrics={anomalyDetection}
-          rows={anomalyDetection?.anomalies ?? []}
-          onDownload={() => onDownloadMl('anomaly_detection.csv', anomalyDetection?.anomalies ?? [])}
-        />
-      </div>
-
-      <div className="rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm">
-        <SectionTitle title="AUTOMATED INSIGHTS" />
-        <div className="flex items-center justify-between gap-4">
-          <button
-            type="button"
-            onClick={onDownloadInsights}
-            className="inline-flex items-center gap-2 rounded-full border border-[#CBD5E1] bg-[#F8FAFC] px-5 py-3 text-sm font-semibold text-[#0F172A]"
-          >
-            <Download className="h-4 w-4" />
-            Download insights CSV
-          </button>
-        </div>
-        <div className="mt-5 overflow-hidden rounded-[22px] border border-[#E2E8F0]">
-          <Table title="Automated Insights" rows={insights?.insights ?? []} />
-        </div>
-      </div>
-
-      <div className="rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm">
-        <h3 className="text-lg font-bold text-[#0F172A]">Load status</h3>
-        <p className="mt-3 text-[15px] text-[#475569]">{loading ? 'Refreshing analysis...' : loadStatus}</p>
-        {error ? <p className="mt-2 text-sm font-semibold text-[#B91C1C]">{error}</p> : null}
-        <p className="mt-4 text-sm text-[#64748B]">Loaded rows: {data.length}</p>
-      </div>
-    </div>
-  )
-}
-
-function MultiSelect({
-  label,
-  options,
-  values,
-  onChange,
-}: {
-  label: string
-  options: string[]
-  values: string[]
-  onChange: (values: string[]) => void
-}) {
-  const placeholder = `Choose one or more ${label.toLowerCase().replace(/_/g, ' ')}${label === 'Vehicle_Type' ? 's' : label === 'Route_ID' ? 's' : 's'}`
-
-  return (
-    <div className="rounded-[18px] border border-[#E2E8F0] bg-[#F8FAFC] p-4">
-      <p className="text-[13px] font-semibold uppercase tracking-[0.16em] text-[#0F766E]">{label}</p>
-      <div className="mb-4 mt-3 min-h-[56px] rounded-[16px] border border-[#E2E8F0] bg-white px-4 py-3">
-        {values.length > 0 ? (
-          <div className="flex flex-wrap gap-2">
-            {values.map((option) => (
-              <button
-                key={option}
-                type="button"
-                onClick={() => onChange(values.filter((value) => value !== option))}
-                className="inline-flex items-center gap-2 rounded-full bg-[#FEE2E2] px-3 py-1 text-sm font-semibold text-[#B91C1C]"
-              >
-                {option}
-                <span aria-hidden="true">×</span>
-              </button>
-            ))}
-          </div>
-        ) : (
-          <div className="text-sm text-[#64748B]">{placeholder}</div>
-        )}
-      </div>
-      <div className="grid max-h-56 gap-2 overflow-y-auto">
-        {options.map((option) => (
-          <button
-            key={option}
-            type="button"
-            onClick={() =>
-              onChange(
-                values.includes(option) ? values.filter((value) => value !== option) : [...values, option],
-              )
-            }
-            className={`w-full rounded-2xl px-3 py-2 text-left text-sm transition ${
-              values.includes(option) ? 'bg-[#0F766E] text-white' : 'bg-white text-[#0F172A] hover:bg-[#E2E8F0]'
-            }`}
-          >
-            {option}
-          </button>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function ModelCard({
-  title,
-  metrics,
-  rows,
-  downloadLabel,
-  onDownload,
-}: {
-  title: string
-  metrics: RouteOptimizationMlResponse | null
-  rows: RouteOptimizationRow[]
-  downloadLabel: string
-  onDownload: () => void
-}) {
-  return (
-    <div className="rounded-[22px] border border-[#E2E8F0] bg-[#F8FAFC] p-5">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h4 className="text-lg font-semibold text-[#0F172A]">{title}</h4>
-          <div className="mt-2 flex gap-3 text-sm text-[#475569]">
-            <span>RMSE {formatMetric(metrics?.rmse, 3)}</span>
-            <span>R² {formatMetric(metrics?.r2, 3)}</span>
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={onDownload}
-          className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#0F172A] shadow-sm"
-        >
-          <Download className="h-4 w-4" />
-          {downloadLabel}
-        </button>
-      </div>
-      <div className="mt-4 overflow-hidden rounded-[18px] border border-[#E2E8F0] bg-white">
-        <Table title="Prediction table" rows={rows} emptyText="Prediction table will appear when backend returns results." />
-      </div>
-    </div>
-  )
-}
-
-function AnomalyCard({
-  title,
-  metrics,
-  rows,
-  onDownload,
-}: {
-  title: string
-  metrics: RouteOptimizationAnomalyResponse | null
-  rows: RouteOptimizationRow[]
-  onDownload: () => void
-}) {
-  return (
-    <div className="rounded-[22px] border border-[#E2E8F0] bg-[#F8FAFC] p-5">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h4 className="text-lg font-semibold text-[#0F172A]">{title}</h4>
-          <div className="mt-2 flex gap-3 text-sm text-[#475569]">
-            <span>Detected anomalies {formatMetric(metrics?.num_anomalies, 0)}</span>
-            <span>Rate {formatMetric(metrics?.anomaly_rate, 2)}%</span>
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={onDownload}
-          className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#0F172A] shadow-sm"
-        >
-          <Download className="h-4 w-4" />
-          Download anomalies
-        </button>
-      </div>
-      <div className="mt-4 overflow-hidden rounded-[18px] border border-[#E2E8F0] bg-white">
-        <Table title="Anomaly table" rows={rows} emptyText="Anomaly table will appear when backend returns results." />
-      </div>
-    </div>
-  )
-}
-
-function ActionPlaybooksTab({
-  playbooks,
-  onDownloadPlaybook,
-}: {
-  playbooks: RouteOptimizationPlaybooksResponse | null
-  onDownloadPlaybook: (name: string, rows: RouteOptimizationRow[]) => void
-}) {
-  return (
-    <div className="space-y-6">
-      <SectionTitle title="Action Playbooks" />
-
-      {PLAYBOOKS.map((section) => {
-        const rows = playbooks?.[section.key] ?? []
-        return (
-          <div key={section.key} className="rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h3 className="text-xl font-bold text-[#0F172A]">
-                  {section.title}
-                  {section.subtitle ? <span className="ml-2 text-[14px] font-medium text-[#64748B]">({section.subtitle})</span> : null}
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => onDownloadPlaybook(`${section.key}.csv`, rows)}
-                className="inline-flex items-center gap-2 rounded-full border border-[#CBD5E1] bg-[#F8FAFC] px-4 py-2 text-sm font-semibold text-[#0F172A]"
-              >
-                <Download className="h-4 w-4" />
-                Download
-              </button>
-            </div>
-            <div className="mt-4 overflow-hidden rounded-[18px] border border-[#E2E8F0]">
-              <Table title="Table" rows={rows} />
-            </div>
-          </div>
-        )
-      })}
-
-      <div className="rounded-[24px] border border-[#E2E8F0] bg-[linear-gradient(135deg,#FFFFFF_0%,#F8FBFF_100%)] p-6 shadow-sm">
-        <h3 className="text-xl font-bold text-[#0F172A]">Executive Recommendations</h3>
-        <div className="mt-4 space-y-2 text-[15px] leading-7 text-[#334155]">
-          <p>Reassign or redesign the 10 least efficient high-fuel routes.</p>
-          <p>Audit vehicles with the worst fuel/km and highest delay scores.</p>
-          <p>Coach or re-pair drivers/operators flagged by the inefficiency scorecard.</p>
-          <p>Avoid high-risk traffic-weather combinations.</p>
-          <p>Use ML-predicted travel hours for planning time-critical routes.</p>
-          <p>Feed these insights into monthly fleet reviews and vendor contracts.</p>
-        </div>
+          </TableBody>
+        </UiTable>
       </div>
     </div>
   )
 }
 
 export function RouteOptimizationPage() {
+  const navigate = useNavigate()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const mappingInputRef = useRef<HTMLInputElement>(null)
+
   const [activeTab, setActiveTab] = useState<TabKey>('overview')
   const [mode, setMode] = useState<RouteOptimizationMode>('default')
   const [data, setData] = useState<RouteOptimizationRow[]>([])
@@ -1042,7 +373,13 @@ export function RouteOptimizationPage() {
   const [uploadFile, setUploadFile] = useState<File | null>(null)
   const [mappingFile, setMappingFile] = useState<File | null>(null)
   const [availableColumns, setAvailableColumns] = useState<string[]>([])
-  const [mappingColumns, setMappingColumns] = useState<Record<string, string>>(DEFAULT_FIELD_MAP)
+  const [mappingColumns, setMappingColumns] = useState<Record<string, string>>(
+    MAPPING_FIELDS.reduce((acc, field) => {
+      acc[field] = field
+      return acc
+    }, {} as Record<string, string>)
+  )
+
   const [kpis, setKpis] = useState<RouteOptimizationFilterResponse['kpis'] | null>(null)
   const [charts, setCharts] = useState<RouteOptimizationChartResponse | null>(null)
   const [clusters, setClusters] = useState<RouteOptimizationClusterResponse | null>(null)
@@ -1054,11 +391,22 @@ export function RouteOptimizationPage() {
   const [insights, setInsights] = useState<RouteOptimizationInsightsResponse | null>(null)
   const [playbooks, setPlaybooks] = useState<RouteOptimizationPlaybooksResponse | null>(null)
 
-  const maybeColumns = useMemo(() => getPreviewColumns(filteredRows.length ? filteredRows : previewRows), [filteredRows, previewRows])
+  useEffect(() => {
+    void loadDefaultData()
+  }, [])
+
+  useEffect(() => {
+    if (!data.length) return
+    const timer = window.setTimeout(() => {
+      void applyCurrentFilters(data)
+    }, 300)
+    return () => window.clearTimeout(timer)
+  }, [data, selectedVehicles, selectedVehicleTypes, selectedRoutes, dateStart, dateEnd])
 
   async function loadDefaultData() {
     setLoading(true)
     setError(null)
+    setMode('default')
     try {
       const response: RouteOptimizationDatasetResponse = await loadDefaultDataset()
       const rows = response.data ?? []
@@ -1072,8 +420,7 @@ export function RouteOptimizationPage() {
       setSelectedRoutes([])
       setDateStart(response.date_min?.slice(0, 10) ?? '')
       setDateEnd(response.date_max?.slice(0, 10) ?? '')
-      setLoadStatus('Default dataset loaded.')
-      setMode('default')
+      setLoadStatus('Default dataset loaded successfully.')
       await applyCurrentFilters(rows)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to load default dataset.')
@@ -1086,6 +433,8 @@ export function RouteOptimizationPage() {
   async function uploadSelectedCsv(file: File) {
     setLoading(true)
     setError(null)
+    setMode('upload')
+    setUploadFile(file)
     try {
       const response = await uploadCsv(file)
       const rows = response.data ?? []
@@ -1093,14 +442,13 @@ export function RouteOptimizationPage() {
       setPreviewRows(response.preview ?? rows.slice(0, 10))
       setVehicles(response.vehicles ?? [])
       setVehicleTypes(response.vehicle_types ?? [])
-      setMode('upload')
       setRoutes(response.routes ?? [])
       setSelectedVehicles([])
       setSelectedVehicleTypes([])
       setSelectedRoutes([])
       setDateStart(response.date_min?.slice(0, 10) ?? '')
       setDateEnd(response.date_max?.slice(0, 10) ?? '')
-      setLoadStatus('Dataset uploaded.')
+      setLoadStatus('Dataset uploaded successfully.')
       await applyCurrentFilters(rows)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed.')
@@ -1113,6 +461,8 @@ export function RouteOptimizationPage() {
   async function prepareMappingColumns(file: File) {
     setLoading(true)
     setError(null)
+    setMappingFile(file)
+    setMode('mapping')
     try {
       const response = await getCsvColumns(file)
       setAvailableColumns(response.columns ?? [])
@@ -1120,7 +470,7 @@ export function RouteOptimizationPage() {
         MAPPING_FIELDS.reduce((acc, field) => {
           acc[field] = response.columns?.includes(field) ? field : ''
           return acc
-        }, {} as Record<string, string>),
+        }, {} as Record<string, string>)
       )
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to read CSV columns.')
@@ -1134,7 +484,6 @@ export function RouteOptimizationPage() {
       setError('Please upload a CSV file first.')
       return
     }
-
     setLoading(true)
     setError(null)
     try {
@@ -1146,11 +495,10 @@ export function RouteOptimizationPage() {
       setVehicles(response.vehicles ?? [])
       setVehicleTypes(derivedVehicleTypes)
       setRoutes(response.routes ?? [])
-      setMode('mapping')
       setSelectedVehicles([])
       setSelectedVehicleTypes([])
       setSelectedRoutes([])
-      setLoadStatus('Dataset uploaded.')
+      setLoadStatus('Mapping applied successfully.')
       await applyCurrentFilters(rows)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Mapping failed.')
@@ -1174,7 +522,6 @@ export function RouteOptimizationPage() {
       setPlaybooks(null)
       return
     }
-
     try {
       const filterResponse = await filterData({
         data: rows,
@@ -1188,7 +535,17 @@ export function RouteOptimizationPage() {
       setFilteredRows(selectedRows)
       setKpis(filterResponse.kpis)
 
-      const [chartsResponse, clustersResponse, costResponse, rfResponse, gbResponse, knnResponse, anomalyResponse, insightsResponse, playbooksResponse] = await Promise.all([
+      const [
+        chartsResponse,
+        clustersResponse,
+        costResponse,
+        rfResponse,
+        gbResponse,
+        knnResponse,
+        anomalyResponse,
+        insightsResponse,
+        playbooksResponse,
+      ] = await Promise.all([
         getChartData(selectedRows).catch(() => null),
         getClusters(selectedRows).catch(() => null),
         getCostSimulation(selectedRows).catch(() => null),
@@ -1215,105 +572,954 @@ export function RouteOptimizationPage() {
     }
   }
 
-  useEffect(() => {
-    void loadDefaultData()
-  }, [])
+  const TABS = [
+    { key: 'overview', label: 'Overview' },
+    { key: 'dictionary', label: 'Data Dictionary' },
+    { key: 'application', label: 'Application' },
+    { key: 'playbooks', label: 'Action Playbooks' },
+  ]
 
-  useEffect(() => {
-    if (!data.length) return
-    const timer = window.setTimeout(() => {
-      void applyCurrentFilters(data)
-    }, 300)
-    return () => window.clearTimeout(timer)
-  }, [data, selectedVehicles, selectedVehicleTypes, selectedRoutes, dateStart, dateEnd])
+  const distanceHistData = charts?.route_distance_histogram ?? []
+  const dailyEffTrendData = charts?.daily_efficiency_trend ?? []
+  const clusterScatterData = clusters?.clusters ?? []
+
+  const boxPlotGrouped = useMemo(() => {
+    const rawData = charts?.efficiency_by_vehicle_type ?? []
+    return rawData.reduce<Record<string, number[]>>((acc, row) => {
+      const key = String(row.Vehicle_Type ?? 'Unknown')
+      acc[key] ||= []
+      const value = Number(row.Efficiency_Score)
+      if (!Number.isNaN(value)) acc[key].push(value)
+      return acc
+    }, {})
+  }, [charts?.efficiency_by_vehicle_type])
+
+  const scatterGrouped = useMemo(() => {
+    const rawData = charts?.delay_vs_distance ?? []
+    const levels = Array.from(new Set(rawData.map((row) => String(row.Traffic_Level ?? 'Unknown'))))
+    return levels.map((lvl) => {
+      const rows = rawData.filter((row) => String(row.Traffic_Level ?? 'Unknown') === lvl)
+      return {
+        lvl,
+        x: rows.map((row) => Number(row.Route_Distance_km)),
+        y: rows.map((row) => Number(row.Delay_Hours)),
+        size: rows.map((row) => Math.max(Number(row.Load_Weight_kg ?? 1) / 25, 8)),
+      }
+    })
+  }, [charts?.delay_vs_distance])
+
+  const fuelViolinData = charts?.fuel_per_km ?? []
+
+  const heatmapData = charts?.correlation_matrix ?? null
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#F8FAFC_0%,#F8FBFF_100%)] p-6">
-      <div className="mx-auto max-w-7xl space-y-6">
-        <Header />
-
-        <div className="rounded-[24px] border border-[#E2E8F0] bg-white p-2 shadow-sm">
-          <div className="grid gap-2 md:grid-cols-4">
-            {(['overview', 'dictionary', 'application', 'playbooks'] as TabKey[]).map((tab) => (
-              <button
-                key={tab}
-                type="button"
-                onClick={() => setActiveTab(tab)}
-                className={`rounded-[18px] px-5 py-3 text-sm font-semibold transition ${
-                  activeTab === tab ? 'bg-[#0F766E] text-white shadow-sm' : 'text-[#475569] hover:bg-[#F8FAFC]'
-                }`}
-              >
-                {tab === 'overview' ? 'Overview' : tab === 'dictionary' ? 'Data Dictionary' : tab === 'application' ? 'Application' : 'Action Playbooks'}
-              </button>
-            ))}
-          </div>
+    <div className="min-h-screen bg-[linear-gradient(180deg,#F8FAFC_0%,#F8FBFF_100%)]">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        
+        {/* Back Button */}
+        <div className="mb-6">
+          <Button
+            variant="outline"
+            onClick={() => navigate(-1)}
+            className="rounded-full px-5 py-2.5 text-sm font-semibold text-slate-700 border-slate-200 bg-white hover:bg-slate-50 hover:-translate-y-0.5 transition active:translate-y-0 shadow-sm"
+          >
+            <ChevronLeft className="mr-1.5 h-4 w-4" />
+            Back
+          </Button>
         </div>
 
-        {activeTab === 'overview' ? (
-          <OverviewTab kpis={kpis} />
-        ) : activeTab === 'dictionary' ? (
-          <DataDictionaryTab onDownloadRequiredColumns={createRequiredColumnsCsv} />
-        ) : activeTab === 'application' ? (
-          <ApplicationTab
-            mode={mode}
-            setMode={setMode}
-            previewRows={previewRows}
-            data={data}
-            filteredRows={filteredRows.length ? filteredRows : previewRows}
-            loadStatus={loadStatus}
-            loading={loading}
-            error={error}
-            vehicles={vehicles}
-            vehicleTypes={vehicleTypes}
-            routes={routes}
-            selectedVehicles={selectedVehicles}
-            selectedVehicleTypes={selectedVehicleTypes}
-            selectedRoutes={selectedRoutes}
-            setSelectedVehicles={setSelectedVehicles}
-            setSelectedVehicleTypes={setSelectedVehicleTypes}
-            setSelectedRoutes={setSelectedRoutes}
-            dateStart={dateStart}
-            dateEnd={dateEnd}
-            setDateStart={setDateStart}
-            setDateEnd={setDateEnd}
-            onDefaultData={loadDefaultData}
-            onUploadCsv={uploadSelectedCsv}
-            onUploadMapping={prepareMappingColumns}
-            uploadFile={uploadFile}
-            setUploadFile={setUploadFile}
-            mappingFile={mappingFile}
-            setMappingFile={setMappingFile}
-            mappingColumns={mappingColumns}
-            setMappingColumns={setMappingColumns}
-            availableColumns={availableColumns}
-            setAvailableColumns={setAvailableColumns}
-            onApplyMapping={applyMapping}
-            kpis={kpis}
-            charts={charts}
-            clusters={clusters}
-            costSimulation={costSimulation}
-            randomForest={randomForest}
-            gradientBoosting={gradientBoosting}
-            knn={knn}
-            anomalyDetection={anomalyDetection}
-            insights={insights}
-            onDownloadFiltered={() => downloadRowsAsCsv('filtered_preview.csv', filteredRows.length ? filteredRows : previewRows)}
-            onDownloadCost={() => downloadRowsAsCsv('cost_simulation.csv', costSimulation?.simulation ?? [])}
-            onDownloadInsights={() => downloadRowsAsCsv('insights.csv', insights?.insights ?? [])}
-            onDownloadMl={(name, rows) => downloadRowsAsCsv(name, rows)}
-          />
-        ) : (
-          <ActionPlaybooksTab
-            playbooks={playbooks}
-            onDownloadPlaybook={(name, rows) => downloadRowsAsCsv(name, rows)}
-          />
+        {/* Hero Header */}
+        <div className="mb-10 rounded-[32px] border border-[#E2E8F0] bg-white px-10 py-12 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#0F766E]">
+            Logistics &amp; Supply Chain &nbsp;•&nbsp; Route Optimization &amp; Logistics Efficiency
+          </p>
+          <h1 className="mt-4 text-4xl font-extrabold tracking-tight text-[#0F172A] sm:text-5xl">
+            Route Optimization &amp; Logistics Efficiency
+          </h1>
+          <p className="mt-4 max-w-3xl text-lg text-slate-600">
+            Reduce miles, cut fuel, and speed up deliveries with data-driven routing optimization and cost simulations.
+          </p>
+        </div>
+
+        {/* Custom Tab Pills Selector */}
+        <div className="mb-8 flex flex-wrap gap-2 rounded-full border border-slate-200 bg-white p-1.5 shadow-sm w-fit">
+          {TABS.map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => setActiveTab(tab.key as TabKey)}
+              className={`rounded-full px-6 py-2.5 text-sm font-semibold transition-all duration-200 ${
+                activeTab === tab.key
+                  ? 'bg-[#0F766E] text-white shadow-md'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* ── OVERVIEW TAB ── */}
+        {activeTab === 'overview' && (
+          <div className="space-y-6">
+            {/* Purpose Intro Card */}
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Overview</p>
+              <h2 className="mt-3 text-3xl font-bold text-[#0F172A]">Purpose</h2>
+              <p className="mt-4 max-w-4xl text-slate-600 leading-relaxed text-base">
+                Cut route costs and delivery time by optimizing routes, predicting delays &amp; fuel usage, and prioritizing high-impact fleet actions.
+              </p>
+            </section>
+
+            {/* Capabilities & Business Impact */}
+            <div className="grid gap-6 md:grid-cols-2">
+              <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+                <div className="mb-5 flex items-center gap-3">
+                  <div className="rounded-2xl bg-[#ECFDF5] p-3">
+                    <Sparkles className="h-5 w-5 text-[#0F766E]" />
+                  </div>
+                  <h3 className="text-xl font-bold text-[#0F172A]">Capabilities</h3>
+                </div>
+                <ul className="space-y-3">
+                  {[
+                    'Route efficiency scoring and anomaly detection',
+                    'Predictive travel time and fuel consumption models',
+                    'Clustering of routes/vehicles for capacity planning',
+                    'Multi-filter exploration (vehicle / route / traffic / weather)',
+                    'Exportable prioritized actions for operations teams',
+                  ].map((feat) => (
+                    <li key={feat} className="flex items-start gap-3">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#0F766E]" />
+                      <span className="text-slate-600 text-sm leading-relaxed">{feat}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+
+              <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+                <div className="mb-5 flex items-center gap-3">
+                  <div className="rounded-2xl bg-[#EFF6FF] p-3">
+                    <TrendingUp className="h-5 w-5 text-[#2563EB]" />
+                  </div>
+                  <h3 className="text-xl font-bold text-[#0F172A]">Business Impact</h3>
+                </div>
+                <ul className="space-y-3">
+                  {[
+                    'Lower fuel & operational cost per km',
+                    'Faster deliveries & higher on-time %',
+                    'Reduced CO₂ per shipment',
+                    'Better fleet utilisation & scheduling',
+                    'Data-driven procurement of vehicles & drivers',
+                  ].map((impact) => (
+                    <li key={impact} className="flex items-start gap-3">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#2563EB]" />
+                      <span className="text-slate-600 text-sm leading-relaxed">{impact}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            </div>
+
+            {/* KPI Cards Grid */}
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+              <MetricCard
+                icon={<Package className="h-5 w-5 text-[#0F766E]" />}
+                label="Total Routes"
+                value={formatMetric(kpis?.total_routes, 0)}
+                accent="bg-[#ECFDF5]"
+              />
+              <MetricCard
+                icon={<Sparkles className="h-5 w-5 text-[#D97706]" />}
+                label="Avg Efficiency"
+                value={formatMetric(kpis?.avg_efficiency, 3)}
+                accent="bg-[#FFFBEB]"
+              />
+              <MetricCard
+                icon={<Clock className="h-5 w-5 text-[#2563EB]" />}
+                label="Avg Delay"
+                value={formatMetric(kpis?.avg_delay_hours, 2) !== '—' ? `${formatMetric(kpis?.avg_delay_hours, 2)} hrs` : '—'}
+                accent="bg-[#EFF6FF]"
+              />
+              <MetricCard
+                icon={<Percent className="h-5 w-5 text-[#7C3AED]" />}
+                label="Avg Fuel/Route"
+                value={formatMetric(kpis?.avg_fuel_liters, 2) !== '—' ? `${formatMetric(kpis?.avg_fuel_liters, 2)} L` : '—'}
+                accent="bg-[#F5F3FF]"
+              />
+              <MetricCard
+                icon={<AlertCircle className="h-5 w-5 text-[#10B981]" />}
+                label="On-Time Deliveries"
+                value={formatMetric(kpis?.ontime_percent, 1) !== '—' ? `${formatMetric(kpis?.ontime_percent, 1)}%` : '—'}
+                accent="bg-[#ECFDF5]"
+              />
+            </div>
+
+            {/* Who & How section */}
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <h3 className="text-2xl font-bold text-[#0F172A] mb-6">User Guide — Who Should Use &amp; How</h3>
+              <div className="grid gap-6 lg:grid-cols-2">
+                <div className="rounded-2xl border border-slate-100 bg-[#F8FAFC] p-6">
+                  <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#0F766E] mb-3">Target Users</p>
+                  <p className="text-slate-600 text-sm leading-relaxed">
+                    Fleet managers, logistics planners, operations heads, and sustainability teams seeking to reduce fuel costs, minimize delivery times, and maximize scheduling efficiency.
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-slate-100 bg-[#F8FAFC] p-6">
+                  <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#0F766E] mb-3">Standard Workflow</p>
+                  <ol className="space-y-2 text-slate-600 text-sm">
+                    <li className="flex gap-2"><span className="font-bold text-[#0F766E]">1.</span> Load data (default sample or upload custom CSV)</li>
+                    <li className="flex gap-2"><span className="font-bold text-[#0F766E]">2.</span> Filter by vehicle ID, vehicle type, route, and time frame</li>
+                    <li className="flex gap-2"><span className="font-bold text-[#0F766E]">3.</span> Examine bottleneck regions, low-efficiency routes, and delay factors</li>
+                    <li className="flex gap-2"><span className="font-bold text-[#0F766E]">4.</span> Export simulated cost optimization models and action playbooks</li>
+                  </ol>
+                </div>
+              </div>
+            </section>
+          </div>
         )}
 
-        {loading ? (
-          <div className="fixed bottom-6 right-6">
-            <LoadingOverlay />
+        {/* ── DATA DICTIONARY TAB ── */}
+        {activeTab === 'dictionary' && (
+          <div className="space-y-6">
+            {/* Required Schema Chips */}
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Schema</p>
+              <h2 className="mt-3 text-2xl font-bold text-[#0F172A]">Required Columns</h2>
+              <p className="mt-2 text-slate-600">The uploaded dataset must include or map to these essential schema fields for analysis.</p>
+              <div className="mt-6 flex flex-wrap gap-2">
+                {REQUIRED_COLUMNS.map((item) => (
+                  <Chip key={item.column} className="border-[#BFDBFE] bg-[#EFF6FF] text-[#1D4ED8]">{item.column}</Chip>
+                ))}
+              </div>
+            </section>
+
+            {/* Data Dictionary Table */}
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Reference</p>
+              <h2 className="mt-3 text-2xl font-bold text-[#0F172A]">Data Dictionary</h2>
+              <p className="mt-2 mb-6 text-slate-600">Business definitions and database types for the primary fields.</p>
+              <div className="overflow-hidden rounded-3xl border border-slate-200">
+                <table className="min-w-full text-left text-sm">
+                  <thead className="bg-[#F8FAFC] border-b border-slate-200">
+                    <tr>
+                      <th className="font-bold text-slate-600 text-[12px] uppercase tracking-[0.08em] py-3.5 px-4">Column Name</th>
+                      <th className="font-bold text-slate-600 text-[12px] uppercase tracking-[0.08em] py-3.5 px-4">Data Type</th>
+                      <th className="font-bold text-slate-600 text-[12px] uppercase tracking-[0.08em] py-3.5 px-4">Business Description</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 bg-white">
+                    {REQUIRED_COLUMNS.map((item) => (
+                      <tr key={item.column} className="hover:bg-slate-50/50">
+                        <td className="px-4 py-3.5 font-semibold text-slate-800 whitespace-nowrap">{item.column}</td>
+                        <td className="px-4 py-3.5 text-slate-600 whitespace-nowrap">{item.type}</td>
+                        <td className="px-4 py-3.5 text-slate-600">{item.description}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            {/* Variable Roles */}
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Model Variables</p>
+              <h2 className="mt-3 text-2xl font-bold text-[#0F172A]">Variable Roles</h2>
+              <div className="mt-6 grid gap-6 md:grid-cols-2">
+                <div className="rounded-3xl border border-[#BFDBFE] bg-[#EFF6FF] p-6">
+                  <p className="mb-4 text-sm font-bold uppercase tracking-[0.18em] text-[#1D4ED8]">Independent Variables (Features)</p>
+                  <div className="flex flex-wrap gap-2">
+                    {INDEPENDENT_VARIABLES.map((item) => (
+                      <Chip key={item} className="border-[#BFDBFE] bg-white text-[#1D4ED8]">{item}</Chip>
+                    ))}
+                  </div>
+                </div>
+                <div className="rounded-3xl border border-[#A7F3D0] bg-[#ECFDF5] p-6">
+                  <p className="mb-4 text-sm font-bold uppercase tracking-[0.18em] text-[#0F766E]">Dependent Variables (Targets)</p>
+                  <div className="flex flex-wrap gap-2">
+                    {DEPENDENT_VARIABLES.map((item) => (
+                      <Chip key={item} className="border-[#A7F3D0] bg-white text-[#0F766E]">{item}</Chip>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="mt-6">
+                <Button
+                  type="button"
+                  onClick={() => {
+                    const rows = REQUIRED_COLUMNS.map((row) => ({ Column: row.column, Type: row.type, Description: row.description }))
+                    downloadRowsAsCsv('route_optimization_schema.csv', rows)
+                  }}
+                  className="rounded-full px-6 py-3 font-bold bg-[#0F766E] text-white hover:bg-[#0E6962] hover:-translate-y-0.5 transition active:translate-y-0 shadow-sm"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download Schema CSV
+                </Button>
+              </div>
+            </section>
           </div>
-        ) : null}
+        )}
+
+        {/* ── APPLICATION TAB ── */}
+        {activeTab === 'application' && (
+          <div className="space-y-6">
+            
+            {/* Step 1: Dataset Options */}
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Step 1</p>
+              <h2 className="mt-2 text-2xl font-bold text-[#0F172A]">Dataset Options</h2>
+              <p className="mt-2 text-slate-600">Load the default routing records or import custom operations datasets.</p>
+
+              <div className="mt-6 flex flex-wrap gap-3">
+                {/* Default Loader */}
+                <Button
+                  type="button"
+                  onClick={() => { void loadDefaultData() }}
+                  disabled={loading}
+                  className={`rounded-full px-6 py-3 font-semibold transition hover:-translate-y-0.5 active:translate-y-0 ${
+                    mode === 'default'
+                      ? 'bg-[#0F766E] text-white shadow-md hover:bg-[#0E6962]'
+                      : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  {loading && mode === 'default' ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <SquareStack className="mr-2 h-4 w-4" />
+                  )}
+                  Load Default Data
+                </Button>
+
+                {/* Upload CSV */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={loading}
+                  className={`rounded-full px-6 py-3 font-semibold transition hover:-translate-y-0.5 active:translate-y-0 ${
+                    mode === 'upload' ? 'border-[#0F766E] bg-[#ECFDF5] text-[#0F766E]' : ''
+                  }`}
+                >
+                  <UploadCloud className="mr-2 h-4 w-4" />
+                  Upload CSV
+                </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) void uploadSelectedCsv(file)
+                  }}
+                />
+
+                {/* Upload + Manual Mapping */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => mappingInputRef.current?.click()}
+                  disabled={loading}
+                  className={`rounded-full px-6 py-3 font-semibold transition hover:-translate-y-0.5 active:translate-y-0 ${
+                    mode === 'mapping' ? 'border-[#0F766E] bg-[#ECFDF5] text-[#0F766E]' : ''
+                  }`}
+                >
+                  <Settings className="mr-2 h-4 w-4" />
+                  Upload CSV + Manual Mapping
+                </Button>
+                <input
+                  ref={mappingInputRef}
+                  type="file"
+                  accept=".csv"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) void prepareMappingColumns(file)
+                  }}
+                />
+              </div>
+
+              {/* Loader Status or Errors */}
+              {loadStatus && (
+                <div className="mt-5 rounded-2xl border border-emerald-100 bg-[#ECFDF5] p-4 text-sm font-medium text-[#0F766E]">
+                  {loadStatus} &nbsp;•&nbsp; Loaded rows: <span className="font-bold">{data.length}</span>
+                </div>
+              )}
+              {error && (
+                <div className="mt-5 rounded-2xl border border-rose-100 bg-rose-50 p-4 text-sm font-medium text-rose-700">
+                  {error}
+                </div>
+              )}
+            </section>
+
+            {/* Mapping Step */}
+            {mode === 'mapping' && availableColumns.length > 0 && (
+              <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Mapping</p>
+                <h3 className="mt-2 text-2xl font-bold text-[#0F172A]">Column Mapping</h3>
+                <p className="mt-2 mb-6 text-slate-600">Assign columns in your CSV to match Route Optimization variables.</p>
+                {mappingFile && (
+                  <div className="mb-6 flex items-center justify-between rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                    <div className="flex items-center gap-3">
+                      <FileText className="h-5 w-5 text-[#0F766E]" />
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">{mappingFile.name}</p>
+                        <p className="text-xs text-slate-500">{(mappingFile.size / 1024).toFixed(1)} KB</p>
+                      </div>
+                    </div>
+                    <button type="button" onClick={() => { setMappingFile(null); setAvailableColumns([]); setMode('mapping'); }} className="rounded-full border border-slate-200 bg-white p-2 text-slate-500 hover:bg-slate-100" aria-label="Clear file select">
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+                <div className="space-y-3">
+                  {MAPPING_FIELDS.map((field) => (
+                    <MappingRow
+                      key={field}
+                      field={field}
+                      columns={availableColumns}
+                      value={mappingColumns[field] ?? ''}
+                      onChange={(val) => setMappingColumns((prev) => ({ ...prev, [field]: val }))}
+                    />
+                  ))}
+                </div>
+                <div className="mt-6">
+                  <Button
+                    type="button"
+                    onClick={() => void applyMapping()}
+                    disabled={loading}
+                    className="rounded-full px-8 py-3 font-bold bg-[#0F766E] text-white hover:bg-[#0E6962] hover:-translate-y-0.5 transition active:translate-y-0"
+                  >
+                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    Apply Mapping Configurations
+                  </Button>
+                </div>
+              </section>
+            )}
+
+            {/* Primary Analysis Blocks */}
+            {data.length > 0 && (
+              <>
+                {/* Default dataset table preview */}
+                {mode === 'default' && (
+                  <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6">
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Preview</p>
+                        <h3 className="mt-2 text-2xl font-bold text-[#0F172A]">Dataset Preview</h3>
+                      </div>
+                      <div className="flex flex-wrap gap-3">
+                        <Button
+                          type="button"
+                          onClick={() => void loadDefaultData()}
+                          disabled={loading}
+                          className="rounded-full px-6 py-3 font-bold bg-[#0F766E] text-white hover:bg-[#0E6962] hover:-translate-y-0.5 transition active:translate-y-0"
+                        >
+                          {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <SquareStack className="mr-2 h-4 w-4" />}
+                          Reload Default Data
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => void downloadSampleCsv(previewRows)}
+                          className="rounded-full px-6 py-3 font-bold hover:-translate-y-0.5 transition active:translate-y-0 bg-white border-slate-200 text-slate-700"
+                        >
+                          <Download className="mr-2 h-4 w-4" />
+                          Download Sample CSV
+                        </Button>
+                      </div>
+                    </div>
+                    {renderTable(previewRows, PREVIEW_COLUMNS, 'Dataset Preview')}
+                  </section>
+                )}
+
+                {/* Step 2 Filters */}
+                <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Step 2</p>
+                  <h3 className="mt-2 text-2xl font-bold text-[#0F172A] mb-6">Filters &amp; Sub-Selection</h3>
+                  <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                    <SelectableFilter
+                      label="Vehicle ID"
+                      values={vehicles}
+                      selected={selectedVehicles}
+                      onToggle={(val) => setSelectedVehicles((prev) => prev.includes(val) ? prev.filter((v) => v !== val) : [...prev, val])}
+                    />
+                    <SelectableFilter
+                      label="Vehicle Type"
+                      values={vehicleTypes}
+                      selected={selectedVehicleTypes}
+                      onToggle={(val) => setSelectedVehicleTypes((prev) => prev.includes(val) ? prev.filter((v) => v !== val) : [...prev, val])}
+                    />
+                    <SelectableFilter
+                      label="Route ID"
+                      values={routes}
+                      selected={selectedRoutes}
+                      onToggle={(val) => setSelectedRoutes((prev) => prev.includes(val) ? prev.filter((v) => v !== val) : [...prev, val])}
+                    />
+                  </div>
+
+                  <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md hover:border-[#0F766E]/30 w-full lg:w-1/2">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-3">
+                      <p className="text-sm font-bold uppercase tracking-[0.12em] text-[#0F766E]">Time Period</p>
+                      <CalendarRange className="h-4 w-4 text-[#0F766E]" />
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <label className="text-sm text-slate-600">
+                        <span className="mb-1.5 block font-semibold text-slate-700">Start Date</span>
+                        <input type="date" value={dateStart} onChange={(e) => setDateStart(e.target.value)} className="w-full rounded-2xl border border-slate-200 bg-[#F8FAFC] px-3 py-2.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0F766E]/40" />
+                      </label>
+                      <label className="text-sm text-slate-600">
+                        <span className="mb-1.5 block font-semibold text-slate-700">End Date</span>
+                        <input type="date" value={dateEnd} onChange={(e) => setDateEnd(e.target.value)} className="w-full rounded-2xl border border-slate-200 bg-[#F8FAFC] px-3 py-2.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0F766E]/40" />
+                      </label>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Filtered Preview Table */}
+                <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6">
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Selection preview</p>
+                      <h3 className="mt-2 text-2xl font-bold text-[#0F172A]">Filtered Data Preview</h3>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => void downloadRowsAsCsv('filtered_preview.csv', filteredRows)}
+                      className="rounded-full px-6 py-3 font-bold hover:-translate-y-0.5 transition active:translate-y-0 bg-white border-slate-200 text-slate-700"
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Download Filtered Preview
+                    </Button>
+                  </div>
+                  {renderTable(filteredRows, PREVIEW_COLUMNS, 'Filtered Data Preview')}
+                </section>
+
+                {/* Dynamic Key Metrics */}
+                <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Metrics</p>
+                  <h3 className="mt-2 text-2xl font-bold text-[#0F172A] mb-6">Dynamic KPIs</h3>
+                  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+                    <MetricCard
+                      icon={<Package className="h-5 w-5 text-[#0F766E]" />}
+                      label="Routes in selection"
+                      value={formatMetric(kpis?.total_routes, 0)}
+                      accent="bg-[#ECFDF5]"
+                    />
+                    <MetricCard
+                      icon={<Sparkles className="h-5 w-5 text-[#D97706]" />}
+                      label="Avg Efficiency"
+                      value={formatMetric(kpis?.avg_efficiency, 3)}
+                      accent="bg-[#FFFBEB]"
+                    />
+                    <MetricCard
+                      icon={<Clock className="h-5 w-5 text-[#2563EB]" />}
+                      label="Avg Delay"
+                      value={formatMetric(kpis?.avg_delay_hours, 2) !== '—' ? `${formatMetric(kpis?.avg_delay_hours, 2)} hrs` : '—'}
+                      accent="bg-[#EFF6FF]"
+                    />
+                    <MetricCard
+                      icon={<Percent className="h-5 w-5 text-[#7C3AED]" />}
+                      label="Avg Fuel/Route"
+                      value={formatMetric(kpis?.avg_fuel_liters, 2) !== '—' ? `${formatMetric(kpis?.avg_fuel_liters, 2)} L` : '—'}
+                      accent="bg-[#F5F3FF]"
+                    />
+                    <MetricCard
+                      icon={<AlertCircle className="h-5 w-5 text-[#10B981]" />}
+                      label="On-Time Deliveries"
+                      value={formatMetric(kpis?.ontime_percent, 1) !== '—' ? `${formatMetric(kpis?.ontime_percent, 1)}%` : '—'}
+                      accent="bg-[#ECFDF5]"
+                    />
+                  </div>
+                </section>
+
+                {/* Exploratory Analysis Charts */}
+                <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">EDA</p>
+                  <h3 className="mt-2 text-2xl font-bold text-[#0F172A] mb-6">Charts &amp; Visualisations</h3>
+                  <div className="grid gap-6">
+
+                    {/* Route distance distribution */}
+                    {distanceHistData.length ? (
+                      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                        <h4 className="text-lg font-bold text-[#0F172A] mb-4">Route Distance Distribution (km)</h4>
+                        <div className="h-[360px]">
+                          <Plot
+                            data={[{
+                              x: distanceHistData.map((item) => (item.bin_start + item.bin_end) / 2),
+                              y: distanceHistData.map((item) => item.count),
+                              type: 'bar',
+                              marker: { color: '#0F766E' }
+                            }]}
+                            layout={{ ...commonLayout, xaxis: { title: 'Route Distance (km)' }, yaxis: { title: 'Count' } }}
+                            useResizeHandler
+                            style={{ width: '100%', height: '100%' }}
+                          />
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {/* Efficiency Score by Vehicle Type */}
+                    {Object.keys(boxPlotGrouped).length ? (
+                      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                        <h4 className="text-lg font-bold text-[#0F172A] mb-4">Efficiency Score by Vehicle Type</h4>
+                        <div className="h-[380px]">
+                          <Plot
+                            data={Object.entries(boxPlotGrouped).map(([vehicleType, values]) => ({
+                              y: values,
+                              type: 'box',
+                              name: vehicleType,
+                              marker: { color: '#0F766E' }
+                            }))}
+                            layout={{ ...commonLayout, xaxis: { title: 'Vehicle Type' }, yaxis: { title: 'Efficiency Score' }, boxmode: 'group' }}
+                            useResizeHandler
+                            style={{ width: '100%', height: '100%' }}
+                          />
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {/* Delay vs Distance Scatter */}
+                    {scatterGrouped.length ? (
+                      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                        <h4 className="text-lg font-bold text-[#0F172A] mb-4">Delay vs Distance by Traffic Level</h4>
+                        <div className="h-[380px]">
+                          <Plot
+                            data={scatterGrouped.map((trace) => ({
+                              x: trace.x,
+                              y: trace.y,
+                              mode: 'markers',
+                              type: 'scatter',
+                              name: trace.lvl,
+                              marker: { size: trace.size, opacity: 0.8 }
+                            }))}
+                            layout={{ ...commonLayout, xaxis: { title: 'Route Distance (km)' }, yaxis: { title: 'Delay (hrs)' }, legend: { orientation: 'h', y: -0.15 } }}
+                            useResizeHandler
+                            style={{ width: '100%', height: '100%' }}
+                          />
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {/* Fuel Consumption Violin */}
+                    {fuelViolinData.length ? (
+                      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                        <h4 className="text-lg font-bold text-[#0F172A] mb-4">Fuel Consumption (L per km)</h4>
+                        <div className="h-[360px]">
+                          <Plot
+                            data={[{
+                              y: fuelViolinData.map((row) => Number(row.Fuel_L_per_km)),
+                              type: 'violin',
+                              name: 'Fuel L/km',
+                              box: { visible: true },
+                              meanline: { visible: true },
+                              marker: { color: '#0F766E' }
+                            }]}
+                            layout={{ ...commonLayout, yaxis: { title: 'Fuel L/km' } }}
+                            useResizeHandler
+                            style={{ width: '100%', height: '100%' }}
+                          />
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {/* Daily Avg Efficiency Score Line */}
+                    {dailyEffTrendData.length ? (
+                      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                        <h4 className="text-lg font-bold text-[#0F172A] mb-4">Daily Average Efficiency Score</h4>
+                        <div className="h-[360px]">
+                          <Plot
+                            data={[{
+                              x: dailyEffTrendData.map((row) => row.Timestamp),
+                              y: dailyEffTrendData.map((row) => Number(row.Efficiency_Score)),
+                              type: 'scatter',
+                              mode: 'lines+markers',
+                              line: { color: '#0F766E', width: 3 },
+                              marker: { color: '#0F766E', size: 7 }
+                            }]}
+                            layout={{ ...commonLayout, xaxis: { title: 'Date' }, yaxis: { title: 'Efficiency Score' } }}
+                            useResizeHandler
+                            style={{ width: '100%', height: '100%' }}
+                          />
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {/* KMeans Clusters by Distance & Delay */}
+                    {clusterScatterData.length ? (
+                      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                        <h4 className="text-lg font-bold text-[#0F172A] mb-4">KMeans Clusters by Distance &amp; Delay</h4>
+                        <div className="h-[360px]">
+                          <Plot
+                            data={Array.from(new Set(clusterScatterData.map((row) => String(row.cluster ?? '0')))).map((cId) => {
+                              const rows = clusterScatterData.filter((row) => String(row.cluster ?? '0') === cId)
+                              return {
+                                x: rows.map((row) => Number(row.Route_Distance_km)),
+                                y: rows.map((row) => Number(row.Delay_Hours)),
+                                mode: 'markers',
+                                type: 'scatter',
+                                name: `Cluster ${cId}`,
+                                marker: { size: 10 }
+                              }
+                            })}
+                            layout={{ ...commonLayout, xaxis: { title: 'Route Distance (km)' }, yaxis: { title: 'Delay (hrs)' }, legend: { orientation: 'h', y: -0.15 } }}
+                            useResizeHandler
+                            style={{ width: '100%', height: '100%' }}
+                          />
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {/* Correlation Heatmap */}
+                    {heatmapData && heatmapData.columns?.length ? (
+                      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                        <h4 className="text-lg font-bold text-[#0F172A] mb-4">Correlation Matrix Heatmap</h4>
+                        <div className="h-[380px]">
+                          <Plot
+                            data={[{
+                              z: heatmapData.values,
+                              x: heatmapData.columns,
+                              y: heatmapData.columns,
+                              type: 'heatmap',
+                              colorscale: [
+                                [0, '#DBEAFE'],
+                                [0.5, '#93C5FD'],
+                                [1, '#0F766E']
+                              ],
+                              zmin: -1,
+                              zmax: 1
+                            }]}
+                            layout={{ ...commonLayout, margin: { l: 100, r: 20, t: 40, b: 80 } }}
+                            useResizeHandler
+                            style={{ width: '100%', height: '100%' }}
+                          />
+                        </div>
+                      </div>
+                    ) : null}
+
+                  </div>
+                </section>
+
+                {/* Route level cost simulation */}
+                <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6">
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Simulation</p>
+                      <h3 className="mt-2 text-2xl font-bold text-[#0F172A]">Route Level Cost Simulation</h3>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => void downloadRowsAsCsv('cost_simulation.csv', costSimulation?.simulation ?? [])}
+                      className="rounded-full px-6 py-3 font-bold hover:-translate-y-0.5 transition active:translate-y-0 bg-white border-slate-200 text-slate-700"
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Download Cost Model
+                    </Button>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 mb-6">
+                    <MetricCard icon={<Package className="h-5 w-5 text-[#0F766E]" />} label="Fuel Cost" value={formatMetric(costSimulation?.total_fuel_cost, 2)} accent="bg-[#ECFDF5]" />
+                    <MetricCard icon={<Sparkles className="h-5 w-5 text-[#D97706]" />} label="Distance Cost" value={formatMetric(costSimulation?.total_distance_cost, 2)} accent="bg-[#FFFBEB]" />
+                    <MetricCard icon={<Clock className="h-5 w-5 text-[#2563EB]" />} label="Delay Penalty" value={formatMetric(costSimulation?.total_delay_penalty, 2)} accent="bg-[#EFF6FF]" />
+                    <MetricCard icon={<Percent className="h-5 w-5 text-[#7C3AED]" />} label="Grand Total" value={formatMetric(costSimulation?.grand_total_cost, 2)} accent="bg-[#F5F3FF]" />
+                  </div>
+
+                  {renderTable(
+                    costSimulation?.simulation ?? [],
+                    ['Route_ID', 'Vehicle_ID', 'Fuel_Cost_INR', 'Distance_Cost_INR', 'Delay_Penalty_INR', 'Total_Route_Cost_INR'],
+                    'Route-Level Cost Details'
+                  )}
+                </section>
+
+                {/* Machine learning models and predictions */}
+                <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Machine Learning</p>
+                  <h3 className="mt-2 text-2xl font-bold text-[#0F172A] mb-6">Model Predictions</h3>
+                  <div className="space-y-8">
+
+                    {/* RandomForest */}
+                    <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
+                      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-4">
+                        <div>
+                          <h4 className="text-lg font-bold text-[#0F172A]">1) RandomForest — Predict Actual Travel Hours</h4>
+                          <div className="mt-2 flex gap-3 text-sm text-slate-500 font-semibold uppercase tracking-wider">
+                            <span>RMSE: {formatMetric(randomForest?.rmse, 3)}</span>
+                            <span>R²: {formatMetric(randomForest?.r2, 3)}</span>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => downloadRowsAsCsv('random_forest_predictions.csv', randomForest?.predictions ?? [])}
+                          className="rounded-full px-6 py-3 font-bold bg-white border-slate-200 text-slate-700 hover:bg-slate-50 transition active:translate-y-0"
+                        >
+                          <Download className="mr-2 h-4 w-4" />
+                          Download RF Results
+                        </Button>
+                      </div>
+                      {renderTable(randomForest?.predictions ?? [], ['Actual_Travel_Hours', 'Predicted_Travel_Hours'], 'RandomForest predictions')}
+                    </div>
+
+                    {/* GradientBoosting */}
+                    <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
+                      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-4">
+                        <div>
+                          <h4 className="text-lg font-bold text-[#0F172A]">2) GradientBoosting — Predict Actual Fuel Liters</h4>
+                          <div className="mt-2 flex gap-3 text-sm text-slate-500 font-semibold uppercase tracking-wider">
+                            <span>RMSE: {formatMetric(gradientBoosting?.rmse, 3)}</span>
+                            <span>R²: {formatMetric(gradientBoosting?.r2, 3)}</span>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => downloadRowsAsCsv('gradient_boosting_predictions.csv', gradientBoosting?.predictions ?? [])}
+                          className="rounded-full px-6 py-3 font-bold bg-white border-slate-200 text-slate-700 hover:bg-slate-50 transition active:translate-y-0"
+                        >
+                          <Download className="mr-2 h-4 w-4" />
+                          Download GB Results
+                        </Button>
+                      </div>
+                      {renderTable(gradientBoosting?.predictions ?? [], ['Actual_Fuel_Liters', 'Predicted_Fuel_Liters'], 'GradientBoosting predictions')}
+                    </div>
+
+                    {/* KNN */}
+                    <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
+                      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-4">
+                        <div>
+                          <h4 className="text-lg font-bold text-[#0F172A]">3) KNN Regressor — Predict Delay Hours</h4>
+                          <div className="mt-2 flex gap-3 text-sm text-slate-500 font-semibold uppercase tracking-wider">
+                            <span>RMSE: {formatMetric(knn?.rmse, 3)}</span>
+                            <span>R²: {formatMetric(knn?.r2, 3)}</span>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => downloadRowsAsCsv('knn_predictions.csv', knn?.predictions ?? [])}
+                          className="rounded-full px-6 py-3 font-bold bg-white border-slate-200 text-slate-700 hover:bg-slate-50 transition active:translate-y-0"
+                        >
+                          <Download className="mr-2 h-4 w-4" />
+                          Download KNN Results
+                        </Button>
+                      </div>
+                      {renderTable(knn?.predictions ?? [], ['Actual_Delay_Hours', 'Predicted_Delay_Hours'], 'KNN predictions')}
+                    </div>
+
+                    {/* IsolationForest Anomaly */}
+                    <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
+                      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-4">
+                        <div>
+                          <h4 className="text-lg font-bold text-[#0F172A]">4) Anomaly Detection — IsolationForest</h4>
+                          <div className="mt-2 flex gap-3 text-sm text-slate-500 font-semibold uppercase tracking-wider">
+                            <span>Anomalies count: {formatMetric(anomalyDetection?.num_anomalies, 0)}</span>
+                            <span>Rate: {formatMetric(anomalyDetection?.anomaly_rate, 2)}%</span>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => downloadRowsAsCsv('anomaly_detection.csv', anomalyDetection?.anomalies ?? [])}
+                          className="rounded-full px-6 py-3 font-bold bg-white border-slate-200 text-slate-700 hover:bg-slate-50 transition active:translate-y-0"
+                        >
+                          <Download className="mr-2 h-4 w-4" />
+                          Download Anomaly Results
+                        </Button>
+                      </div>
+                      {renderTable(anomalyDetection?.anomalies ?? [], ['Timestamp', 'Vehicle_ID', 'Route_ID', 'Route_Distance_km', 'Actual_Fuel_Liters', 'Fuel_L_per_km', 'Efficiency_Score', 'Delay_Hours', '_is_anomaly'], 'IsolationForest anomalies')}
+                    </div>
+
+                  </div>
+                </section>
+
+                {/* Automated insights */}
+                <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6">
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Insights</p>
+                      <h3 className="mt-2 text-2xl font-bold text-[#0F172A]">Automated Insights</h3>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => void downloadRowsAsCsv('insights.csv', insights?.insights ?? [])}
+                      className="rounded-full px-6 py-3 font-bold hover:-translate-y-0.5 transition active:translate-y-0 bg-white border-slate-200 text-slate-700"
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Download Insights CSV
+                    </Button>
+                  </div>
+                  {renderTable(insights?.insights ?? [], ['Insight_Type', 'Route_ID', 'Avg_Efficiency', 'Count', 'Avg_Delay_Hours', 'Vehicle_ID', 'Avg_L_per_km'], 'Automated Insights')}
+                </section>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* ── ACTION PLAYBOOKS TAB ── */}
+        {activeTab === 'playbooks' && (
+          <div className="space-y-6">
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Actions</p>
+              <h2 className="mt-2 text-2xl font-bold text-[#0F172A]">Operations Action Playbooks</h2>
+              <p className="mt-2 text-slate-600">Download prioritize playbooks to reassign assets and reduce delays.</p>
+            </section>
+
+            {PLAYBOOKS.map((section) => {
+              const rows = playbooks?.[section.key] ?? []
+              const displayColumns = rows.length ? Object.keys(rows[0]).slice(0, 8) : []
+              return (
+                <article key={section.key} className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)] hover:shadow-md transition">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6">
+                    <div>
+                      <h3 className="text-xl font-bold text-[#0F172A]">
+                        {section.title}
+                        {section.subtitle ? <span className="ml-2 text-sm font-semibold text-slate-400">({section.subtitle})</span> : null}
+                      </h3>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => downloadRowsAsCsv(`${section.key}.csv`, rows)}
+                      className="rounded-full px-6 py-3 font-bold bg-white border-slate-200 text-slate-700 hover:bg-slate-50 transition active:translate-y-0"
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Download {section.title}
+                    </Button>
+                  </div>
+                  {renderTable(rows, displayColumns, section.title)}
+                </article>
+              )
+            })}
+
+            {/* Recommendations panel */}
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <div className="mb-6 flex items-center gap-3">
+                <div className="rounded-2xl bg-[#EFF6FF] p-3">
+                  <Lightbulb className="h-5 w-5 text-[#2563EB]" />
+                </div>
+                <h3 className="text-2xl font-bold text-[#0F172A]">Executive Recommendations</h3>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                {[
+                  'Reassign or redesign the 10 least efficient high-fuel routes.',
+                  'Audit vehicles with the worst fuel/km and highest delay scores.',
+                  'Coach or re-pair drivers/operators flagged by the inefficiency scorecard.',
+                  'Avoid high-risk traffic-weather combinations.',
+                  'Use ML-predicted travel hours for planning time-critical routes.',
+                  'Feed these insights into monthly fleet reviews and vendor contracts.',
+                ].map((rec, index) => (
+                  <div key={index} className="flex items-start gap-3 rounded-2xl bg-slate-50 p-4 border border-slate-100">
+                    <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#0F766E]" />
+                    <span className="text-sm text-slate-600 leading-relaxed font-semibold">{rec}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+        )}
+
       </div>
     </div>
   )

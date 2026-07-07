@@ -1,5 +1,27 @@
-import { useEffect, useMemo, useState, type ChangeEvent } from 'react'
-import { CloudUpload, Download, Loader2, MapPin, Upload } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useNavigate } from 'react-router'
+import {
+  Download,
+  FileText,
+  UploadCloud,
+  X,
+  ChevronLeft,
+  Loader2,
+  Sparkles,
+  SquareStack,
+  Clock,
+  Settings,
+  TrendingUp,
+  Package,
+  AlertCircle,
+  Percent,
+  CalendarRange,
+  Lightbulb,
+  MapPin,
+} from 'lucide-react'
+import { Button } from '@/app/components/ui/button'
+import { Table as UiTable, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/app/components/ui/table'
+
 import {
   applyColumnMapping,
   downloadFilteredCsv,
@@ -15,6 +37,7 @@ import {
   runProductivityPredictor,
   uploadCsv,
 } from '@/services/warehouseOperationsApi'
+
 import type {
   WarehouseOperationsChartResponse,
   WarehouseOperationsClusterResponse,
@@ -43,8 +66,6 @@ import AisleCongestion from './components/charts/AisleCongestion'
 import ProductivityShift from './components/charts/ProductivityShift'
 import DelayDurationDistribution from './components/charts/DelayDurationDistribution'
 import ClusterScatter from './components/charts/ClusterScatter'
-
-type TabKey = 'overview' | 'dictionary' | 'application' | 'playbooks'
 
 const REQUIRED_COLUMNS = [
   { column: 'Order_ID', type: 'Categorical', description: 'Unique identifier of the customer order' },
@@ -122,6 +143,125 @@ const PLAYBOOKS = [
   { Action: 'Delay elimination', Rationale: 'Use Delay_Reason stats to run focused kaizen events on top-3 root causes.' },
 ]
 
+type TabKey = 'overview' | 'dictionary' | 'application' | 'playbooks'
+
+function Chip({ children, className = '' }: { children: ReactNode; className?: string }) {
+  return (
+    <span className={`rounded-full px-3 py-1.5 text-sm font-semibold border transition shadow-sm ${className || 'border-[#CBD5E1] bg-white text-[#334155]'}`}>
+      {children}
+    </span>
+  )
+}
+
+function MetricCard({ icon, label, value, accent }: { icon: ReactNode; label: string; value: string; accent: string }) {
+  return (
+    <div className="rounded-3xl border border-[#E2E8F0] bg-white p-6 shadow-[0_18px_40px_rgba(15,23,42,0.08)] transition hover:shadow-[0_24px_50px_rgba(15,23,42,0.12)]">
+      <div className="flex items-center gap-4">
+        <div className={`rounded-2xl p-4 shrink-0 bg-slate-50 ${accent}`}>{icon}</div>
+        <div>
+          <p className="text-sm font-bold text-slate-500 tracking-tight uppercase">{label}</p>
+          <p className="mt-1 text-2xl font-black text-[#0F172A]">{value}</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function SelectableFilter({ label, values, selected, onToggle }: { label: string; values: string[]; selected: string[]; onToggle: (value: string) => void }) {
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md hover:border-[#0F766E]/30">
+      <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-3">
+        <p className="text-sm font-bold uppercase tracking-[0.12em] text-[#0F766E]">{label}</p>
+        <span className="rounded-full bg-[#ECFDF5] px-2 py-0.5 text-xs font-semibold text-[#0F766E]">{selected.length} selected</span>
+      </div>
+      <div className="mb-3 min-h-[56px] rounded-2xl border border-slate-100 bg-[#F8FAFC] px-3.5 py-2.5 flex items-center">
+        {selected.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5">
+            {selected.map((option) => (
+              <span key={option} className="inline-flex items-center gap-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] px-2.5 py-1 text-xs font-bold text-[#0F766E]">
+                {option}
+                <button type="button" onClick={() => onToggle(option)} className="hover:text-red-500 font-bold ml-0.5">×</button>
+              </span>
+            ))}
+          </div>
+        ) : (
+          <div className="text-xs text-slate-400 font-medium">Filter by {label.toLowerCase().replace(/_/g, ' ')}...</div>
+        )}
+      </div>
+      <div className="grid max-h-48 gap-1.5 overflow-y-auto pr-1">
+        {values.map((option) => {
+          const isSelected = selected.includes(option)
+          return (
+            <button
+              key={option}
+              type="button"
+              onClick={() => onToggle(option)}
+              className={`w-full rounded-xl px-3 py-2 text-left text-xs font-semibold transition ${
+                isSelected
+                  ? 'bg-[#0F766E] text-white shadow-sm font-bold'
+                  : 'bg-[#F8FAFC] text-slate-700 hover:bg-slate-100 border border-slate-100'
+              }`}
+            >
+              {option}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function MappingRow({ field, columns, value, onChange }: { field: string; columns: string[]; value: string; onChange: (value: string) => void }) {
+  return (
+    <div className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:grid-cols-[220px_1fr] md:items-center">
+      <div>
+        <p className="text-sm font-semibold text-slate-800">{field}</p>
+      </div>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0F766E]/40"
+      >
+        <option value="">-- Skip --</option>
+        {columns.map((column) => (
+          <option key={column} value={column}>
+            {column}
+          </option>
+        ))}
+      </select>
+    </div>
+  )
+}
+
+function formatCell(value: unknown) {
+  if (value === null || value === undefined) return '—'
+  if (typeof value === 'number') return Number.isInteger(value) ? value.toString() : value.toFixed(4)
+  return String(value)
+}
+
+function formatMetric(value: number | null | undefined, decimals = 2) {
+  if (value == null || Number.isNaN(value)) return '—'
+  return Number(value).toFixed(decimals)
+}
+
+function downloadSampleCsv() {
+  const sample = [
+    ['Order_ID', 'Warehouse', 'Zone', 'Aisle', 'Bin', 'Order_Timestamp', 'Shift', 'Picker_ID', 'SKU', 'SKU_Weight_KG', 'SKU_Cube_M3', 'SKU_Class', 'Pick_Qty', 'Travel_Distance_M', 'Travel_Time_Sec', 'Pick_Time_Sec', 'Pack_Time_Sec', 'Heatmap_Level', 'Slotting_Score', 'Equipment_Type', 'Picker_Productivity_Items_Hour', 'Congestion_Factor', 'Delay_Reason', 'Delay_Minutes'],
+    ['ORD1001', 'WH_North', 'Zone_A', 'Aisle_12', 'Bin_04', '2023-06-15 08:30:00', 'Morning', 'PK_042', 'SKU_90234', '12.4', '0.045', 'A', '3', '45.2', '72', '120', '45', '2', '85.5', 'Forklift', '150.0', '1.2', 'None', '0.0'],
+    ['ORD1002', 'WH_North', 'Zone_B', 'Aisle_18', 'Bin_12', '2023-06-15 09:15:00', 'Morning', 'PK_018', 'SKU_11234', '1.8', '0.005', 'C', '1', '12.6', '24', '35', '18', '4', '62.1', 'Hand_Cart', '95.0', '2.8', 'Aisle Congestion', '4.5'],
+  ]
+  const csv = sample.map((row) => row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(',')).join('\n')
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = 'warehouse_operations_sample.csv'
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(url)
+}
+
 function createRequiredColumnsCsv() {
   const rows = REQUIRED_COLUMNS.map((row) => [row.column, row.type, row.description])
   const csv = ['Column,Type,Description', ...rows.map((row) => row.map((value) => `"${value.replace(/"/g, '""')}"`).join(','))].join('\n')
@@ -159,851 +299,41 @@ function downloadRowsAsCsv(filename: string, rows: WarehouseOperationsRow[]) {
   URL.revokeObjectURL(url)
 }
 
-function downloadSampleCsv() {
-  const sample = [
-    ['Order_ID', 'Warehouse', 'Zone', 'Aisle', 'Bin', 'Order_Timestamp', 'Shift', 'Picker_ID', 'SKU', 'SKU_Weight_KG', 'SKU_Cube_M3', 'SKU_Class', 'Pick_Qty', 'Travel_Distance_M', 'Travel_Time_Sec', 'Pick_Time_Sec', 'Pack_Time_Sec', 'Heatmap_Level', 'Slotting_Score', 'Equipment_Type', 'Picker_Productivity_Items_Hour', 'Congestion_Factor', 'Delay_Reason', 'Delay_Minutes'],
-    ['ORD1001', 'WH_North', 'Zone_A', 'Aisle_12', 'Bin_04', '2023-06-15 08:30:00', 'Morning', 'PK_042', 'SKU_90234', '12.4', '0.045', 'A', '3', '45.2', '72', '120', '45', '2', '85.5', 'Forklift', '150.0', '1.2', 'None', '0.0'],
-    ['ORD1002', 'WH_North', 'Zone_B', 'Aisle_18', 'Bin_12', '2023-06-15 09:15:00', 'Morning', 'PK_018', 'SKU_11234', '1.8', '0.005', 'C', '1', '12.6', '24', '35', '18', '4', '62.1', 'Hand_Cart', '95.0', '2.8', 'Aisle Congestion', '4.5'],
-  ]
-  const csv = sample.map((row) => row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(',')).join('\n')
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = 'warehouse_operations_sample.csv'
-  document.body.appendChild(link)
-  link.click()
-  link.remove()
-  URL.revokeObjectURL(url)
-}
-
-function formatMetric(value: number | null | undefined, decimals = 2) {
-  if (value == null || Number.isNaN(value)) return '--'
-  return Number(value).toFixed(decimals)
-}
-
-function getPreviewColumns(rows: WarehouseOperationsRow[]) {
-  return Array.from(
-    rows.reduce((set, row) => {
-      Object.keys(row).slice(0, 10).forEach((key) => set.add(key))
-      return set
-    }, new Set<string>()),
-  ).slice(0, 10)
-}
-
-function Table({
-  title,
-  rows,
-  columns,
-  emptyText = 'No data available.',
-}: {
-  title: string
-  rows: WarehouseOperationsRow[]
-  columns?: string[]
-  emptyText?: string
-}) {
-  const visibleColumns = columns ?? getPreviewColumns(rows)
-
+function renderTable(rows: WarehouseOperationsRow[], columns: string[], title: string) {
+  if (!rows.length) {
+    return <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">No rows to display.</div>
+  }
   return (
-    <div className="rounded-[24px] border border-[#E2E8F0] bg-white shadow-sm">
-      <div className="border-b border-[#E2E8F0] px-5 py-4">
-        <h3 className="text-lg font-semibold text-[#0F172A]">{title}</h3>
-      </div>
+    <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white">
       <div className="overflow-x-auto">
-        <table className="min-w-full text-left text-[13px]">
-          <thead className="bg-[#F8FAFC] text-[#475569]">
-            <tr>
-              {visibleColumns.map((column) => (
-                <th key={column} className="whitespace-nowrap px-4 py-3 font-semibold">
-                  {column}
-                </th>
+        <UiTable>
+          <TableHeader>
+            <TableRow className="bg-slate-50 border-b border-slate-200">
+              {columns.map((col) => (
+                <TableHead key={col} className="font-bold text-slate-600 text-[12px] uppercase tracking-[0.08em] py-3.5 px-4 whitespace-nowrap">{col}</TableHead>
               ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 ? (
-              <tr>
-                <td className="px-4 py-4 text-[#64748B]" colSpan={visibleColumns.length}>
-                  {emptyText}
-                </td>
-              </tr>
-            ) : (
-              rows.slice(0, 10).map((row, index) => (
-                <tr key={index} className="border-t border-[#E2E8F0]">
-                  {visibleColumns.map((column) => (
-                    <td key={column} className="max-w-[240px] px-4 py-3 align-top text-[#0F172A]">
-                      {row[column] == null ? '--' : String(row[column])}
-                    </td>
-                  ))}
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  )
-}
-
-function SummaryCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-[22px] border border-[#D6EAF8] bg-[linear-gradient(180deg,#FFFFFF_0%,#F8FBFF_100%)] px-4 py-4 shadow-sm">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#0F766E]">{label}</p>
-      <p className="mt-2 text-2xl font-bold text-[#0F172A]">{value}</p>
-    </div>
-  )
-}
-
-function SectionTitle({ title, subtitle }: { title: string; subtitle?: string }) {
-  return (
-    <div className="mb-4">
-      <h3 className="text-2xl font-bold text-[#0F172A]">{title}</h3>
-      {subtitle ? <p className="mt-2 text-[15px] leading-7 text-[#475569]">{subtitle}</p> : null}
-    </div>
-  )
-}
-
-function LoadingOverlay() {
-  return (
-    <div className="inline-flex items-center gap-2 rounded-full border border-[#CCFBF1] bg-[#ECFDF5] px-3 py-1 text-[12px] font-semibold uppercase tracking-[0.18em] text-[#0F766E]">
-      <Loader2 className="h-4 w-4 animate-spin" />
-      Loading
-    </div>
-  )
-}
-
-function Header() {
-  return (
-    <section className="rounded-[28px] border border-[#E2E8F0] bg-[linear-gradient(135deg,#FFFFFF_0%,#F7FBFF_100%)] px-6 py-6 shadow-[0_18px_40px_rgba(15,23,42,0.08)] md:px-8 md:py-7">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:gap-5">
-        <div className="flex h-14 w-14 items-center justify-center rounded-[18px] bg-[#0F766E] text-lg font-black text-white shadow-lg">
-          AA
-        </div>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-[#0F172A] md:text-4xl">Warehouse Operations Analytics</h1>
-          <p className="mt-2 max-w-3xl text-[16px] leading-7 text-[#475569]">Analyse picking efficiency, slotting, layouts, and picker productivity.</p>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-function OverviewTab({ kpis }: { kpis: WarehouseOperationsFilterResponse['kpis'] | null }) {
-  const overviewKpis = [
-    { label: 'Total Orders', value: formatMetric(kpis?.total_orders, 0) },
-    { label: 'Avg Pick Time', value: `${formatMetric(kpis?.avg_pick_time_sec, 1)}s` },
-    { label: 'Avg Travel Time', value: `${formatMetric(kpis?.avg_travel_time_sec, 1)}s` },
-    { label: 'Heatmap Intensity', value: formatMetric(kpis?.avg_heatmap_level, 2) },
-    { label: 'Productivity Score', value: `${formatMetric(kpis?.avg_productivity, 1)} items/hr` },
-  ]
-
-  return (
-    <div className="space-y-6">
-      <SectionTitle title="Overview" />
-
-      <div className="rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#0F766E]">Purpose</p>
-        <p className="mt-3 max-w-4xl text-[16px] leading-8 text-[#334155]">
-          Analyse picking efficiency, slotting, congestion, picker productivity and equipment usage.
-          Use this to redesign layout, rebalance workload, and cut cost per order without breaking your ops team.
-        </p>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm">
-          <h3 className="text-lg font-bold text-[#0F172A]">Capabilities Card</h3>
-          <ul className="mt-4 space-y-3 text-[15px] leading-7 text-[#334155]">
-            <li>Warehouse heatmaps &amp; congestion analysis</li>
-            <li>Pick-path &amp; travel distance efficiency</li>
-            <li>Slotting score &amp; SKU-class optimisation</li>
-            <li>Picker productivity benchmarking</li>
-            <li>Delay root-cause analytics</li>
-            <li>Equipment utilisation and mix analysis</li>
-          </ul>
-        </div>
-
-        <div className="rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm">
-          <h3 className="text-lg font-bold text-[#0F172A]">Business Impact Card</h3>
-          <ul className="mt-4 space-y-3 text-[15px] leading-7 text-[#334155]">
-            <li>Faster order fulfilment &amp; higher throughput</li>
-            <li>Lower labour + operational cost per order</li>
-            <li>Reduced congestion &amp; picker fatigue</li>
-            <li>Better layout &amp; slotting decisions</li>
-            <li>More predictable performance during peaks</li>
-          </ul>
-        </div>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-        {overviewKpis.map((item) => (
-          <SummaryCard key={item.label} label={item.label} value={item.value} />
-        ))}
-      </div>
-
-      <div className="rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm">
-        <h3 className="text-lg font-bold text-[#0F172A]">Who Should Use &amp; How</h3>
-        <div className="mt-4 grid gap-6 lg:grid-cols-2">
-          <div>
-            <p className="text-[13px] font-semibold uppercase tracking-[0.2em] text-[#0F766E]">Who:</p>
-            <p className="mt-2 text-[15px] leading-7 text-[#334155]">Warehouse managers &amp; DC heads, ops / logistics leaders, industrial engineering / IE teams, process excellence &amp; BI teams.</p>
-          </div>
-          <div>
-            <p className="text-[13px] font-semibold uppercase tracking-[0.2em] text-[#0F766E]">How:</p>
-            <ol className="mt-2 space-y-2 text-[15px] leading-7 text-[#334155]">
-              <li>1. Load dataset (default/upload)</li>
-              <li>2. Filter by warehouse, shift, and picker ID</li>
-              <li>3. Audit pick times and travel distance metrics</li>
-              <li>4. Implement ML predictions and download playbooks for action</li>
-            </ol>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function DataDictionaryTab({ onDownloadRequiredColumns }: { onDownloadRequiredColumns: () => void }) {
-  return (
-    <div className="space-y-6">
-      <SectionTitle
-        title="Data Dictionary"
-        subtitle="Below is the complete schema used for Warehouse Operations. Required columns must exist in your file or be mapped manually."
-      />
-
-      <div className="rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm">
-        <Table
-          title="Required columns table"
-          rows={REQUIRED_COLUMNS as unknown as WarehouseOperationsRow[]}
-          columns={['column', 'type', 'description']}
-        />
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm">
-          <h3 className="text-lg font-bold text-[#0F172A]">Independent Variables</h3>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {INDEPENDENT_VARIABLES.map((item) => (
-              <span key={item} className="rounded-full border border-[#C7E5F6] bg-[#EFF8FD] px-3 py-1.5 text-[14px] font-semibold text-[#075985]">
-                {item}
-              </span>
+            </TableRow>
+          </TableHeader>
+          <TableBody className="divide-y divide-slate-100">
+            {rows.slice(0, 10).map((row, index) => (
+              <TableRow key={index} className="border-slate-100 hover:bg-slate-50/50">
+                {columns.map((col) => (
+                  <TableCell key={`${index}-${col}`} className="px-4 py-3.5 text-slate-700 text-sm max-w-[180px] truncate">{formatCell(row[col])}</TableCell>
+                ))}
+              </TableRow>
             ))}
-          </div>
-        </div>
-
-        <div className="rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm">
-          <h3 className="text-lg font-bold text-[#0F172A]">Dependent Variables</h3>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {DEPENDENT_VARIABLES.map((item) => (
-              <span key={item} className="rounded-full border border-[#CCFBF1] bg-[#F0FDFA] px-3 py-1.5 text-[14px] font-semibold text-[#0F766E]">
-                {item}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="flex justify-start">
-        <button
-          type="button"
-          onClick={onDownloadRequiredColumns}
-          className="inline-flex items-center gap-2 rounded-full bg-[#0F766E] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#0D5F58]"
-        >
-          <Download className="h-4 w-4" />
-          Download Data Dictionary
-        </button>
-      </div>
-    </div>
-  )
-}
-
-function ApplicationTab({
-  mode,
-  setMode,
-  previewRows,
-  data,
-  filteredRows,
-  loadStatus,
-  loading,
-  error,
-  warehouses,
-  shifts,
-  pickerIds,
-  selectedWarehouses,
-  selectedShifts,
-  selectedPickerIds,
-  setSelectedWarehouses,
-  setSelectedShifts,
-  setSelectedPickerIds,
-  dateStart,
-  dateEnd,
-  setDateStart,
-  setDateEnd,
-  onDefaultData,
-  onUploadCsv,
-  onUploadMapping,
-  uploadFile,
-  setUploadFile,
-  mappingFile,
-  setMappingFile,
-  mappingColumns,
-  setMappingColumns,
-  availableColumns,
-  setAvailableColumns,
-  onApplyMapping,
-  kpis,
-  charts,
-  clusters,
-  pickTimeMl,
-  delayMl,
-  productivityMl,
-  insights,
-  onDownloadFiltered,
-  onDownloadInsights,
-  onDownloadMl,
-  onDownloadClusters,
-}: {
-  mode: WarehouseOperationsMode
-  setMode: (mode: WarehouseOperationsMode) => void
-  previewRows: WarehouseOperationsRow[]
-  data: WarehouseOperationsRow[]
-  filteredRows: WarehouseOperationsRow[]
-  loadStatus: string
-  loading: boolean
-  error: string | null
-  warehouses: string[]
-  shifts: string[]
-  pickerIds: string[]
-  selectedWarehouses: string[]
-  selectedShifts: string[]
-  selectedPickerIds: string[]
-  setSelectedWarehouses: (values: string[]) => void
-  setSelectedShifts: (values: string[]) => void
-  setSelectedPickerIds: (values: string[]) => void
-  dateStart: string
-  dateEnd: string
-  setDateStart: (value: string) => void
-  setDateEnd: (value: string) => void
-  onDefaultData: () => void
-  onUploadCsv: (file: File) => Promise<void>
-  onUploadMapping: (file: File) => Promise<void>
-  uploadFile: File | null
-  setUploadFile: (file: File | null) => void
-  mappingFile: File | null
-  setMappingFile: (file: File | null) => void
-  mappingColumns: Record<string, string>
-  setMappingColumns: (columns: Record<string, string>) => void
-  availableColumns: string[]
-  setAvailableColumns: (columns: string[]) => void
-  onApplyMapping: () => Promise<void>
-  kpis: WarehouseOperationsFilterResponse['kpis'] | null
-  charts: WarehouseOperationsChartResponse | null
-  clusters: WarehouseOperationsClusterResponse | null
-  pickTimeMl: WarehouseOperationsMlResponse | null
-  delayMl: WarehouseOperationsMlResponse | null
-  productivityMl: WarehouseOperationsMlResponse | null
-  insights: WarehouseOperationsInsightsResponse | null
-  onDownloadFiltered: () => void
-  onDownloadInsights: () => void
-  onDownloadMl: (label: string, rows: WarehouseOperationsRow[]) => void
-  onDownloadClusters: () => void
-}) {
-  const filteredPreview = filteredRows.slice(0, 10)
-
-  // Determine whether to display the rest of the workflow
-  const showWorkflow = data.length > 0
-
-  return (
-    <div className="space-y-6">
-      <SectionTitle title="Application" />
-
-      {/* STEP 1: LOAD DATASET (Always Visible) */}
-      <div className="rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm">
-        <SectionTitle title="STEP 1 — LOAD DATASET" />
-        <div className="grid gap-3 md:grid-cols-3">
-          {(['default', 'upload', 'mapping'] as WarehouseOperationsMode[]).map((item) => (
-            <label
-              key={item}
-              className={`flex cursor-pointer items-center gap-3 rounded-[18px] border px-4 py-4 transition ${
-                mode === item ? 'border-[#0F766E] bg-[#ECFDF5]' : 'border-[#E2E8F0] bg-[#F8FAFC] hover:border-[#CBD5E1]'
-              }`}
-            >
-              <input
-                type="radio"
-                name="dataset-mode"
-                checked={mode === item}
-                onChange={() => {
-                  setMode(item)
-                  setData([])
-                  setFilteredRows([])
-                  setPreviewRows([])
-                  setKpis(null)
-                  setCharts(null)
-                  setClusters(null)
-                  setPickTimeMl(null)
-                  setDelayMl(null)
-                  setProductivityMl(null)
-                  setInsights(null)
-                  setUploadFile(null)
-                  setMappingFile(null)
-                  setAvailableColumns([])
-                  if (item === 'default') {
-                    void loadDefaultData()
-                  }
-                }}
-                className="h-4 w-4 accent-[#0F766E]"
-              />
-              <span className="text-[15px] font-semibold text-[#0F172A]">
-                {item === 'default' ? 'Default Data' : item === 'upload' ? 'Upload CSV' : 'Upload + Map Columns'}
-              </span>
-            </label>
-          ))}
-        </div>
-
-        <div className="mt-6 space-y-6">
-          {mode === 'upload' ? (
-            <div className="rounded-[22px] border border-[#E2E8F0] bg-[#F8FAFC] p-5">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm font-semibold text-[#0F172A]">Step 1: Upload CSV File</p>
-                  <p className="mt-1 text-[13px] text-[#475569]">Upload your warehouse dataset CSV.</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={downloadSampleCsv}
-                  className="inline-flex items-center gap-2 rounded-full border border-[#CBD5E1] bg-white px-4 py-2 text-sm font-semibold text-[#0F172A]"
-                >
-                  <Download className="h-4 w-4" />
-                  Download Sample CSV
-                </button>
-              </div>
-
-              <label className="mt-4 flex min-h-[120px] cursor-pointer flex-col items-center justify-center rounded-[22px] border border-dashed border-[#CBD5E1] bg-white px-4 py-6 text-center hover:bg-slate-50 transition">
-                <CloudUpload className="h-7 w-7 text-[#0F766E]" />
-                <span className="mt-3 text-[15px] font-semibold text-[#0F172A]">Drag &amp; Drop CSV</span>
-                <span className="mt-1 text-[13px] text-[#64748B]">or Browse Files to upload</span>
-                <input
-                  type="file"
-                  accept=".csv"
-                  className="hidden"
-                  onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                    const file = event.target.files?.[0] ?? null
-                    setUploadFile(file)
-                    if (file) void onUploadCsv(file)
-                  }}
-                />
-              </label>
-              {showWorkflow && (
-                <p className="mt-3 text-[14px] font-semibold text-[#0F766E]">Dataset uploaded. ({data.length} rows loaded)</p>
-              )}
-            </div>
-          ) : null}
-
-          {mode === 'default' ? (
-            <div className="rounded-[22px] border border-[#E2E8F0] bg-[#F8FAFC] p-5">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm font-semibold text-[#0F172A]">Default Data Flow</p>
-                  <p className="mt-1 text-[13px] text-[#475569]">Loaded from standard supply chain dataset repositories.</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={onDefaultData}
-                  className="inline-flex items-center gap-2 rounded-full bg-[#0F766E] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0D5F58] transition"
-                >
-                  <MapPin className="h-4 w-4" />
-                  Download Default Dataset
-                </button>
-              </div>
-              <p className="mt-3 text-[14px] font-semibold text-[#0F766E]">{loadStatus}</p>
-              {showWorkflow && (
-                <div className="mt-4 overflow-hidden rounded-[22px] border border-[#E2E8F0]">
-                  <Table title="Dataset preview table (Horizontal Scroll)" rows={previewRows.slice(0, 10)} columns={PREVIEW_COLUMNS} />
-                </div>
-              )}
-            </div>
-          ) : null}
-
-          {mode === 'mapping' ? (
-            <div className="rounded-[22px] border border-[#E2E8F0] bg-[#F8FAFC] p-5">
-              <p className="text-sm font-semibold text-[#0F172A]">Step 1: Load Dataset</p>
-              <p className="mt-1 text-[13px] text-[#475569]">Upload CSV to map columns to required fields.</p>
-              <label className="mt-4 flex min-h-[120px] cursor-pointer flex-col items-center justify-center rounded-[22px] border border-dashed border-[#CBD5E1] bg-white px-4 py-6 text-center hover:bg-slate-50 transition">
-                <Upload className="h-5 w-5 text-[#0F766E]" />
-                <span className="mt-3 text-[15px] font-semibold text-[#0F172A]">{mappingFile ? mappingFile.name : 'Drag &amp; Drop CSV'}</span>
-                <span className="mt-1 text-[13px] text-[#64748B]">or Browse Files</span>
-                <input
-                  type="file"
-                  accept=".csv"
-                  className="hidden"
-                  onChange={async (event: ChangeEvent<HTMLInputElement>) => {
-                    const file = event.target.files?.[0] ?? null
-                    setMappingFile(file)
-                    if (file) void onUploadMapping(file)
-                  }}
-                />
-              </label>
-
-              {availableColumns.length ? (
-                <div className="mt-5 space-y-4">
-                  <h4 className="text-[14px] font-bold text-[#0F172A] uppercase tracking-wider">Map Columns to Required Schema</h4>
-                  <div className="grid gap-3 lg:grid-cols-2">
-                    {MAPPING_FIELDS.map((field) => (
-                      <label key={field} className="rounded-[18px] border border-[#E2E8F0] bg-white p-4 text-sm font-semibold text-[#0F172A] block">
-                        <span className="mb-2 block">{field}</span>
-                        <select
-                          value={mappingColumns[field] || ''}
-                          onChange={(event) => setMappingColumns({ ...mappingColumns, [field]: event.target.value })}
-                          className="w-full rounded-xl border border-[#CBD5E1] bg-white px-3 py-2 text-sm text-[#0F172A] font-medium"
-                        >
-                          <option value="">-- Skip / Select column --</option>
-                          {availableColumns.map((column) => (
-                            <option key={column} value={column}>{column}</option>
-                          ))}
-                        </select>
-                      </label>
-                    ))}
-                  </div>
-                  <div className="mt-5 flex justify-start">
-                    <button
-                      type="button"
-                      onClick={onApplyMapping}
-                      className="inline-flex items-center gap-2 rounded-full bg-[#0F766E] px-6 py-3 text-sm font-semibold text-white hover:bg-[#0D5F58] transition"
-                    >
-                      Apply Mapping
-                    </button>
-                  </div>
-                </div>
-              ) : null}
-              {showWorkflow && (
-                <p className="mt-3 text-[14px] font-semibold text-[#0F766E]">Dataset mapped and loaded. ({data.length} rows loaded)</p>
-              )}
-            </div>
-          ) : null}
-        </div>
-      </div>
-
-
-
-      {/* REST OF WORKFLOW (Only appears when dataset loaded / showWorkflow is true) */}
-      {showWorkflow ? (
-        <>
-          {/* STEP 2: FILTERS & PREVIEW */}
-          <div className="rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm">
-            <SectionTitle title="STEP 2 — FILTERS & PREVIEW" />
-            <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
-              <MultiSelect label="Warehouse" options={warehouses} values={selectedWarehouses} onChange={setSelectedWarehouses} />
-              <MultiSelect label="Shift" options={shifts} values={selectedShifts} onChange={setSelectedShifts} />
-              <MultiSelect label="Picker ID" options={pickerIds} values={selectedPickerIds} onChange={setSelectedPickerIds} />
-
-              <div className="rounded-[18px] border border-[#E2E8F0] bg-[#F8FAFC] p-4">
-                <p className="text-[13px] font-semibold uppercase tracking-[0.16em] text-[#0F766E]">Order Date Filter</p>
-                <div className="mt-3 grid gap-3">
-                  <input
-                    type="date"
-                    value={dateStart}
-                    onChange={(event) => setDateStart(event.target.value)}
-                    className="rounded-xl border border-[#CBD5E1] bg-white px-3 py-2 text-sm text-[#0F172A]"
-                  />
-                  <input
-                    type="date"
-                    value={dateEnd}
-                    onChange={(event) => setDateEnd(event.target.value)}
-                    className="rounded-xl border border-[#CBD5E1] bg-white px-3 py-2 text-sm text-[#0F172A]"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 flex items-center justify-between gap-4 flex-wrap">
-              <h3 className="text-lg font-bold text-[#0F172A]">Filtered Data Preview (first 10 rows)</h3>
-              <button
-                type="button"
-                onClick={onDownloadFiltered}
-                className="inline-flex items-center gap-2 rounded-full border border-[#CBD5E1] bg-[#F8FAFC] px-5 py-3 text-sm font-semibold text-[#0F172A] hover:bg-[#F1F5F9] transition"
-              >
-                <Download className="h-4 w-4" />
-                Download Filtered Data
-              </button>
-            </div>
-
-            <div className="mt-4 overflow-hidden rounded-[22px] border border-[#E2E8F0]">
-              <Table title="" rows={filteredPreview} columns={PREVIEW_COLUMNS} />
-            </div>
-          </div>
-
-          {/* STEP 3: KPIs */}
-          <div className="rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm">
-            <h3 className="text-lg font-bold text-[#0F172A]">Dynamic KPIs</h3>
-            <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-              <SummaryCard label="Orders" value={formatMetric(kpis?.total_orders, 0)} />
-              <SummaryCard label="Avg Pick Time" value={`${formatMetric(kpis?.avg_pick_time_sec, 1)}s`} />
-              <SummaryCard label="Avg Travel Time" value={`${formatMetric(kpis?.avg_travel_time_sec, 1)}s`} />
-              <SummaryCard label="Avg Heatmap Level" value={formatMetric(kpis?.avg_heatmap_level, 2)} />
-              <SummaryCard label="Avg Productivity" value={`${formatMetric(kpis?.avg_productivity, 1)} items/hr`} />
-            </div>
-          </div>
-
-          {/* STEP 4: EXPLORATORY DATA ANALYSIS */}
-          <div className="space-y-6 rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm">
-            <SectionTitle title="EXPLORATORY DATA ANALYSIS" subtitle="Plotly dynamic charts mapping the warehouse operations dataset." />
-            <div className="grid grid-cols-1 gap-6">
-              <PickQtyDistribution data={charts?.pick_qty_distribution ?? []} />
-              <TravelDistanceOverTime data={charts?.travel_distance_over_time ?? []} />
-              <ZoneHeatmapActivity data={charts?.zone_heatmap_activity ?? []} />
-              <SlottingScoreSkuClass data={charts?.slotting_score_by_sku_class ?? []} />
-              <DelayReasonsDistribution data={charts?.delay_reasons ?? []} />
-              <TravelTimeVsDistance data={charts?.travel_time_vs_distance ?? []} />
-              <EquipmentUsage data={charts?.equipment_usage ?? []} />
-              <PickerProductivityDistribution data={charts?.picker_productivity_distribution ?? []} />
-              <CongestionFactorWarehouse data={charts?.congestion_by_warehouse ?? []} />
-              <SkuWeightDistribution data={charts?.sku_weight_distribution ?? []} />
-              <PickPackTime data={charts?.pick_vs_pack_time ?? []} />
-              <HeatmapLevelOverTime data={charts?.heatmap_over_time ?? []} />
-              <AisleCongestion data={filteredRows.length ? filteredRows : previewRows} />
-              <ProductivityShift data={charts?.productivity_by_shift ?? []} />
-              <DelayDurationDistribution data={charts?.delay_duration_distribution ?? []} />
-            </div>
-          </div>
-
-          {/* STEP 5: MACHINE LEARNING MODELS */}
-          <div className="space-y-6 rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm">
-            <SectionTitle
-              title="MACHINE LEARNING MODELS"
-              subtitle="Predictive and clustering workflows running Random Forests, Gradient Boosters, and KMeans."
-            />
-            
-            {/* Pick Time Regressor */}
-            <ModelCard
-              title="1. Predict Pick Time (RandomForestRegressor)"
-              metrics={pickTimeMl}
-              rows={pickTimeMl?.predictions ?? []}
-              downloadLabel="Download Pick Time Predictions"
-              onDownload={() => onDownloadMl('pick_time_predictions.csv', pickTimeMl?.predictions ?? [])}
-            />
-
-            {/* Clustering */}
-            <div className="rounded-[22px] border border-[#E2E8F0] bg-[#F8FAFC] p-5 space-y-4">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <h4 className="text-lg font-semibold text-[#0F172A]">2. Congestion Pattern Clustering (KMeans Cluster)</h4>
-                  <p className="text-sm text-[#475569]">Groups warehouse picks by Heatmap, Congestion, and Pick Quantity.</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={onDownloadClusters}
-                  className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#0F172A] shadow-sm hover:bg-slate-50 transition"
-                >
-                  <Download className="h-4 w-4" />
-                  Download Cluster Distribution
-                </button>
-              </div>
-              
-              <div className="grid grid-cols-1 gap-5">
-                <div className="overflow-hidden rounded-[18px] border border-[#E2E8F0] bg-white">
-                  <Table
-                    title="Cluster Distribution Table"
-                    rows={clusters?.cluster_counts ?? []}
-                    columns={['Cluster', 'Count']}
-                  />
-                </div>
-                <ClusterScatter data={clusters?.scatter_data ?? []} />
-              </div>
-            </div>
-
-            {/* Delay Predictor */}
-            <ModelCard
-              title="3. Predict Delay Minutes (GradientBoostingRegressor)"
-              metrics={delayMl}
-              rows={delayMl?.predictions ?? []}
-              downloadLabel="Download Delay Predictions"
-              onDownload={() => onDownloadMl('delay_predictions.csv', delayMl?.predictions ?? [])}
-            />
-
-            {/* Picker Productivity Predictor */}
-            <ModelCard
-              title="4. Predict Picker Productivity (RandomForestRegressor)"
-              metrics={productivityMl}
-              rows={productivityMl?.predictions ?? []}
-              downloadLabel="Download Productivity Predictions"
-              onDownload={() => onDownloadMl('picker_productivity_predictions.csv', productivityMl?.predictions ?? [])}
-            />
-          </div>
-
-          {/* STEP 6: AUTOMATED INSIGHTS */}
-          <div className="rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm">
-            <SectionTitle title="AUTOMATED INSIGHTS" />
-            <div className="flex items-center justify-between gap-4 mb-4">
-              <p className="text-sm text-[#475569]">Insights generated dynamically based on highest congestion, slow equipment, productivity, and delay reasons.</p>
-              <button
-                type="button"
-                onClick={onDownloadInsights}
-                className="inline-flex items-center gap-2 rounded-full border border-[#CBD5E1] bg-[#F8FAFC] px-5 py-3 text-sm font-semibold text-[#0F172A] hover:bg-slate-50 transition"
-              >
-                <Download className="h-4 w-4" />
-                Download Automated Insights
-              </button>
-            </div>
-            <div className="overflow-hidden rounded-[22px] border border-[#E2E8F0]">
-              <Table title="Automated Insights Table" rows={insights?.insights ?? []} columns={['Insight', 'Value', 'Detail']} />
-            </div>
-          </div>
-        </>
-      ) : null}
-
-      {/* LOAD STATUS FOOTER */}
-      <div className="rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm">
-        <h3 className="text-lg font-bold text-[#0F172A]">System load status</h3>
-        <p className="mt-3 text-[15px] text-[#475569]">{loading ? 'Refreshing analysis...' : loadStatus}</p>
-        {error ? <p className="mt-2 text-sm font-semibold text-[#B91C1C]">{error}</p> : null}
-        <p className="mt-4 text-sm text-[#64748B]">Loaded dataset rows count: {data.length}</p>
-      </div>
-    </div>
-  )
-}
-
-function MultiSelect({
-  label,
-  options,
-  values,
-  onChange,
-}: {
-  label: string
-  options: string[]
-  values: string[]
-  onChange: (values: string[]) => void
-}) {
-  const placeholder = `Choose one or more ${label.toLowerCase()}s`
-
-  return (
-    <div className="rounded-[18px] border border-[#E2E8F0] bg-[#F8FAFC] p-4">
-      <p className="text-[13px] font-semibold uppercase tracking-[0.16em] text-[#0F766E]">{label}</p>
-      <div className="mb-4 mt-3 min-h-[56px] rounded-[16px] border border-[#E2E8F0] bg-white px-4 py-3">
-        {values.length > 0 ? (
-          <div className="flex flex-wrap gap-2">
-            {values.map((option) => (
-              <button
-                key={option}
-                type="button"
-                onClick={() => onChange(values.filter((value) => value !== option))}
-                className="inline-flex items-center gap-2 rounded-full bg-[#FEE2E2] px-3 py-1 text-sm font-semibold text-[#B91C1C] hover:bg-[#FCA5A5] transition"
-              >
-                {option}
-                <span aria-hidden="true">×</span>
-              </button>
-            ))}
-          </div>
-        ) : (
-          <div className="text-sm text-[#64748B]">{placeholder}</div>
-        )}
-      </div>
-      <div className="grid max-h-56 gap-2 overflow-y-auto pr-1">
-        {options.map((option) => (
-          <button
-            key={option}
-            type="button"
-            onClick={() =>
-              onChange(
-                values.includes(option) ? values.filter((value) => value !== option) : [...values, option],
-              )
-            }
-            className={`w-full rounded-2xl px-3 py-2 text-left text-sm transition ${
-              values.includes(option) ? 'bg-[#0F766E] text-white font-semibold' : 'bg-white text-[#0F172A] hover:bg-[#E2E8F0]'
-            }`}
-          >
-            {option}
-          </button>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function ModelCard({
-  title,
-  metrics,
-  rows,
-  downloadLabel,
-  onDownload,
-}: {
-  title: string
-  metrics: WarehouseOperationsMlResponse | null
-  rows: WarehouseOperationsRow[]
-  downloadLabel: string
-  onDownload: () => void
-}) {
-  return (
-    <div className="rounded-[22px] border border-[#E2E8F0] bg-[#F8FAFC] p-5">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h4 className="text-lg font-semibold text-[#0F172A]">{title}</h4>
-          <div className="mt-2 flex gap-4 text-sm font-medium text-[#475569]">
-            <span>RMSE: {formatMetric(metrics?.rmse, 3)}</span>
-            <span>R²: {formatMetric(metrics?.r2, 3)}</span>
-            <span>Train size: {metrics?.train_size ?? '--'}</span>
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={onDownload}
-          className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#0F172A] shadow-sm hover:bg-slate-50 transition"
-        >
-          <Download className="h-4 w-4" />
-          {downloadLabel}
-        </button>
-      </div>
-      <div className="mt-4 overflow-hidden rounded-[18px] border border-[#E2E8F0] bg-white">
-        <Table title="Actual vs Predicted Results (Preview)" rows={rows} emptyText="Model predictions will appear when the dataset is loaded." />
-      </div>
-    </div>
-  )
-}
-
-function ActionPlaybooksTab({
-  playbooks,
-  onDownloadPlaybook,
-}: {
-  playbooks: WarehouseOperationsRow[]
-  onDownloadPlaybook: () => void
-}) {
-  return (
-    <div className="space-y-6">
-      <SectionTitle title="Action Playbooks" />
-
-      <div className="rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm">
-        <div className="flex items-start justify-between gap-4 mb-4 flex-wrap">
-          <div>
-            <h3 className="text-xl font-bold text-[#0F172A]">Action Recommendations</h3>
-            <p className="text-sm text-[#475569] mt-1">Recommended layout and operational playbook based on warehouse parameters.</p>
-          </div>
-          <button
-            type="button"
-            onClick={onDownloadPlaybook}
-            className="inline-flex items-center gap-2 rounded-full border border-[#CBD5E1] bg-[#F8FAFC] px-4 py-2 text-sm font-semibold text-[#0F172A] hover:bg-slate-50 transition"
-          >
-            <Download className="h-4 w-4" />
-            Download Playbooks
-          </button>
-        </div>
-        <div className="overflow-hidden rounded-[18px] border border-[#E2E8F0]">
-          <Table title="Playbooks Table" rows={playbooks} columns={['Action', 'Rationale']} />
-        </div>
-      </div>
-
-      <div className="rounded-[24px] border border-[#E2E8F0] bg-[linear-gradient(135deg,#FFFFFF_0%,#F8FBFF_100%)] p-6 shadow-sm">
-        <h3 className="text-xl font-bold text-[#0F172A]">Executive Recommendations</h3>
-        <div className="mt-4 space-y-2 text-[15px] leading-7 text-[#334155]">
-          <p>• Prioritise slotting optimisation for Class A SKUs to reduce avg travel distance.</p>
-          <p>• Reroute or stagger picks in high-congestion aisles to flatline heatmap spikes.</p>
-          <p>• Schedule AMRs / Forklifts for heavier SKU weights to reduce picker fatigue and travel duration.</p>
-          <p>• Target bottom quartile pickers for training on standard SOP workflows.</p>
-          <p>• Conduct root-cause kaizen events on the highest frequency delay categories.</p>
-        </div>
+          </TableBody>
+        </UiTable>
       </div>
     </div>
   )
 }
 
 export function WarehouseOperationsPage() {
+  const navigate = useNavigate()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const mappingInputRef = useRef<HTMLInputElement>(null)
+
   const [activeTab, setActiveTab] = useState<TabKey>('overview')
   const [mode, setMode] = useState<WarehouseOperationsMode>('default')
   const [data, setData] = useState<WarehouseOperationsRow[]>([])
@@ -1037,9 +367,27 @@ export function WarehouseOperationsPage() {
   const [insights, setInsights] = useState<WarehouseOperationsInsightsResponse | null>(null)
   const [playbooks, setPlaybooks] = useState<WarehouseOperationsRow[]>(PLAYBOOKS)
 
+  useEffect(() => {
+    void loadDefaultData()
+    void getPlaybooks().then((res) => {
+      if (res.playbooks) {
+        setPlaybooks(res.playbooks)
+      }
+    }).catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    if (!data.length) return
+    const timer = window.setTimeout(() => {
+      void applyCurrentFilters(data)
+    }, 300)
+    return () => window.clearTimeout(timer)
+  }, [data, selectedWarehouses, selectedShifts, selectedPickerIds, dateStart, dateEnd])
+
   async function loadDefaultData() {
     setLoading(true)
     setError(null)
+    setMode('default')
     try {
       const response: WarehouseOperationsDatasetResponse = await loadDefaultDataset()
       const rows = response.data ?? []
@@ -1053,8 +401,7 @@ export function WarehouseOperationsPage() {
       setSelectedPickerIds([])
       setDateStart(response.date_min?.slice(0, 10) ?? '')
       setDateEnd(response.date_max?.slice(0, 10) ?? '')
-      setLoadStatus('Default dataset loaded.')
-      setMode('default')
+      setLoadStatus('Default dataset loaded successfully.')
       await applyCurrentFilters(rows)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to load default dataset.')
@@ -1067,6 +414,8 @@ export function WarehouseOperationsPage() {
   async function uploadSelectedCsv(file: File) {
     setLoading(true)
     setError(null)
+    setMode('upload')
+    setUploadFile(file)
     try {
       const response = await uploadCsv(file)
       const rows = response.data ?? []
@@ -1074,7 +423,6 @@ export function WarehouseOperationsPage() {
       setPreviewRows(response.preview ?? rows.slice(0, 10))
       setWarehouses(response.warehouses ?? [])
       setShifts(response.shifts ?? [])
-      setMode('upload')
       setPickerIds(response.picker_ids || Array.from(new Set(rows.map((r) => r.Picker_ID).filter(Boolean))).slice(0, 50) as string[])
       setSelectedWarehouses([])
       setSelectedShifts([])
@@ -1094,6 +442,8 @@ export function WarehouseOperationsPage() {
   async function prepareMappingColumns(file: File) {
     setLoading(true)
     setError(null)
+    setMappingFile(file)
+    setMode('mapping')
     try {
       const response = await getCsvColumns(file)
       setAvailableColumns(response.columns ?? [])
@@ -1101,7 +451,7 @@ export function WarehouseOperationsPage() {
         MAPPING_FIELDS.reduce((acc, field) => {
           acc[field] = response.columns?.includes(field) ? field : ''
           return acc
-        }, {} as Record<string, string>),
+        }, {} as Record<string, string>)
       )
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to read CSV columns.')
@@ -1115,7 +465,6 @@ export function WarehouseOperationsPage() {
       setError('Please upload a CSV file first.')
       return
     }
-
     setLoading(true)
     setError(null)
     try {
@@ -1126,11 +475,10 @@ export function WarehouseOperationsPage() {
       setWarehouses(response.warehouses ?? [])
       setShifts(response.shifts ?? [])
       setPickerIds(response.picker_ids || Array.from(new Set(rows.map((r) => r.Picker_ID).filter(Boolean))).slice(0, 50) as string[])
-      setMode('mapping')
       setSelectedWarehouses([])
       setSelectedShifts([])
       setSelectedPickerIds([])
-      setLoadStatus('Dataset mapped and loaded.')
+      setLoadStatus('Mapping applied successfully.')
       await applyCurrentFilters(rows)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Mapping failed.')
@@ -1151,7 +499,6 @@ export function WarehouseOperationsPage() {
       setInsights(null)
       return
     }
-
     try {
       const filterResponse = await filterData({
         data: rows,
@@ -1165,7 +512,6 @@ export function WarehouseOperationsPage() {
       setFilteredRows(selectedRows)
       setKpis(filterResponse.kpis)
 
-      // Fetch downstream analytics
       const [chartsResponse, clustersResponse, ptMlResponse, dlMlResponse, prodMlResponse, insightsResponse] = await Promise.all([
         getChartData(selectedRows).catch(() => null),
         getClusters(selectedRows).catch(() => null),
@@ -1199,117 +545,669 @@ export function WarehouseOperationsPage() {
       link.remove()
       URL.revokeObjectURL(url)
     } catch (err) {
-      // Fallback
       downloadRowsAsCsv('filtered_warehouse_operations_data.csv', filteredRows.length ? filteredRows : data)
     }
   }
 
-  // Load playbooks and default data initially
-  useEffect(() => {
-    void loadDefaultData()
-    void getPlaybooks().then((res) => {
-      if (res.playbooks) {
-        setPlaybooks(res.playbooks)
-      }
-    }).catch(() => {})
-  }, [])
-
-  // Auto trigger filter refresh when filtering inputs change
-  useEffect(() => {
-    if (!data.length) return
-    const timer = window.setTimeout(() => {
-      void applyCurrentFilters(data)
-    }, 300)
-    return () => window.clearTimeout(timer)
-  }, [data, selectedWarehouses, selectedShifts, selectedPickerIds, dateStart, dateEnd])
+  const TABS = [
+    { key: 'overview', label: 'Overview' },
+    { key: 'dictionary', label: 'Data Dictionary' },
+    { key: 'application', label: 'Application' },
+    { key: 'playbooks', label: 'Action Playbooks' },
+  ]
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#F8FAFC_0%,#F8FBFF_100%)] p-6">
-      <div className="mx-auto max-w-[95%] xl:max-w-[1550px] space-y-6">
-        <Header />
-
-        {/* TAB CONTROLS */}
-        <div className="rounded-[24px] border border-[#E2E8F0] bg-white p-2 shadow-sm">
-          <div className="grid gap-2 md:grid-cols-4">
-            {(['overview', 'dictionary', 'application', 'playbooks'] as TabKey[]).map((tab) => (
-              <button
-                key={tab}
-                type="button"
-                onClick={() => setActiveTab(tab)}
-                className={`rounded-[18px] px-5 py-3 text-sm font-semibold transition ${
-                  activeTab === tab ? 'bg-[#0F766E] text-white shadow-sm' : 'text-[#475569] hover:bg-[#F8FAFC]'
-                }`}
-              >
-                {tab === 'overview' ? 'Overview' : tab === 'dictionary' ? 'Data Dictionary' : tab === 'application' ? 'Application' : 'Action Playbooks'}
-              </button>
-            ))}
-          </div>
+    <div className="min-h-screen bg-[linear-gradient(180deg,#F8FAFC_0%,#F8FBFF_100%)]">
+      <div className="mx-auto max-w-[95%] xl:max-w-[1550px] px-4 py-8 sm:px-6 lg:px-8">
+        
+        {/* Back Button */}
+        <div className="mb-6">
+          <Button
+            variant="outline"
+            onClick={() => navigate(-1)}
+            className="rounded-full px-5 py-2.5 text-sm font-semibold text-slate-700 border-slate-200 bg-white hover:bg-slate-50 hover:-translate-y-0.5 transition active:translate-y-0 shadow-sm"
+          >
+            <ChevronLeft className="mr-1.5 h-4 w-4" />
+            Back
+          </Button>
         </div>
 
-        {/* TAB CONTENTS */}
-        {activeTab === 'overview' ? (
-          <OverviewTab kpis={kpis} />
-        ) : activeTab === 'dictionary' ? (
-          <DataDictionaryTab onDownloadRequiredColumns={createRequiredColumnsCsv} />
-        ) : activeTab === 'application' ? (
-          <ApplicationTab
-            mode={mode}
-            setMode={setMode}
-            previewRows={previewRows}
-            data={data}
-            filteredRows={filteredRows.length ? filteredRows : previewRows}
-            loadStatus={loadStatus}
-            loading={loading}
-            error={error}
-            warehouses={warehouses}
-            shifts={shifts}
-            pickerIds={pickerIds}
-            selectedWarehouses={selectedWarehouses}
-            selectedShifts={selectedShifts}
-            selectedPickerIds={selectedPickerIds}
-            setSelectedWarehouses={setSelectedWarehouses}
-            setSelectedShifts={setSelectedShifts}
-            setSelectedPickerIds={setSelectedPickerIds}
-            dateStart={dateStart}
-            dateEnd={dateEnd}
-            setDateStart={setDateStart}
-            setDateEnd={setDateEnd}
-            onDefaultData={loadDefaultData}
-            onUploadCsv={uploadSelectedCsv}
-            onUploadMapping={prepareMappingColumns}
-            uploadFile={uploadFile}
-            setUploadFile={setUploadFile}
-            mappingFile={mappingFile}
-            setMappingFile={setMappingFile}
-            mappingColumns={mappingColumns}
-            setMappingColumns={setMappingColumns}
-            availableColumns={availableColumns}
-            setAvailableColumns={setAvailableColumns}
-            onApplyMapping={applyMapping}
-            kpis={kpis}
-            charts={charts}
-            clusters={clusters}
-            pickTimeMl={pickTimeMl}
-            delayMl={delayMl}
-            productivityMl={productivityMl}
-            insights={insights}
-            onDownloadFiltered={handleDownloadFiltered}
-            onDownloadInsights={() => downloadRowsAsCsv('warehouse_operations_insights.csv', insights?.insights ?? [])}
-            onDownloadMl={(name, rows) => downloadRowsAsCsv(name, rows)}
-            onDownloadClusters={() => downloadRowsAsCsv('congestion_clusters.csv', clusters?.cluster_counts ?? [])}
-          />
-        ) : (
-          <ActionPlaybooksTab
-            playbooks={playbooks}
-            onDownloadPlaybook={() => downloadRowsAsCsv('warehouse_playbooks.csv', playbooks)}
-          />
+        {/* Hero Header */}
+        <div className="mb-10 rounded-[32px] border border-[#E2E8F0] bg-white px-10 py-12 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#0F766E]">
+            Logistics &amp; Supply Chain &nbsp;•&nbsp; Warehouse Operations Analytics
+          </p>
+          <h1 className="mt-4 text-4xl font-extrabold tracking-tight text-[#0F172A] sm:text-5xl">
+            Warehouse Operations Analytics
+          </h1>
+          <p className="mt-4 max-w-3xl text-lg text-slate-600">
+            Analyse picking efficiency, slotting layout, congestion bottlenecks, picker productivity, and equipment utilization.
+          </p>
+        </div>
+
+        {/* Custom Tab Pills Selector */}
+        <div className="mb-8 flex flex-wrap gap-2 rounded-full border border-slate-200 bg-white p-1.5 shadow-sm w-fit">
+          {TABS.map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => setActiveTab(tab.key as TabKey)}
+              className={`rounded-full px-6 py-2.5 text-sm font-semibold transition-all duration-200 ${
+                activeTab === tab.key
+                  ? 'bg-[#0F766E] text-white shadow-md'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* ── OVERVIEW TAB ── */}
+        {activeTab === 'overview' && (
+          <div className="space-y-6">
+            {/* Purpose Intro Card */}
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Overview</p>
+              <h2 className="mt-3 text-3xl font-bold text-[#0F172A]">Purpose</h2>
+              <p className="mt-4 max-w-4xl text-slate-600 leading-relaxed text-base">
+                Optimize fulfillment flows by identifying congestion zones, rebalancing picking patterns, and training staff based on ML productivity scorecards.
+              </p>
+            </section>
+
+            {/* Capabilities & Business Impact */}
+            <div className="grid gap-6 md:grid-cols-2">
+              <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+                <div className="mb-5 flex items-center gap-3">
+                  <div className="rounded-2xl bg-[#ECFDF5] p-3">
+                    <Sparkles className="h-5 w-5 text-[#0F766E]" />
+                  </div>
+                  <h3 className="text-xl font-bold text-[#0F172A]">Capabilities</h3>
+                </div>
+                <ul className="space-y-3">
+                  {[
+                    'Warehouse heatmaps & congestion analysis',
+                    'Pick-path & travel distance efficiency tracking',
+                    'Slotting score & SKU-class optimization models',
+                    'Picker productivity benchmarking & workload profiling',
+                    'Delay reasons root-cause analytics',
+                    'Equipment utilization and fleet mix analysis',
+                  ].map((feat) => (
+                    <li key={feat} className="flex items-start gap-3">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#0F766E]" />
+                      <span className="text-slate-600 text-sm leading-relaxed">{feat}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+
+              <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+                <div className="mb-5 flex items-center gap-3">
+                  <div className="rounded-2xl bg-[#EFF6FF] p-3">
+                    <TrendingUp className="h-5 w-5 text-[#2563EB]" />
+                  </div>
+                  <h3 className="text-xl font-bold text-[#0F172A]">Business Impact</h3>
+                </div>
+                <ul className="space-y-3">
+                  {[
+                    'Faster order fulfillment & higher throughput',
+                    'Lower labor + operational cost per pick',
+                    'Reduced travel congestion & picker fatigue',
+                    'Data-backed layout & slotting redesigns',
+                    'High predictability during holiday peaks',
+                  ].map((impact) => (
+                    <li key={impact} className="flex items-start gap-3">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#2563EB]" />
+                      <span className="text-slate-600 text-sm leading-relaxed">{impact}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            </div>
+
+            {/* KPI Cards Grid */}
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+              <MetricCard icon={<Package className="h-5 w-5 text-[#0F766E]" />} label="Total Orders" value={formatMetric(kpis?.total_orders, 0)} accent="bg-[#ECFDF5]" />
+              <MetricCard icon={<Clock className="h-5 w-5 text-[#D97706]" />} label="Avg Pick Time" value={formatMetric(kpis?.avg_pick_time_sec, 1) !== '—' ? `${formatMetric(kpis?.avg_pick_time_sec, 1)}s` : '—'} accent="bg-[#FFFBEB]" />
+              <MetricCard icon={<TrendingUp className="h-5 w-5 text-[#2563EB]" />} label="Avg Travel Time" value={formatMetric(kpis?.avg_travel_time_sec, 1) !== '—' ? `${formatMetric(kpis?.avg_travel_time_sec, 1)}s` : '—'} accent="bg-[#EFF6FF]" />
+              <MetricCard icon={<AlertCircle className="h-5 w-5 text-[#7C3AED]" />} label="Avg Heatmap Level" value={formatMetric(kpis?.avg_heatmap_level, 2)} accent="bg-[#F5F3FF]" />
+              <MetricCard icon={<Sparkles className="h-5 w-5 text-[#10B981]" />} label="Avg Productivity" value={formatMetric(kpis?.avg_productivity, 1) !== '—' ? `${formatMetric(kpis?.avg_productivity, 1)} items/hr` : '—'} accent="bg-[#ECFDF5]" />
+            </div>
+
+            {/* Who & How Guide */}
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <h3 className="text-2xl font-bold text-[#0F172A] mb-6">User Guide — Who Should Use &amp; How</h3>
+              <div className="grid gap-6 lg:grid-cols-2">
+                <div className="rounded-2xl border border-slate-100 bg-[#F8FAFC] p-6">
+                  <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#0F766E] mb-3">Target Users</p>
+                  <p className="text-slate-600 text-sm leading-relaxed">
+                    Warehouse managers, fulfillment center operations heads, industrial engineers, supply chain designers, and process improvement leaders looking to eliminate fulfillment delay root causes.
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-slate-100 bg-[#F8FAFC] p-6">
+                  <p className="text-sm font-bold uppercase tracking-[0.16em] text-[#0F766E] mb-3">Standard Workflow</p>
+                  <ol className="space-y-2 text-slate-600 text-sm">
+                    <li className="flex gap-2"><span className="font-bold text-[#0F766E]">1.</span> Load operations dataset (default sample or upload custom CSV)</li>
+                    <li className="flex gap-2"><span className="font-bold text-[#0F766E]">2.</span> Filter by warehouse, shift, and picker ID</li>
+                    <li className="flex gap-2"><span className="font-bold text-[#0F766E]">3.</span> Audit pick times, slotting scores, and travel distance distributions</li>
+                    <li className="flex gap-2"><span className="font-bold text-[#0F766E]">4.</span> Generate ML productivity scorecards and download operational playbooks</li>
+                  </ol>
+                </div>
+              </div>
+            </section>
+          </div>
         )}
 
-        {loading ? (
-          <div className="fixed bottom-6 right-6">
-            <LoadingOverlay />
+        {/* ── DATA DICTIONARY TAB ── */}
+        {activeTab === 'dictionary' && (
+          <div className="space-y-6">
+            {/* Required Schema Chips */}
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Schema</p>
+              <h2 className="mt-3 text-2xl font-bold text-[#0F172A]">Required Columns</h2>
+              <p className="mt-2 text-slate-600">The uploaded dataset must include or map to these essential schema fields for analysis.</p>
+              <div className="mt-6 flex flex-wrap gap-2">
+                {REQUIRED_COLUMNS.map((item) => (
+                  <Chip key={item.column} className="border-[#BFDBFE] bg-[#EFF6FF] text-[#1D4ED8]">{item.column}</Chip>
+                ))}
+              </div>
+            </section>
+
+            {/* Data Dictionary Table */}
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Reference</p>
+              <h2 className="mt-3 text-2xl font-bold text-[#0F172A]">Data Dictionary</h2>
+              <p className="mt-2 mb-6 text-slate-600">Business definitions and database types for the primary fields.</p>
+              {renderTable(REQUIRED_COLUMNS as unknown as WarehouseOperationsRow[], ['column', 'type', 'description'], 'Data Dictionary')}
+            </section>
+
+            {/* Variable Roles */}
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Model Variables</p>
+              <h2 className="mt-3 text-2xl font-bold text-[#0F172A]">Variable Roles</h2>
+              <div className="mt-6 grid gap-6 md:grid-cols-2">
+                <div className="rounded-3xl border border-[#BFDBFE] bg-[#EFF6FF] p-6">
+                  <p className="mb-4 text-sm font-bold uppercase tracking-[0.18em] text-[#1D4ED8]">Independent Variables (Features)</p>
+                  <div className="flex flex-wrap gap-2">
+                    {INDEPENDENT_VARIABLES.map((item) => (
+                      <Chip key={item} className="border-[#BFDBFE] bg-white text-[#1D4ED8]">{item}</Chip>
+                    ))}
+                  </div>
+                </div>
+                <div className="rounded-3xl border border-[#A7F3D0] bg-[#ECFDF5] p-6">
+                  <p className="mb-4 text-sm font-bold uppercase tracking-[0.18em] text-[#0F766E]">Dependent Variables (Targets)</p>
+                  <div className="flex flex-wrap gap-2">
+                    {DEPENDENT_VARIABLES.map((item) => (
+                      <Chip key={item} className="border-[#A7F3D0] bg-white text-[#0F766E]">{item}</Chip>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="mt-6">
+                <Button
+                  type="button"
+                  onClick={createRequiredColumnsCsv}
+                  className="rounded-full px-6 py-3 font-bold bg-[#0F766E] text-white hover:bg-[#0E6962] hover:-translate-y-0.5 transition active:translate-y-0 shadow-sm"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download Schema CSV
+                </Button>
+              </div>
+            </section>
           </div>
-        ) : null}
+        )}
+
+        {/* ── APPLICATION TAB ── */}
+        {activeTab === 'application' && (
+          <div className="space-y-6">
+            
+            {/* Step 1: Dataset Options */}
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Step 1</p>
+              <h2 className="mt-2 text-2xl font-bold text-[#0F172A]">Dataset Options</h2>
+              <p className="mt-2 text-slate-600">Load standard warehouse logs or import custom picker records.</p>
+
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Button
+                  type="button"
+                  onClick={() => { void loadDefaultData() }}
+                  disabled={loading}
+                  className={`rounded-full px-6 py-3 font-semibold transition hover:-translate-y-0.5 active:translate-y-0 ${
+                    mode === 'default'
+                      ? 'bg-[#0F766E] text-white shadow-md hover:bg-[#0E6962]'
+                      : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  {loading && mode === 'default' ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <SquareStack className="mr-2 h-4 w-4" />
+                  )}
+                  Load Default Data
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={loading}
+                  className={`rounded-full px-6 py-3 font-semibold transition hover:-translate-y-0.5 active:translate-y-0 ${
+                    mode === 'upload' ? 'border-[#0F766E] bg-[#ECFDF5] text-[#0F766E]' : ''
+                  }`}
+                >
+                  <UploadCloud className="mr-2 h-4 w-4" />
+                  Upload CSV
+                </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) void uploadSelectedCsv(file)
+                  }}
+                />
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => mappingInputRef.current?.click()}
+                  disabled={loading}
+                  className={`rounded-full px-6 py-3 font-semibold transition hover:-translate-y-0.5 active:translate-y-0 ${
+                    mode === 'mapping' ? 'border-[#0F766E] bg-[#ECFDF5] text-[#0F766E]' : ''
+                  }`}
+                >
+                  <Settings className="mr-2 h-4 w-4" />
+                  Upload CSV + Manual Mapping
+                </Button>
+                <input
+                  ref={mappingInputRef}
+                  type="file"
+                  accept=".csv"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) void prepareMappingColumns(file)
+                  }}
+                />
+              </div>
+
+              {loadStatus && (
+                <div className="mt-5 rounded-2xl border border-emerald-100 bg-[#ECFDF5] p-4 text-sm font-medium text-[#0F766E]">
+                  {loadStatus} &nbsp;•&nbsp; Loaded rows: <span className="font-bold">{data.length}</span>
+                </div>
+              )}
+              {error && (
+                <div className="mt-5 rounded-2xl border border-rose-100 bg-rose-50 p-4 text-sm font-medium text-rose-700">
+                  {error}
+                </div>
+              )}
+            </section>
+
+            {/* Mapping Step */}
+            {mode === 'mapping' && availableColumns.length > 0 && (
+              <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Mapping</p>
+                <h3 className="mt-2 text-2xl font-bold text-[#0F172A]">Column Mapping</h3>
+                <p className="mt-2 mb-6 text-slate-600">Assign columns in your CSV to match Warehouse Operations variables.</p>
+                {mappingFile && (
+                  <div className="mb-6 flex items-center justify-between rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                    <div className="flex items-center gap-3">
+                      <FileText className="h-5 w-5 text-[#0F766E]" />
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">{mappingFile.name}</p>
+                        <p className="text-xs text-slate-500">{(mappingFile.size / 1024).toFixed(1)} KB</p>
+                      </div>
+                    </div>
+                    <button type="button" onClick={() => { setMappingFile(null); setAvailableColumns([]); setMode('mapping'); }} className="rounded-full border border-slate-200 bg-white p-2 text-slate-500 hover:bg-slate-100" aria-label="Clear mapping file">
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+                <div className="space-y-3">
+                  {MAPPING_FIELDS.map((field) => (
+                    <MappingRow
+                      key={field}
+                      field={field}
+                      columns={availableColumns}
+                      value={mappingColumns[field] ?? ''}
+                      onChange={(val) => setMappingColumns((prev) => ({ ...prev, [field]: val }))}
+                    />
+                  ))}
+                </div>
+                <div className="mt-6">
+                  <Button
+                    type="button"
+                    onClick={() => void applyMapping()}
+                    disabled={loading}
+                    className="rounded-full px-8 py-3 font-bold bg-[#0F766E] text-white hover:bg-[#0E6962] hover:-translate-y-0.5 transition active:translate-y-0"
+                  >
+                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    Apply Mapping Configurations
+                  </Button>
+                </div>
+              </section>
+            )}
+
+            {/* Primary Analysis Blocks */}
+            {data.length > 0 && (
+              <>
+                {/* Default dataset table preview */}
+                {mode === 'default' && (
+                  <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6">
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Preview</p>
+                        <h3 className="mt-2 text-2xl font-bold text-[#0F172A]">Dataset Preview</h3>
+                      </div>
+                      <div className="flex flex-wrap gap-3">
+                        <Button
+                          type="button"
+                          onClick={() => void loadDefaultData()}
+                          disabled={loading}
+                          className="rounded-full px-6 py-3 font-bold bg-[#0F766E] text-white hover:bg-[#0E6962] hover:-translate-y-0.5 transition active:translate-y-0"
+                        >
+                          {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <SquareStack className="mr-2 h-4 w-4" />}
+                          Reload Default Data
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={downloadSampleCsv}
+                          className="rounded-full px-6 py-3 font-bold hover:-translate-y-0.5 transition active:translate-y-0 bg-white border-slate-200 text-slate-700"
+                        >
+                          <Download className="mr-2 h-4 w-4" />
+                          Download Sample CSV
+                        </Button>
+                      </div>
+                    </div>
+                    {renderTable(previewRows, PREVIEW_COLUMNS, 'Dataset Preview')}
+                  </section>
+                )}
+
+                {/* Step 2 Filters */}
+                <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Step 2</p>
+                  <h3 className="mt-2 text-2xl font-bold text-[#0F172A] mb-6">Filters &amp; Sub-Selection</h3>
+                  <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                    <SelectableFilter
+                      label="Warehouse"
+                      values={warehouses}
+                      selected={selectedWarehouses}
+                      onToggle={(val) => setSelectedWarehouses((prev) => prev.includes(val) ? prev.filter((v) => v !== val) : [...prev, val])}
+                    />
+                    <SelectableFilter
+                      label="Shift"
+                      values={shifts}
+                      selected={selectedShifts}
+                      onToggle={(val) => setSelectedShifts((prev) => prev.includes(val) ? prev.filter((v) => v !== val) : [...prev, val])}
+                    />
+                    <SelectableFilter
+                      label="Picker ID"
+                      values={pickerIds}
+                      selected={selectedPickerIds}
+                      onToggle={(val) => setSelectedPickerIds((prev) => prev.includes(val) ? prev.filter((v) => v !== val) : [...prev, val])}
+                    />
+                  </div>
+
+                  <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md hover:border-[#0F766E]/30 w-full lg:w-1/2">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-3">
+                      <p className="text-sm font-bold uppercase tracking-[0.12em] text-[#0F766E]">Order Period</p>
+                      <CalendarRange className="h-4 w-4 text-[#0F766E]" />
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <label className="text-sm text-slate-600">
+                        <span className="mb-1.5 block font-semibold text-slate-700">Start Date</span>
+                        <input type="date" value={dateStart} onChange={(e) => setDateStart(e.target.value)} className="w-full rounded-2xl border border-slate-200 bg-[#F8FAFC] px-3 py-2.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0F766E]/40" />
+                      </label>
+                      <label className="text-sm text-slate-600">
+                        <span className="mb-1.5 block font-semibold text-slate-700">End Date</span>
+                        <input type="date" value={dateEnd} onChange={(e) => setDateEnd(e.target.value)} className="w-full rounded-2xl border border-slate-200 bg-[#F8FAFC] px-3 py-2.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0F766E]/40" />
+                      </label>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Filtered Preview Table */}
+                <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6">
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Selection preview</p>
+                      <h3 className="mt-2 text-2xl font-bold text-[#0F172A]">Filtered Data Preview</h3>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleDownloadFiltered}
+                      className="rounded-full px-6 py-3 font-bold hover:-translate-y-0.5 transition active:translate-y-0 bg-white border-slate-200 text-slate-700"
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Download Filtered Preview
+                    </Button>
+                  </div>
+                  {renderTable(filteredRows, PREVIEW_COLUMNS, 'Filtered Data Preview')}
+                </section>
+
+                {/* Dynamic Key Metrics */}
+                <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Metrics</p>
+                  <h3 className="mt-2 text-2xl font-bold text-[#0F172A] mb-6">Dynamic KPIs</h3>
+                  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+                    <MetricCard icon={<Package className="h-5 w-5 text-[#0F766E]" />} label="Orders in selection" value={formatMetric(kpis?.total_orders, 0)} accent="bg-[#ECFDF5]" />
+                    <MetricCard icon={<Clock className="h-5 w-5 text-[#D97706]" />} label="Avg Pick Time" value={formatMetric(kpis?.avg_pick_time_sec, 1) !== '—' ? `${formatMetric(kpis?.avg_pick_time_sec, 1)}s` : '—'} accent="bg-[#FFFBEB]" />
+                    <MetricCard icon={<TrendingUp className="h-5 w-5 text-[#2563EB]" />} label="Avg Travel Time" value={formatMetric(kpis?.avg_travel_time_sec, 1) !== '—' ? `${formatMetric(kpis?.avg_travel_time_sec, 1)}s` : '—'} accent="bg-[#EFF6FF]" />
+                    <MetricCard icon={<AlertCircle className="h-5 w-5 text-[#7C3AED]" />} label="Avg Heatmap Level" value={formatMetric(kpis?.avg_heatmap_level, 2)} accent="bg-[#F5F3FF]" />
+                    <MetricCard icon={<Sparkles className="h-5 w-5 text-[#10B981]" />} label="Avg Productivity" value={formatMetric(kpis?.avg_productivity, 1) !== '—' ? `${formatMetric(kpis?.avg_productivity, 1)} items/hr` : '—'} accent="bg-[#ECFDF5]" />
+                  </div>
+                </section>
+
+                {/* Exploratory Analysis Charts */}
+                <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">EDA</p>
+                  <h3 className="mt-2 text-2xl font-bold text-[#0F172A] mb-6">Charts &amp; Visualisations</h3>
+                  
+                  {/* Single Column Layout of 15 imported charts */}
+                  <div className="grid grid-cols-1 gap-6">
+                    <PickQtyDistribution data={charts?.pick_qty_distribution ?? []} />
+                    <TravelDistanceOverTime data={charts?.travel_distance_over_time ?? []} />
+                    <ZoneHeatmapActivity data={charts?.zone_heatmap_activity ?? []} />
+                    <SlottingScoreSkuClass data={charts?.slotting_score_by_sku_class ?? []} />
+                    <DelayReasonsDistribution data={charts?.delay_reasons ?? []} />
+                    <TravelTimeVsDistance data={charts?.travel_time_vs_distance ?? []} />
+                    <EquipmentUsage data={charts?.equipment_usage ?? []} />
+                    <PickerProductivityDistribution data={charts?.picker_productivity_distribution ?? []} />
+                    <CongestionFactorWarehouse data={charts?.congestion_by_warehouse ?? []} />
+                    <SkuWeightDistribution data={charts?.sku_weight_distribution ?? []} />
+                    <PickPackTime data={charts?.pick_vs_pack_time ?? []} />
+                    <HeatmapLevelOverTime data={charts?.heatmap_over_time ?? []} />
+                    <AisleCongestion data={filteredRows.length ? filteredRows : previewRows} />
+                    <ProductivityShift data={charts?.productivity_by_shift ?? []} />
+                    <DelayDurationDistribution data={charts?.delay_duration_distribution ?? []} />
+                  </div>
+                </section>
+
+                {/* Machine learning models and predictions */}
+                <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Machine Learning</p>
+                  <h3 className="mt-2 text-2xl font-bold text-[#0F172A] mb-6">Model Predictions</h3>
+                  <div className="space-y-8">
+
+                    {/* RandomForest Pick Time */}
+                    <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
+                      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-4">
+                        <div>
+                          <h4 className="text-lg font-bold text-[#0F172A]">1. Predict Pick Time (RandomForestRegressor)</h4>
+                          <div className="mt-2 flex gap-3 text-sm text-slate-500 font-semibold uppercase tracking-wider">
+                            <span>RMSE: {formatMetric(pickTimeMl?.rmse, 3)}</span>
+                            <span>R²: {formatMetric(pickTimeMl?.r2, 3)}</span>
+                            <span>Train size: {pickTimeMl?.train_size ?? '—'}</span>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => downloadRowsAsCsv('pick_time_predictions.csv', pickTimeMl?.predictions ?? [])}
+                          className="rounded-full px-6 py-3 font-bold bg-white border-slate-200 text-slate-700 hover:bg-slate-50 transition active:translate-y-0"
+                        >
+                          <Download className="mr-2 h-4 w-4" />
+                          Download Predictions
+                        </Button>
+                      </div>
+                      {renderTable(pickTimeMl?.predictions ?? [], ['Actual_Pick_Time_Sec', 'Predicted_Pick_Time_Sec'], 'Pick Time Regressor')}
+                    </div>
+
+                    {/* KMeans Cluster */}
+                    <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6 space-y-4">
+                      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                        <div>
+                          <h4 className="text-lg font-bold text-[#0F172A]">2. Congestion Pattern Clustering (KMeans Cluster)</h4>
+                          <p className="text-sm text-[#475569]">Groups warehouse picks by Heatmap, Congestion, and Pick Quantity.</p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleDownloadFiltered}
+                          className="rounded-full px-6 py-3 font-bold bg-white border-slate-200 text-slate-700 hover:bg-slate-50 transition active:translate-y-0"
+                        >
+                          <Download className="mr-2 h-4 w-4" />
+                          Download Clusters Distribution
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-1 gap-6">
+                        {renderTable(clusters?.cluster_counts ?? [], ['Cluster', 'Count'], 'Cluster counts')}
+                        <ClusterScatter data={clusters?.scatter_data ?? []} />
+                      </div>
+                    </div>
+
+                    {/* GradientBoosting Delay */}
+                    <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
+                      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-4">
+                        <div>
+                          <h4 className="text-lg font-bold text-[#0F172A]">3. Predict Delay Minutes (GradientBoostingRegressor)</h4>
+                          <div className="mt-2 flex gap-3 text-sm text-slate-500 font-semibold uppercase tracking-wider">
+                            <span>RMSE: {formatMetric(delayMl?.rmse, 3)}</span>
+                            <span>R²: {formatMetric(delayMl?.r2, 3)}</span>
+                            <span>Train size: {delayMl?.train_size ?? '—'}</span>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => downloadRowsAsCsv('delay_predictions.csv', delayMl?.predictions ?? [])}
+                          className="rounded-full px-6 py-3 font-bold bg-white border-slate-200 text-slate-700 hover:bg-slate-50 transition active:translate-y-0"
+                        >
+                          <Download className="mr-2 h-4 w-4" />
+                          Download Predictions
+                        </Button>
+                      </div>
+                      {renderTable(delayMl?.predictions ?? [], ['Actual_Delay_Min', 'Predicted_Delay_Min'], 'Delay regressor')}
+                    </div>
+
+                    {/* RandomForest Picker Productivity */}
+                    <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
+                      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-4">
+                        <div>
+                          <h4 className="text-lg font-bold text-[#0F172A]">4. Predict Picker Productivity (RandomForestRegressor)</h4>
+                          <div className="mt-2 flex gap-3 text-sm text-slate-500 font-semibold uppercase tracking-wider">
+                            <span>RMSE: {formatMetric(productivityMl?.rmse, 3)}</span>
+                            <span>R²: {formatMetric(productivityMl?.r2, 3)}</span>
+                            <span>Train size: {productivityMl?.train_size ?? '—'}</span>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => downloadRowsAsCsv('picker_productivity_predictions.csv', productivityMl?.predictions ?? [])}
+                          className="rounded-full px-6 py-3 font-bold bg-white border-slate-200 text-slate-700 hover:bg-slate-50 transition active:translate-y-0"
+                        >
+                          <Download className="mr-2 h-4 w-4" />
+                          Download Predictions
+                        </Button>
+                      </div>
+                      {renderTable(productivityMl?.predictions ?? [], ['Actual_Productivity', 'Predicted_Productivity'], 'Productivity regressor')}
+                    </div>
+
+                  </div>
+                </section>
+
+                {/* Automated insights */}
+                <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6">
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Insights</p>
+                      <h3 className="mt-2 text-2xl font-bold text-[#0F172A]">Automated Insights</h3>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => downloadRowsAsCsv('warehouse_operations_insights.csv', insights?.insights ?? [])}
+                      className="rounded-full px-6 py-3 font-bold hover:-translate-y-0.5 transition active:translate-y-0 bg-white border-slate-200 text-slate-700"
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Download Insights CSV
+                    </Button>
+                  </div>
+                  {renderTable(insights?.insights ?? [], ['Insight', 'Value', 'Detail'], 'Automated Insights')}
+                </section>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* ── ACTION PLAYBOOKS TAB ── */}
+        {activeTab === 'playbooks' && (
+          <div className="space-y-6">
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#0F766E]">Actions</p>
+              <h2 className="mt-2 text-2xl font-bold text-[#0F172A]">Operations Action Playbooks</h2>
+              <p className="mt-2 text-slate-600">Download prioritized recommendation matrices to redesign warehouse floor patterns.</p>
+            </section>
+
+            <article className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)] hover:shadow-md transition">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6">
+                <div>
+                  <h3 className="text-xl font-bold text-[#0F172A]">Action Recommendations</h3>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => downloadRowsAsCsv('warehouse_playbooks.csv', playbooks)}
+                  className="rounded-full px-6 py-3 font-bold bg-white border-slate-200 text-slate-700 hover:bg-slate-50 transition active:translate-y-0"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download Playbooks
+                </Button>
+              </div>
+              {renderTable(playbooks, ['Action', 'Rationale'], 'Action Recommendations')}
+            </article>
+
+            {/* Recommendations panel */}
+            <section className="rounded-[32px] border border-[#E2E8F0] bg-white p-8 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+              <div className="mb-6 flex items-center gap-3">
+                <div className="rounded-2xl bg-[#EFF6FF] p-3">
+                  <Lightbulb className="h-5 w-5 text-[#2563EB]" />
+                </div>
+                <h3 className="text-2xl font-bold text-[#0F172A]">Executive Recommendations</h3>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                {[
+                  'Prioritise slotting optimisation for Class A SKUs to reduce avg travel distance.',
+                  'Reroute or stagger picks in high-congestion aisles to flatline heatmap spikes.',
+                  'Schedule AMRs / Forklifts for heavier SKU weights to reduce picker fatigue and travel duration.',
+                  'Target bottom quartile pickers for training on standard SOP workflows.',
+                  'Conduct root-cause kaizen events on the highest frequency delay categories.',
+                ].map((rec, index) => (
+                  <div key={index} className="flex items-start gap-3 rounded-2xl bg-slate-50 p-4 border border-slate-100">
+                    <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#0F766E]" />
+                    <span className="text-sm text-slate-600 leading-relaxed font-semibold">{rec}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+        )}
+
       </div>
     </div>
   )
